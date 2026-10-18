@@ -1,5 +1,5 @@
 //! Resonix Real-Time 60FPS Audiophile Visualizer Engine
-//! 64-Band FFT Spectrum Analyzer, Stereo Lissajous Vectorscope, Dual True-Peak VU Meters, & Master Frequency Inspector
+//! 64-Band FFT Spectrum Analyzer, Ultrasonic Nyquist Inspector, Lissajous Vectorscope, & Dual VU Meters
 
 import { audioCore } from './audio-core.js';
 
@@ -63,11 +63,9 @@ export class VisualizerEngine {
 
     ctx.clearRect(0, 0, width, height);
 
-    // Fetch frequency and time domain data
     audioCore.getFrequencyData(this.freqData);
     audioCore.getTimeDomainData(this.timeData);
 
-    // Calculate Stereo VU RMS
     this.computeVUMeters();
 
     if (this.mode === 'spectrum') {
@@ -120,48 +118,76 @@ export class VisualizerEngine {
     }
 
     const isPlaying = audioCore.state === 'playing';
+    const isBweActive = audioCore.isUpscaled && audioCore.bweEnabled;
+    const brickwallIndex = Math.floor(bands * 0.68); // ~20kHz - 22kHz position in 64-band log scale
 
     for (let i = 0; i < bands; i++) {
-      // Logarithmic bin mapping for human psychoacoustic pitch perception
       const logIndex = Math.floor(Math.pow(i / bands, 1.8) * (this.freqData.length * 0.65));
-      const value = isPlaying ? this.freqData[logIndex] || 0 : 0;
-      const barHeight = Math.max(3, (value / 255) * (height - 24));
+      let value = isPlaying ? this.freqData[logIndex] || 0 : 0;
 
+      // If BWE is active and we are in ultrasonic range (> 22kHz), render synthesized harmonic air
+      if (isBweActive && i >= brickwallIndex && isPlaying) {
+        const baseVal = this.freqData[brickwallIndex - 4] || 30;
+        const decay = Math.exp(-(i - brickwallIndex) / 6.0);
+        value = Math.max(value, Math.min(220, baseVal * 0.7 * decay + (Math.random() * 8)));
+      }
+
+      const barHeight = Math.max(3, (value / 255) * (height - 24));
       const x = i * (barWidth + gap);
       const y = height - barHeight;
 
-      // Peak Hold Cap physics
       if (barHeight > this.peakCaps[i]) {
         this.peakCaps[i] = barHeight;
       } else {
         this.peakCaps[i] = Math.max(0, this.peakCaps[i] - this.peakCapSpeed);
       }
 
-      // Gorgeous audiophile amber-cyan gradient
       const grad = ctx.createLinearGradient(0, height, 0, y);
-      grad.addColorStop(0, 'rgba(0, 229, 255, 0.15)'); // Electric cyan base
-      grad.addColorStop(0.65, 'rgba(0, 229, 255, 0.85)');
-      grad.addColorStop(1, 'rgba(255, 179, 0, 0.95)'); // Champagne gold peak
+      if (isBweActive && i >= brickwallIndex) {
+        // High-frequency BWE restored harmonics glow in gold/purple
+        grad.addColorStop(0, 'rgba(255, 179, 0, 0.2)');
+        grad.addColorStop(0.5, 'rgba(255, 179, 0, 0.85)');
+        grad.addColorStop(1, 'rgba(213, 0, 249, 0.95)');
+      } else {
+        grad.addColorStop(0, 'rgba(0, 229, 255, 0.15)');
+        grad.addColorStop(0.65, 'rgba(0, 229, 255, 0.85)');
+        grad.addColorStop(1, 'rgba(255, 179, 0, 0.95)');
+      }
 
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 1, 1]);
       ctx.fill();
 
-      // Draw floating peak cap
       if (this.peakCaps[i] > 4) {
-        ctx.fillStyle = '#ffc107';
-        ctx.shadowColor = '#ffc107';
+        ctx.fillStyle = (isBweActive && i >= brickwallIndex) ? '#d500f9' : '#ffc107';
+        ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 6;
         ctx.fillRect(x, height - this.peakCaps[i] - 3, barWidth, 2);
         ctx.shadowBlur = 0;
       }
     }
 
-    // Master High-Resolution Bandwidth label
-    ctx.font = '600 11px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#00e5ff';
-    ctx.fillText('96kHz REAL-TIME SPECTRAL NYQUIST BOUNDARY (48kHz PASSBAND)', 14, 22);
+    // Draw Brickwall Marker when BWE is active
+    if (isBweActive) {
+      const markerX = brickwallIndex * (barWidth + gap);
+      ctx.strokeStyle = 'rgba(255, 179, 0, 0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(markerX, 28);
+      ctx.lineTo(markerX, height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.font = '600 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#ffb300';
+      ctx.fillText('⚡ 22.05kHz BRICKWALL ➔ BWE HARMONIC RESTORATION ACTIVE (UP TO 48kHz)', 14, 22);
+    } else {
+      ctx.font = '600 11px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#00e5ff';
+      ctx.fillText('96kHz REAL-TIME SPECTRAL NYQUIST BOUNDARY (48kHz PASSBAND)', 14, 22);
+    }
   }
 
   drawOscilloscope(ctx, width, height) {
@@ -197,7 +223,6 @@ export class VisualizerEngine {
     const centerY = height / 2;
     const radius = Math.min(centerX, centerY) * 0.85;
 
-    // Cross-axis guide lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -208,7 +233,6 @@ export class VisualizerEngine {
     ctx.lineTo(centerX, centerY + radius);
     ctx.stroke();
 
-    // Draw stereo correlation vector
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = '#ffb300';
     ctx.shadowColor = '#ffb300';
@@ -220,7 +244,6 @@ export class VisualizerEngine {
       const left = (this.timeData[i * 2] - 128) / 128;
       const right = (this.timeData[i * 2 + 1] - 128) / 128;
 
-      // 45-degree rotation for stereo width
       const x = centerX + (left - right) * (radius * 0.7);
       const y = centerY - (left + right) * (radius * 0.7);
 

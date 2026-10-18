@@ -1,5 +1,5 @@
 //! Resonix Studio Application Coordinator
-//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Hardware DACs, and i18n
+//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Public Vault, BWE Engine, and i18n
 
 import { i18n } from './i18n/i18n.js';
 import { locales } from './i18n/locales.js';
@@ -7,11 +7,14 @@ import { audioCore } from './audio-core.js';
 import { VisualizerEngine } from './visualizer.js';
 import { EqualizerManager } from './equalizer.js';
 import { smartMusicManager } from './smart-manager.js';
+import { publicVault } from './public-vault.js';
 import { hwManager, BLUETOOTH_CODECS } from './bluetooth-manager.js';
 
 class ResonixApp {
   constructor() {
     this.currentTrackIndex = 0;
+    this.activeSourceTab = 'local'; // 'local' or 'vault'
+    this.activeVaultGenre = 'All';
     this.visualizer = null;
     this.equalizer = null;
   }
@@ -21,7 +24,6 @@ class ResonixApp {
     i18n.updateDOM();
     this.updateLanguageButton();
 
-    // Show Language Selector on first launch if not chosen
     if (!localStorage.getItem('resonix_lang_chosen')) {
       this.openLangModal();
     }
@@ -52,6 +54,55 @@ class ResonixApp {
   }
 
   setupEventListeners() {
+    // Source Navigation Tabs: Local Masters vs Public Vault
+    const tabLocal = document.getElementById('tab-local-masters');
+    const tabVault = document.getElementById('tab-public-vault');
+    const genreChips = document.getElementById('vault-genre-chips');
+
+    if (tabLocal && tabVault) {
+      tabLocal.addEventListener('click', () => {
+        this.activeSourceTab = 'local';
+        tabLocal.classList.add('active');
+        tabVault.classList.remove('active');
+        if (genreChips) genreChips.style.display = 'none';
+        this.renderTrackList();
+      });
+
+      tabVault.addEventListener('click', () => {
+        this.activeSourceTab = 'vault';
+        tabVault.classList.add('active');
+        tabLocal.classList.remove('active');
+        if (genreChips) genreChips.style.display = 'flex';
+        this.renderTrackList();
+      });
+    }
+
+    // Genre Chips Filter for Public Vault
+    document.querySelectorAll('.genre-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+        e.target.classList.add('active');
+        this.activeVaultGenre = e.target.getAttribute('data-genre');
+        this.renderTrackList();
+      });
+    });
+
+    // AI BWE Remaster Toggle Button
+    const btnToggleBwe = document.getElementById('btn-toggle-bwe');
+    if (btnToggleBwe) {
+      btnToggleBwe.addEventListener('click', () => {
+        audioCore.setBweRemaster(!audioCore.bweEnabled);
+        if (audioCore.bweEnabled) {
+          btnToggleBwe.classList.remove('bwe-off');
+          btnToggleBwe.classList.add('bwe-active-btn');
+        } else {
+          btnToggleBwe.classList.add('bwe-off');
+          btnToggleBwe.classList.remove('bwe-active-btn');
+        }
+        hwManager.updateDynamicBadge();
+      });
+    }
+
     // Play / Pause Toggle
     const btnPlayPause = document.getElementById('btn-play-pause');
     if (btnPlayPause) {
@@ -59,7 +110,8 @@ class ResonixApp {
         if (audioCore.state === 'playing') {
           audioCore.pause();
         } else {
-          const track = smartMusicManager.getTracks()[this.currentTrackIndex];
+          const list = this.getActiveTrackList();
+          const track = list[this.currentTrackIndex] || list[0];
           audioCore.play(track);
         }
       });
@@ -200,7 +252,6 @@ class ResonixApp {
   }
 
   setupAudioListeners() {
-    // Playback State Change
     audioCore.on('stateChange', (state) => {
       const icon = document.getElementById('play-pause-icon');
       if (icon) {
@@ -213,7 +264,6 @@ class ResonixApp {
       this.updateTrackActiveVisuals();
     });
 
-    // Time & Scrubber Update
     audioCore.on('timeUpdate', (data) => {
       const curStamp = document.getElementById('player-time-current');
       const totStamp = document.getElementById('player-time-total');
@@ -224,13 +274,29 @@ class ResonixApp {
       if (slider) slider.value = data.progress * 100;
     });
 
-    // Buffer Metrics
     audioCore.on('metrics', (metrics) => {
       const bufEl = document.getElementById('metric-ringbuf');
       const ufEl = document.getElementById('metric-underflows');
       if (bufEl) bufEl.textContent = `${metrics.bufferOccupancy}%`;
       if (ufEl) ufEl.textContent = metrics.underflows;
     });
+
+    audioCore.on('bweChange', () => {
+      hwManager.updateDynamicBadge();
+    });
+  }
+
+  getActiveTrackList(filter = '') {
+    if (this.activeSourceTab === 'vault') {
+      return publicVault.getTracks(filter, this.activeVaultGenre);
+    } else {
+      const tracks = smartMusicManager.getTracks();
+      return tracks.filter(t =>
+        t.title.toLowerCase().includes(filter) ||
+        t.artist.toLowerCase().includes(filter) ||
+        t.format.toLowerCase().includes(filter)
+      );
+    }
   }
 
   renderTrackList(filter = '') {
@@ -238,20 +304,22 @@ class ResonixApp {
     if (!container) return;
     container.innerHTML = '';
 
-    const tracks = smartMusicManager.getTracks();
-    const filtered = tracks.filter(t => 
-      t.title.toLowerCase().includes(filter) ||
-      t.artist.toLowerCase().includes(filter) ||
-      t.format.toLowerCase().includes(filter)
-    );
+    const list = this.getActiveTrackList(filter);
 
     const countBadge = document.getElementById('library-count-badge');
-    if (countBadge) countBadge.textContent = `${filtered.length} Masters`;
+    if (countBadge) {
+      countBadge.textContent = `${list.length} ${this.activeSourceTab === 'vault' ? 'Public Masters' : 'Masters'}`;
+    }
 
-    filtered.forEach((track, idx) => {
+    list.forEach((track, idx) => {
       const card = document.createElement('div');
       const isCur = audioCore.currentTrack && audioCore.currentTrack.id === track.id;
       card.className = `track-item-card ${isCur ? 'active-playing' : ''}`;
+
+      const isUpscaledTarget = track.sample_rate < 88200 || !track.is_native_hires;
+      const qualityPill = isUpscaledTarget
+        ? `<span class="track-pill-bwe" title="Auto-Remasters to 24-bit/96kHz via BWE Engine">AI 24/96 Remaster</span>`
+        : `<span class="track-pill-hires">Native ${track.format}</span>`;
 
       card.innerHTML = `
         <div class="track-info-left">
@@ -268,12 +336,12 @@ class ResonixApp {
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <span class="track-pill-hires">${track.format}</span>
+          ${qualityPill}
         </div>
       `;
 
       card.addEventListener('click', () => {
-        this.currentTrackIndex = tracks.findIndex(t => t.id === track.id);
+        this.currentTrackIndex = idx;
         this.playTrack(track);
       });
 
@@ -291,15 +359,15 @@ class ResonixApp {
   }
 
   nextTrack() {
-    const tracks = smartMusicManager.getTracks();
-    this.currentTrackIndex = (this.currentTrackIndex + 1) % tracks.length;
-    this.playTrack(tracks[this.currentTrackIndex]);
+    const list = this.getActiveTrackList();
+    this.currentTrackIndex = (this.currentTrackIndex + 1) % list.length;
+    this.playTrack(list[this.currentTrackIndex]);
   }
 
   prevTrack() {
-    const tracks = smartMusicManager.getTracks();
-    this.currentTrackIndex = (this.currentTrackIndex - 1 + tracks.length) % tracks.length;
-    this.playTrack(tracks[this.currentTrackIndex]);
+    const list = this.getActiveTrackList();
+    this.currentTrackIndex = (this.currentTrackIndex - 1 + list.length) % list.length;
+    this.playTrack(list[this.currentTrackIndex]);
   }
 
   updateCurrentTrackUI(track) {
@@ -317,8 +385,9 @@ class ResonixApp {
     const container = document.getElementById('track-list-container');
     if (!container) return;
     const cards = container.querySelectorAll('.track-item-card');
+    const list = this.getActiveTrackList();
     cards.forEach((c, idx) => {
-      const isCur = audioCore.currentTrack && smartMusicManager.getTracks()[idx] && smartMusicManager.getTracks()[idx].id === audioCore.currentTrack.id;
+      const isCur = audioCore.currentTrack && list[idx] && list[idx].id === audioCore.currentTrack.id;
       if (isCur) {
         c.classList.add('active-playing');
       } else {
