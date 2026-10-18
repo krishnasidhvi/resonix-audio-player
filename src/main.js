@@ -73,12 +73,32 @@ class ResonixApp {
     const tabLocal = document.getElementById('tab-local-masters');
     const tabTrending = document.getElementById('tab-trending-hits');
     const tabVault = document.getElementById('tab-public-vault');
+    const tabStudioConsole = document.getElementById('tab-studio-console');
+    const tabLyricsNav = document.getElementById('tab-lyrics-nav');
+    const btnReturnCatalog = document.getElementById('btn-return-catalog');
+    const viewCatalog = document.getElementById('view-music-catalog');
+    const viewStudio = document.getElementById('view-studio-console');
+
     const langChips = document.getElementById('vault-lang-chips');
     const quickTags = document.getElementById('quick-search-tags');
     const loadMoreWrap = document.getElementById('btn-load-more-wrap');
 
+    const showCatalog = () => {
+      if (viewCatalog) viewCatalog.style.display = 'flex';
+      if (viewStudio) viewStudio.style.display = 'none';
+    };
+
+    const showStudio = () => {
+      if (viewCatalog) viewCatalog.style.display = 'none';
+      if (viewStudio) viewStudio.style.display = 'flex';
+      [tabLocal, tabTrending, tabVault, tabStudioConsole, tabLyricsNav].forEach(t => t && t.classList.remove('active'));
+      if (tabStudioConsole) tabStudioConsole.classList.add('active');
+      if (this.visualizer) this.visualizer.resize();
+    };
+
     const updateTabActive = (activeTab) => {
-      [tabLocal, tabTrending, tabVault].forEach(t => t && t.classList.remove('active'));
+      showCatalog();
+      [tabLocal, tabTrending, tabVault, tabStudioConsole, tabLyricsNav].forEach(t => t && t.classList.remove('active'));
       if (activeTab) activeTab.classList.add('active');
     };
 
@@ -113,6 +133,38 @@ class ResonixApp {
         this.renderTrackList();
       });
     }
+
+    if (tabStudioConsole) {
+      tabStudioConsole.addEventListener('click', () => {
+        showStudio();
+      });
+    }
+
+    if (btnReturnCatalog) {
+      btnReturnCatalog.addEventListener('click', () => {
+        updateTabActive(tabTrending);
+      });
+    }
+
+    if (tabLyricsNav) {
+      tabLyricsNav.addEventListener('click', () => {
+        this.toggleLyricsModal();
+      });
+    }
+
+    // Spotlight Play & Lyrics Actions
+    const spotPlay = document.getElementById('spotlight-btn-play');
+    const spotActionPlay = document.getElementById('spotlight-action-play');
+    const spotActionLyrics = document.getElementById('spotlight-action-lyrics');
+
+    const playCurrentSpotlight = () => {
+      const track = audioCore.currentTrack || this.activeDisplayList[0] || (this.getActiveTrackList())[0];
+      if (track) this.playTrack(track);
+    };
+
+    if (spotPlay) spotPlay.addEventListener('click', playCurrentSpotlight);
+    if (spotActionPlay) spotActionPlay.addEventListener('click', playCurrentSpotlight);
+    if (spotActionLyrics) spotActionLyrics.addEventListener('click', () => this.toggleLyricsModal(true));
 
     // Multilingual Language Chips Filter
     document.querySelectorAll('[data-vault-lang]').forEach(chip => {
@@ -802,6 +854,39 @@ class ResonixApp {
     if (artImg) {
       artImg.src = artUrl;
       artImg.onerror = () => window.handleImageError(artImg, track.title, track.artist, track.genre);
+    }
+
+    // Update Spotlight Hero Card
+    const spotArt = document.getElementById('spotlight-art-img');
+    const spotTitle = document.getElementById('spotlight-title');
+    const spotArtist = document.getElementById('spotlight-artist');
+    const spotPill = document.getElementById('spotlight-format-pill');
+
+    if (spotArt) {
+      spotArt.src = artUrl;
+      spotArt.onerror = () => window.handleImageError(spotArt, track.title, track.artist, track.genre);
+    }
+    if (spotTitle) spotTitle.textContent = track.title;
+    if (spotArtist) spotArtist.textContent = `${track.artist} • ${track.source_platform || 'Studio Master'}`;
+    if (spotPill) {
+      const isUpscaledTarget = track.sample_rate < 88200 || !track.is_native_hires;
+      spotPill.textContent = isUpscaledTarget ? 'AI 24/96 Remaster' : `Native ${track.format || 'FLAC 24/96'}`;
+    }
+
+    // Update Right Rail Now Playing Card
+    const sideArt = document.getElementById('sidebar-art-img');
+    const sideTitle = document.getElementById('sidebar-track-title');
+    const sideArtist = document.getElementById('sidebar-track-artist');
+    const sideBadge = document.getElementById('sidebar-quality-badge');
+
+    if (sideArt) {
+      sideArt.src = artUrl;
+      sideArt.onerror = () => window.handleImageError(sideArt, track.title, track.artist, track.genre);
+    }
+    if (sideTitle) sideTitle.textContent = track.title;
+    if (sideArtist) sideArtist.textContent = track.artist;
+    if (sideBadge) {
+      sideBadge.textContent = `${track.format || 'FLAC 24/96'} • ${track.bit_depth || 24}-BIT`;
     }
 
     // Update Studio Lounge Fullscreen Metadata
