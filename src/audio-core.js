@@ -50,10 +50,13 @@ export class AudioCore {
   resolveStreamUrl(url) {
     if (!url) return '';
     // If it's a local path or blob, return directly
-    if (url.startsWith('/audio/') || url.startsWith('blob:') || url.startsWith('data:')) {
+    if (url.startsWith('/audio/') || url.startsWith('./audio/') || url.startsWith('audio/') || url.startsWith('blob:') || url.startsWith('data:')) {
+      if (url.startsWith('/audio/')) {
+        return '.' + url; // Convert /audio/ to ./audio/ so GitHub Pages resolves under /repo-name/audio/
+      }
       return url;
     }
-    // If it's a remote URL, route through our Vite CORS proxy so it gets Access-Control-Allow-Origin: *
+    // If it's a remote URL, on local dev route through proxy; on GitHub Pages, direct stream works because CDN allows CORS
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         const parsed = new URL(url);
@@ -61,6 +64,9 @@ export class AudioCore {
           return url;
         }
       } catch (e) {}
+      if (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')) {
+        return url;
+      }
       return `/api/proxy-stream?url=${encodeURIComponent(url)}`;
     }
     return url;
