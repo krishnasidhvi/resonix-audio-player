@@ -793,11 +793,20 @@ class ResonixApp {
              onerror="window.handleImageError(this, '${safeTitleAttr}', '${safeArtistAttr}', '${safeGenreAttr}')" />
       `;
 
+      const isPlaying = audioCore.state === 'playing';
+      const eqWave = isCur ? `
+        <div class="playing-equalizer-wave ${isPlaying ? 'is-playing' : 'is-paused'}" title="${isPlaying ? 'Now Playing' : 'Paused'}">
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+          <span class="eq-bar"></span>
+        </div>
+      ` : '';
+
       card.innerHTML = `
         <div class="track-info-left" style="overflow: hidden;">
           ${thumbImg}
           <div class="track-meta-wrap" style="overflow: hidden;">
-            <div class="track-meta-title" title="${track.title}">${track.title}</div>
+            <div class="track-meta-title" title="${track.title}">${track.title}${eqWave}</div>
             <div class="track-meta-artist" title="${track.artist}">${track.artist} ${platformLabel}</div>
           </div>
         </div>
@@ -934,12 +943,28 @@ class ResonixApp {
     if (!container) return;
     const cards = container.querySelectorAll('.track-item-card');
     const list = this.getActiveTrackList();
+    const isPlaying = audioCore.state === 'playing';
     cards.forEach((c, idx) => {
       const isCur = audioCore.currentTrack && list[idx] && list[idx].id === audioCore.currentTrack.id;
+      const existingWave = c.querySelector('.playing-equalizer-wave');
       if (isCur) {
         c.classList.add('active-playing');
+        if (!existingWave) {
+          const metaTitle = c.querySelector('.track-meta-title');
+          if (metaTitle) {
+            const wave = document.createElement('div');
+            wave.className = `playing-equalizer-wave ${isPlaying ? 'is-playing' : 'is-paused'}`;
+            wave.title = isPlaying ? 'Now Playing' : 'Paused';
+            wave.innerHTML = '<span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>';
+            metaTitle.appendChild(wave);
+          }
+        } else {
+          existingWave.className = `playing-equalizer-wave ${isPlaying ? 'is-playing' : 'is-paused'}`;
+          existingWave.title = isPlaying ? 'Now Playing' : 'Paused';
+        }
       } else {
         c.classList.remove('active-playing');
+        if (existingWave) existingWave.remove();
       }
     });
   }
