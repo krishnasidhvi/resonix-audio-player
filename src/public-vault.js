@@ -1,6 +1,8 @@
 //! Resonix Multilingual Public Master Vault
 //! Catalog of Public Domain & Creative Commons Audio Tracks across English, Hindi, Telugu, Tamil, Japanese, Spanish, and Western Masters.
 
+import { ArtworkGenerator } from './artwork-generator.js';
+
 export const MULTILINGUAL_PUBLIC_TRACKS = [
   // --- TELUGU (తెలుగు) - Carnatic & Heritage ---
   {
@@ -338,7 +340,10 @@ export const MULTILINGUAL_PUBLIC_TRACKS = [
 
 export class PublicVaultManager {
   constructor() {
-    this.tracks = [...MULTILINGUAL_PUBLIC_TRACKS];
+    this.tracks = MULTILINGUAL_PUBLIC_TRACKS.map(t => ({
+      ...t,
+      image: t.image || ArtworkGenerator.getArtworkUrl(t)
+    }));
     this.activeLanguage = "all";
   }
 

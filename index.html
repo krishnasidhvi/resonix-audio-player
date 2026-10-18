@@ -41,10 +41,28 @@
     </div>
 
     <div class="header-actions">
+      <!-- 3D Spatial Audio & Binaural Soundstage Selector -->
+      <select id="spatial-mode-select" class="icon-btn-pill" title="3D Spatial Audio & Binaural Crossfeed" style="font-size: 0.74rem;">
+        <option value="direct">🎧 Direct Bit-Perfect</option>
+        <option value="studio">🎙️ Studio Crossfeed</option>
+        <option value="hall">🏛️ Concert Hall 3D</option>
+        <option value="warmth">🔥 Analog Tube Warmth</option>
+      </select>
+
+      <!-- A/B Remaster Audition Compare Button -->
+      <button id="btn-toggle-ab" class="icon-btn-pill" title="A/B Audition: Compare 24/96 AI Remaster vs Raw Compressed Audio">
+        <span id="ab-btn-badge">🔀 A/B Compare</span>
+      </button>
+
       <!-- AI BWE Remastering Toggle Button -->
       <button id="btn-toggle-bwe" class="icon-btn-pill bwe-active-btn" title="Toggle AI High-Res Upsampling & Harmonic Restoration">
         <span class="status-dot-pulse" style="background: #d500f9;"></span>
         <span id="bwe-btn-label">⚡ AI Remaster (BWE)</span>
+      </button>
+
+      <!-- Studio Lounge Fullscreen Mode -->
+      <button id="btn-open-lounge" class="icon-btn-pill" title="Enter Immersive Studio Lounge Fullscreen View">
+        <span>✨ Studio Lounge</span>
       </button>
 
       <button id="btn-open-lang" class="icon-btn-pill" title="Change Language">
@@ -255,13 +273,10 @@
   <!-- Bottom Audiophile Playback Bar -->
   <footer class="bottom-player-bar">
     <div class="player-now-playing">
-      <div class="player-art-square">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
+      <div class="player-art-square" id="player-art-wrap" title="Click to Open Studio Lounge Fullscreen">
+        <img id="player-art-img" src="" alt="Album Artwork" style="width: 100%; height: 100%; border-radius: var(--radius-md); object-fit: cover;" onerror="window.handleImageError(this, 'Now Playing', 'Resonix Studio', 'Hi-Res')" />
       </div>
-      <div style="overflow: hidden;">
+      <div style="overflow: hidden; cursor: pointer;" id="player-meta-wrap" title="Click to open Studio Lounge">
         <div id="player-track-title" class="player-title">Nocturne in C-Sharp Minor</div>
         <div id="player-track-artist" class="player-artist">Frédéric Chopin / Valentina Lisitsa</div>
       </div>
@@ -306,6 +321,16 @@
             <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
             <polyline points="7 23 3 19 7 15"></polyline>
             <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        </button>
+
+        <!-- Synchronized Lyrics & Acoustic Lore Toggle -->
+        <button id="btn-toggle-lyrics" class="btn-ctrl" title="View Synchronized Lyrics & Acoustic Lore">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
           </svg>
         </button>
       </div>
@@ -358,6 +383,132 @@
         <button id="btn-close-lang-modal" class="icon-btn-pill" style="background: var(--accent-cyan); color: #000; font-weight: 700; border: none; padding: 8px 18px;" data-i18n="modal.confirm">
           Save & Continue
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Synchronized Lyrics & Acoustic Lore Modal / Drawer -->
+  <div id="lyrics-modal" class="modal-overlay">
+    <div class="modal-card lyrics-modal-card">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="panel-badge" id="lyrics-lang-badge">Synchronized Lyrics</span>
+            <span id="lyrics-sync-indicator" class="status-dot-pulse" style="background: var(--accent-cyan);"></span>
+          </div>
+          <h3 id="lyrics-track-title" style="font-size: 1.2rem; font-weight: 700;">Track Lyrics</h3>
+          <p id="lyrics-track-artist" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Artist</p>
+        </div>
+        <button id="btn-close-lyrics" class="icon-btn-pill" style="padding: 6px 12px; font-weight: 700;">✕ Close</button>
+      </div>
+
+      <!-- Acoustic Story & Provenance Card -->
+      <div id="lyrics-lore-box" class="lyrics-lore-banner">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Dynamic Karaoke Scroller -->
+      <div class="lyrics-lines-container" id="lyrics-lines-container">
+        <!-- Injected dynamically with active line glow -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Studio Lounge: Fullscreen Immersive Audiophile Listening Room -->
+  <div id="studio-lounge-overlay" class="studio-lounge-overlay">
+    <div class="lounge-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span class="status-dot-pulse"></span>
+        <span style="font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 1px; color: var(--accent-cyan); font-weight: 700;">
+          RESONIX STUDIO LOUNGE • BIT-PERFECT AUDIOPHILE IMMERSION
+        </span>
+      </div>
+      <button id="btn-close-lounge" class="icon-btn-pill" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); padding: 8px 18px; font-weight: 700;">
+        ✕ Exit Lounge (Esc)
+      </button>
+    </div>
+
+    <div class="lounge-stage-grid">
+      <!-- Left: Giant Vinyl Turntable & Spinning Record -->
+      <div class="lounge-turntable-col">
+        <div class="vinyl-platter-assembly">
+          <div id="lounge-vinyl-record" class="lounge-vinyl-disc spinning">
+            <div class="vinyl-groove-lines"></div>
+            <div class="vinyl-center-art-wrap">
+              <img id="lounge-vinyl-art" src="" alt="Vinyl Center Art" onerror="window.handleImageError(this, 'Vinyl Master', 'Resonix', 'Hi-Res')" />
+              <div class="vinyl-center-spindle"></div>
+            </div>
+          </div>
+          <div class="tonearm-assembly">
+            <div class="tonearm-pivot"></div>
+            <div class="tonearm-rod"></div>
+            <div class="tonearm-cartridge"></div>
+          </div>
+        </div>
+
+        <div class="lounge-now-playing-meta">
+          <h2 id="lounge-track-title" class="lounge-title">Track Title</h2>
+          <p id="lounge-track-artist" class="lounge-artist">Artist Name</p>
+          <div id="lounge-track-badge" class="lounge-badge">24-BIT / 96kHz DIRECT MASTER</div>
+        </div>
+      </div>
+
+      <!-- Right: Live Audiophile Telemetry & Synced Lyrics Stream -->
+      <div class="lounge-telemetry-col">
+        <div class="telemetry-panel">
+          <div class="telemetry-grid">
+            <div class="telemetry-item">
+              <span class="telemetry-label">STREAM PROTOCOL</span>
+              <span id="tel-format" class="telemetry-val">FLAC 24/96</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">DYNAMIC RANGE</span>
+              <span id="tel-dr" class="telemetry-val" style="color: var(--accent-gold);">DR 16.5</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">SAMPLE RATE</span>
+              <span id="tel-sample-rate" class="telemetry-val">96,000 Hz</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">BIT DEPTH</span>
+              <span id="tel-bit-depth" class="telemetry-val">24-Bit Studio</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">SPATIAL STAGE</span>
+              <span id="tel-spatial" class="telemetry-val" style="color: var(--accent-purple);">Direct Bit-Perfect</span>
+            </div>
+            <div class="telemetry-item">
+              <span class="telemetry-label">HARDWARE DAC</span>
+              <span id="tel-dac" class="telemetry-val" style="color: var(--accent-cyan);">WASAPI Exclusive</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Synced Ticker in Lounge -->
+        <div class="lounge-lyrics-ticker-wrap">
+          <div class="panel-title-bar" style="margin-bottom: 8px;">
+            <h3 style="font-size: 0.85rem; color: var(--text-secondary); font-family: var(--font-mono);">
+              🎙️ REAL-TIME LYRICS & ACOUSTIC MOVEMENT
+            </h3>
+          </div>
+          <div id="lounge-lyrics-container" class="lounge-lyrics-scroll">
+            <!-- Synced lines rendered here -->
+          </div>
+        </div>
+
+        <!-- Large Scrubber & Controls in Lounge -->
+        <div class="lounge-controls-wrap">
+          <div class="scrubber-timeline-row">
+            <span id="lounge-time-current" class="time-stamp">00:00</span>
+            <input type="range" id="lounge-seek-slider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
+            <span id="lounge-time-total" class="time-stamp">04:14</span>
+          </div>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 14px;">
+            <button id="lounge-btn-prev" class="btn-ctrl" style="font-size: 1.4rem;">⏮️</button>
+            <button id="lounge-btn-play" class="btn-play-pause-main" style="width: 56px; height: 56px; font-size: 1.5rem;">▶</button>
+            <button id="lounge-btn-next" class="btn-ctrl" style="font-size: 1.4rem;">⏭️</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
