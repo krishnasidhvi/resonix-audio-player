@@ -1,9 +1,9 @@
 //! Resonix Reverse-Engineered Live Trending & Commercial Music Service
-//! Connects JioSaavn Open API + Curated Lossless & High-Bitrate Trending Hits
-//! Streams real, full-length 320kbps audio across Hindi, Telugu, English, Tamil, and Global Masters.
+//! Connects JioSaavn Open API + Audius Decentralized Protocol + Curated 320kbps Master Hits
+//! Streams full-length 320kbps audio across Hindi, Telugu, English, Tamil, and Global Masters.
 
 export const PRECACHED_TRENDING_HITS = [
-  // --- TELUGU TRENDING HITS (Tollywood / Anirudh / Thaman) ---
+  // --- TELUGU TRENDING HITS ---
   {
     id: 601,
     title: "Devara Thandavam (From 'Devara Part 1')",
@@ -109,7 +109,7 @@ export const PRECACHED_TRENDING_HITS = [
     }
   },
 
-  // --- HINDI TRENDING HITS (Bollywood / Arijit Singh / Indie) ---
+  // --- HINDI TRENDING HITS ---
   {
     id: 605,
     title: "Tum Hi Ho (From 'Aashiqui 2')",
@@ -379,8 +379,11 @@ export const PRECACHED_TRENDING_HITS = [
 export class LiveTrendingService {
   constructor() {
     this.precached = [...PRECACHED_TRENDING_HITS];
-    this.searchResults = [];
-    this.isSearching = false;
+    this.onlineCache = new Map(); // categoryKey -> track array
+    this.currentQuery = '';
+    this.currentPage = 1;
+    this.isLoading = false;
+    this.activeCategory = 'all';
   }
 
   getPrecached(language = 'all') {
@@ -389,42 +392,100 @@ export class LiveTrendingService {
   }
 
   /**
-   * Performs Live Reverse-Engineered Search with Full 320kbps Streams
-   * Returns real commercial songs with direct playable audio streams!
+   * Loads a rich online catalog for a specific language or genre
    */
-  async searchOnline(query) {
-    if (!query || query.trim().length < 2) {
-      this.searchResults = [];
-      return [];
+  async loadCategoryTracks(lang = 'all', page = 1) {
+    this.activeCategory = lang;
+    this.currentPage = page;
+    this.isLoading = true;
+
+    const cacheKey = `${lang}_p${page}`;
+    if (this.onlineCache.has(cacheKey) && page === 1) {
+      this.isLoading = false;
+      return this.onlineCache.get(cacheKey);
     }
 
-    this.isSearching = true;
-    const cleanQuery = query.trim();
+    let query = 'Trending Indian Top Hits';
+    if (lang === 'te') query = 'Telugu Trending Hits Tollywood';
+    else if (lang === 'hi') query = 'Bollywood Top 50 Trending Hits';
+    else if (lang === 'ta') query = 'Tamil Top Trending Hits Kollywood';
+    else if (lang === 'en') query = 'Top Pop Billboard Hits 2026';
+    else if (lang === 'ja') query = 'Japanese Classical Koto Airs';
+    else if (lang === 'es') query = 'Spanish Guitar Masterworks';
 
     try {
-      const searchUrl = `/api/saavn-search?q=${encodeURIComponent(cleanQuery)}`;
+      const searchUrl = `/api/saavn-search?q=${encodeURIComponent(query)}&n=25&p=${page}`;
       const res = await fetch(searchUrl);
       const json = await res.json();
+      let results = json.results || [];
 
-      if (json.results && json.results.length > 0) {
-        this.searchResults = json.results;
-      } else {
-        this.searchResults = this.precached.filter(t =>
-          t.title.toLowerCase().includes(cleanQuery.toLowerCase()) ||
-          t.artist.toLowerCase().includes(cleanQuery.toLowerCase())
-        );
+      // If category is 'en' or 'all', also mix in Audius decentralized tracks
+      if ((lang === 'en' || lang === 'all') && page === 1) {
+        try {
+          const audiusRes = await fetch('/api/audius-trending');
+          const audiusJson = await audiusRes.json();
+          if (audiusJson.results && audiusJson.results.length > 0) {
+            results = [...results, ...audiusJson.results.slice(0, 15)];
+          }
+        } catch (e) {
+          console.warn('Audius trending note:', e);
+        }
       }
+
+      // Merge with precached high-res local masters for this language so they are always at top
+      const localMatches = this.getPrecached(lang);
+      const combined = [...localMatches, ...results.filter(r => !localMatches.some(l => l.title === r.title))];
+
+      this.onlineCache.set(cacheKey, combined);
+      this.isLoading = false;
+      return combined;
     } catch (e) {
-      console.warn('Live online search fallback:', e);
-      this.searchResults = this.precached.filter(t =>
-        t.title.toLowerCase().includes(cleanQuery.toLowerCase()) ||
-        t.artist.toLowerCase().includes(cleanQuery.toLowerCase())
-      );
-    } finally {
-      this.isSearching = false;
+      console.warn('Failed to load category tracks online, using precached:', e);
+      this.isLoading = false;
+      return this.getPrecached(lang);
+    }
+  }
+
+  /**
+   * Performs Live Reverse-Engineered Search with Full 320kbps Streams
+   */
+  async searchOnline(query, page = 1) {
+    if (!query || query.trim().length < 2) {
+      return this.loadCategoryTracks(this.activeCategory, 1);
     }
 
-    return this.searchResults;
+    this.currentQuery = query.trim();
+    this.currentPage = page;
+    this.isLoading = true;
+
+    try {
+      const searchUrl = `/api/saavn-search?q=${encodeURIComponent(this.currentQuery)}&n=30&p=${page}`;
+      const res = await fetch(searchUrl);
+      const json = await res.json();
+      const results = json.results || [];
+
+      this.isLoading = false;
+      return results;
+    } catch (e) {
+      console.warn('Live online search fallback:', e);
+      this.isLoading = false;
+      return this.precached.filter(t =>
+        t.title.toLowerCase().includes(query.toLowerCase()) ||
+        t.artist.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+  }
+
+  /**
+   * Appends next page of results
+   */
+  async loadMore() {
+    this.currentPage += 1;
+    if (this.currentQuery && this.currentQuery.length >= 2) {
+      return this.searchOnline(this.currentQuery, this.currentPage);
+    } else {
+      return this.loadCategoryTracks(this.activeCategory, this.currentPage);
+    }
   }
 }
 

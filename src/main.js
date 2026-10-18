@@ -14,11 +14,13 @@ import { hwManager, BLUETOOTH_CODECS } from './bluetooth-manager.js';
 class ResonixApp {
   constructor() {
     this.currentTrackIndex = 0;
-    this.activeSourceTab = 'trending'; // Default to 'trending' so user sees trending songs immediately!
+    this.activeSourceTab = 'trending'; // Default to 'trending' so user sees online trending songs immediately!
     this.activeLanguageFilter = 'all'; // 'all', 'te', 'hi', 'ta', 'en', 'ja', 'es'
+    this.activeDisplayList = [];
     this.visualizer = null;
     this.equalizer = null;
     this.searchDebounceTimer = null;
+    this.currentSearchQuery = '';
   }
 
   async init() {
@@ -44,23 +46,21 @@ class ResonixApp {
       this.equalizer = new EqualizerManager(eqSlidersContainer, eqCurveSvg);
     }
 
-    // 4. Render Initial Library & Recommendations
-    const initialList = this.getActiveTrackList();
-    this.renderTrackList();
-    if (initialList.length > 0) {
-      this.updateCurrentTrackUI(initialList[0]);
-      smartMusicManager.setSeedTrack(initialList[0]);
-      this.updateRecommendationsAndRadar();
-    }
-    hwManager.updateDynamicBadge();
+    // 4. Setup Listeners
+    this.setupEventListeners();
+    this.setupAudioListeners();
 
-    // Show language chips by default in Trending mode
+    // 5. Load Initial Online Trending Songs
     const langChips = document.getElementById('vault-lang-chips');
     if (langChips) langChips.style.display = 'flex';
 
-    // 5. Setup Listeners
-    this.setupEventListeners();
-    this.setupAudioListeners();
+    await this.loadTrendingCategory(this.activeLanguageFilter);
+    if (this.activeDisplayList.length > 0) {
+      this.updateCurrentTrackUI(this.activeDisplayList[0]);
+      smartMusicManager.setSeedTrack(this.activeDisplayList[0]);
+      this.updateRecommendationsAndRadar();
+    }
+    hwManager.updateDynamicBadge();
   }
 
   setupEventListeners() {
@@ -69,6 +69,8 @@ class ResonixApp {
     const tabTrending = document.getElementById('tab-trending-hits');
     const tabVault = document.getElementById('tab-public-vault');
     const langChips = document.getElementById('vault-lang-chips');
+    const quickTags = document.getElementById('quick-search-tags');
+    const loadMoreWrap = document.getElementById('btn-load-more-wrap');
 
     const updateTabActive = (activeTab) => {
       [tabLocal, tabTrending, tabVault].forEach(t => t && t.classList.remove('active'));
@@ -76,11 +78,12 @@ class ResonixApp {
     };
 
     if (tabTrending) {
-      tabTrending.addEventListener('click', () => {
+      tabTrending.addEventListener('click', async () => {
         this.activeSourceTab = 'trending';
         updateTabActive(tabTrending);
         if (langChips) langChips.style.display = 'flex';
-        this.renderTrackList();
+        if (quickTags) quickTags.style.display = 'flex';
+        await this.loadTrendingCategory(this.activeLanguageFilter);
       });
     }
 
@@ -89,6 +92,8 @@ class ResonixApp {
         this.activeSourceTab = 'vault';
         updateTabActive(tabVault);
         if (langChips) langChips.style.display = 'flex';
+        if (quickTags) quickTags.style.display = 'none';
+        if (loadMoreWrap) loadMoreWrap.style.display = 'none';
         this.renderTrackList();
       });
     }
@@ -98,19 +103,51 @@ class ResonixApp {
         this.activeSourceTab = 'local';
         updateTabActive(tabLocal);
         if (langChips) langChips.style.display = 'none';
+        if (quickTags) quickTags.style.display = 'none';
+        if (loadMoreWrap) loadMoreWrap.style.display = 'none';
         this.renderTrackList();
       });
     }
 
     // Multilingual Language Chips Filter
     document.querySelectorAll('[data-vault-lang]').forEach(chip => {
-      chip.addEventListener('click', (e) => {
+      chip.addEventListener('click', async (e) => {
         document.querySelectorAll('[data-vault-lang]').forEach(c => c.classList.remove('active'));
         e.target.classList.add('active');
         this.activeLanguageFilter = e.target.getAttribute('data-vault-lang');
-        this.renderTrackList();
+        const input = document.getElementById('library-search-input');
+        if (input) input.value = '';
+        this.currentSearchQuery = '';
+
+        if (this.activeSourceTab === 'trending') {
+          await this.loadTrendingCategory(this.activeLanguageFilter);
+        } else {
+          this.renderTrackList();
+        }
       });
     });
+
+    // Quick Search Suggestion Tags
+    document.querySelectorAll('.quick-tag').forEach(tag => {
+      tag.addEventListener('click', async (e) => {
+        const query = e.target.getAttribute('data-quick-q');
+        const input = document.getElementById('library-search-input');
+        if (input) input.value = query;
+
+        this.activeSourceTab = 'trending';
+        updateTabActive(tabTrending);
+        if (langChips) langChips.style.display = 'flex';
+        if (quickTags) quickTags.style.display = 'flex';
+
+        await this.performOnlineSearch(query);
+      });
+    });
+
+    // Load More Songs Button
+    const btnLoadMore = document.getElementById('btn-load-more');
+    if (btnLoadMore) {
+      btnLoadMore.addEventListener('click', () => this.loadMoreSongs());
+    }
 
     // AI BWE Remaster Toggle Button
     const btnToggleBwe = document.getElementById('btn-toggle-bwe');
@@ -222,18 +259,19 @@ class ResonixApp {
         const q = e.target.value;
         if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
 
-        if (this.activeSourceTab === 'trending' && q.trim().length >= 2) {
-          const badge = document.getElementById('library-count-badge');
-          if (badge) badge.textContent = 'Searching Live...';
+        if (this.activeSourceTab === 'trending') {
+          if (q.trim().length >= 2) {
+            const badge = document.getElementById('library-count-badge');
+            if (badge) badge.textContent = 'Searching Online...';
 
-          this.searchDebounceTimer = setTimeout(async () => {
-            const liveResults = await liveTrending.searchOnline(q);
-            if (liveResults.length > 0) {
-              this.renderCustomList(liveResults);
-            } else {
-              this.renderTrackList(q);
-            }
-          }, 400);
+            this.searchDebounceTimer = setTimeout(async () => {
+              await this.performOnlineSearch(q);
+            }, 350);
+          } else if (q.trim().length === 0) {
+            this.searchDebounceTimer = setTimeout(async () => {
+              await this.loadTrendingCategory(this.activeLanguageFilter);
+            }, 200);
+          }
         } else {
           this.searchDebounceTimer = setTimeout(() => {
             this.renderTrackList(q);
@@ -330,21 +368,57 @@ class ResonixApp {
       hwManager.updateDynamicBadge();
     });
 
+    // Continuous Queue / Autoplay Next Track
     audioCore.on('ended', () => {
       this.nextTrack();
     });
   }
 
+  async loadTrendingCategory(lang) {
+    const badge = document.getElementById('library-count-badge');
+    const loadMoreWrap = document.getElementById('btn-load-more-wrap');
+    if (badge) badge.textContent = 'Pulling Live Songs...';
+
+    const list = await liveTrending.loadCategoryTracks(lang, 1);
+    this.activeDisplayList = list;
+    this.renderCustomList(list, `${list.length} Online Hits`);
+
+    if (loadMoreWrap) loadMoreWrap.style.display = 'block';
+  }
+
+  async performOnlineSearch(query) {
+    this.currentSearchQuery = query;
+    const badge = document.getElementById('library-count-badge');
+    const loadMoreWrap = document.getElementById('btn-load-more-wrap');
+    if (badge) badge.textContent = 'Searching 10M+ Online...';
+
+    const results = await liveTrending.searchOnline(query, 1);
+    this.activeDisplayList = results;
+    this.renderCustomList(results, `${results.length} Online Results`);
+
+    if (loadMoreWrap) loadMoreWrap.style.display = results.length > 0 ? 'block' : 'none';
+  }
+
+  async loadMoreSongs() {
+    const btnLoadMore = document.getElementById('btn-load-more');
+    if (btnLoadMore) btnLoadMore.textContent = '⏳ Loading More Online...';
+
+    const more = await liveTrending.loadMore();
+    if (more && more.length > 0) {
+      // Append non-duplicate tracks
+      const existingIds = new Set(this.activeDisplayList.map(t => t.id));
+      const fresh = more.filter(t => !existingIds.has(t.id));
+      this.activeDisplayList = [...this.activeDisplayList, ...fresh];
+      this.renderCustomList(this.activeDisplayList, `${this.activeDisplayList.length} Online Songs`);
+    }
+
+    if (btnLoadMore) btnLoadMore.textContent = '⬇️ Load More Songs (+25 Online)';
+  }
+
   getActiveTrackList(filter = '') {
     if (this.activeSourceTab === 'trending') {
-      const q = filter.trim().toLowerCase();
-      const allTrending = liveTrending.getPrecached(this.activeLanguageFilter);
-      return allTrending.filter(t =>
-        !q ||
-        t.title.toLowerCase().includes(q) ||
-        t.artist.toLowerCase().includes(q) ||
-        t.genre.toLowerCase().includes(q)
-      );
+      if (this.activeDisplayList.length > 0) return this.activeDisplayList;
+      return liveTrending.getPrecached(this.activeLanguageFilter);
     } else if (this.activeSourceTab === 'vault') {
       return publicVault.getTracks(filter, this.activeLanguageFilter);
     } else {
@@ -359,13 +433,13 @@ class ResonixApp {
     }
   }
 
-  renderCustomList(list) {
+  renderCustomList(list, badgeText) {
     const container = document.getElementById('track-list-container');
     if (!container) return;
     container.innerHTML = '';
 
     const countBadge = document.getElementById('library-count-badge');
-    if (countBadge) countBadge.textContent = `${list.length} Live Results`;
+    if (countBadge && badgeText) countBadge.textContent = badgeText;
 
     this.renderCards(list, container);
   }
@@ -387,6 +461,15 @@ class ResonixApp {
   }
 
   renderCards(list, container) {
+    if (!list || list.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 24px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+          No tracks found. Try clicking a trending tag or searching above.
+        </div>
+      `;
+      return;
+    }
+
     list.forEach((track, idx) => {
       const card = document.createElement('div');
       const isCur = audioCore.currentTrack && audioCore.currentTrack.id === track.id;
@@ -401,8 +484,12 @@ class ResonixApp {
         ? `<span style="font-size: 0.65rem; color: var(--text-tertiary); font-family: var(--font-mono); margin-left: 6px;">• ${track.source_platform}</span>`
         : '';
 
+      const durationLabel = track.duration_seconds
+        ? `<span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-secondary); margin-left: 6px;">${this.formatTime(track.duration_seconds)}</span>`
+        : '';
+
       const thumbImg = track.image
-        ? `<img src="${track.image}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover;" alt="Artwork" />`
+        ? `<img src="${track.image}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" alt="Artwork" loading="lazy" />`
         : `<div class="track-thumb">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18V5l12-2v13"></path>
@@ -412,15 +499,16 @@ class ResonixApp {
            </div>`;
 
       card.innerHTML = `
-        <div class="track-info-left">
+        <div class="track-info-left" style="overflow: hidden;">
           ${thumbImg}
-          <div class="track-meta-wrap">
-            <div class="track-meta-title">${track.title}</div>
-            <div class="track-meta-artist">${track.artist} ${platformLabel}</div>
+          <div class="track-meta-wrap" style="overflow: hidden;">
+            <div class="track-meta-title" title="${track.title}">${track.title}</div>
+            <div class="track-meta-artist" title="${track.artist}">${track.artist} ${platformLabel}</div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
           ${qualityPill}
+          ${durationLabel}
         </div>
       `;
 
@@ -444,12 +532,14 @@ class ResonixApp {
 
   nextTrack() {
     const list = this.getActiveTrackList();
+    if (list.length === 0) return;
     this.currentTrackIndex = (this.currentTrackIndex + 1) % list.length;
     this.playTrack(list[this.currentTrackIndex]);
   }
 
   prevTrack() {
     const list = this.getActiveTrackList();
+    if (list.length === 0) return;
     this.currentTrackIndex = (this.currentTrackIndex - 1 + list.length) % list.length;
     this.playTrack(list[this.currentTrackIndex]);
   }
@@ -516,6 +606,7 @@ class ResonixApp {
   }
 
   formatTime(secs) {
+    if (!secs || isNaN(secs)) return '00:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;

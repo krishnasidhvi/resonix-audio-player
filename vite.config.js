@@ -30,10 +30,12 @@ export default defineConfig({
     {
       name: 'resonix-audio-and-search-engine',
       configureServer(server) {
-        // 1. Live Saavn Search with Full 320kbps Stream Decryption
+        // 1. Live Saavn Search with Full 320kbps Stream Decryption & Pagination
         server.middlewares.use('/api/saavn-search', async (req, res) => {
           const urlParams = new URL(req.url, 'http://localhost:5173');
           const query = urlParams.searchParams.get('q');
+          const limit = parseInt(urlParams.searchParams.get('n') || '25', 10);
+          const page = parseInt(urlParams.searchParams.get('p') || '1', 10);
 
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Content-Type', 'application/json');
@@ -43,7 +45,7 @@ export default defineConfig({
             return;
           }
 
-          const saavnUrl = 'https://www.jiosaavn.com/api.php?__call=search.getResults&_format=json&_marker=0&api_version=4&ctx=web6dot0&n=12&p=1&q=' + encodeURIComponent(query.trim());
+          const saavnUrl = `https://www.jiosaavn.com/api.php?__call=search.getResults&_format=json&_marker=0&api_version=4&ctx=web6dot0&n=${limit}&p=${page}&q=${encodeURIComponent(query.trim())}`;
 
           https.get(saavnUrl, {
             headers: {
@@ -68,7 +70,7 @@ export default defineConfig({
                   const langCode = lang.includes('telugu') ? 'te' : lang.includes('tamil') ? 'ta' : lang.includes('english') ? 'en' : 'hi';
 
                   return {
-                    id: 8000 + idx,
+                    id: 80000 + page * 1000 + idx,
                     title: rawTitle,
                     artist: rawArtist,
                     album: (r.album || rawTitle).replace(/&quot;/g, '"'),
@@ -94,7 +96,7 @@ export default defineConfig({
                     }
                   };
                 });
-                res.end(JSON.stringify({ results: formatted }));
+                res.end(JSON.stringify({ results: formatted, total: json.total || formatted.length }));
               } catch (err) {
                 res.end(JSON.stringify({ error: err.message, results: [] }));
               }
@@ -104,7 +106,55 @@ export default defineConfig({
           });
         });
 
-        // 2. Audio CORS Proxy for Remote CDNs
+        // 2. Audius Global Decentralized Trending Tracks
+        server.middlewares.use('/api/audius-trending', (req, res) => {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Content-Type', 'application/json');
+
+          const audiusUrl = 'https://discoveryprovider.audius.co/v1/tracks/trending?app_name=RESONIX&limit=25';
+          https.get(audiusUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (apiRes) => {
+            let data = '';
+            apiRes.on('data', d => data += d);
+            apiRes.on('end', () => {
+              try {
+                const json = JSON.parse(data);
+                const list = (json.data || []).map((t, idx) => ({
+                  id: 90000 + idx,
+                  title: t.title,
+                  artist: t.user?.name || 'Audius Creator',
+                  album: t.genre || 'Electronic / Indie Global',
+                  language: 'en',
+                  language_label: 'GLOBAL',
+                  genre: t.genre || 'Global Pop / EDM',
+                  duration_seconds: t.duration || 210,
+                  sample_rate: 44100,
+                  bit_depth: 16,
+                  format: 'MP3 320k Lossless',
+                  is_native_hires: false,
+                  source_platform: 'Audius Global Protocol',
+                  image: t.artwork ? (t.artwork['480x480'] || t.artwork['150x150']) : null,
+                  stream_url: `https://discoveryprovider.audius.co/v1/tracks/${t.id}/stream?app_name=RESONIX`,
+                  features: {
+                    tempo_bpm: 124,
+                    energy: 0.82,
+                    spectral_centroid: 3500,
+                    danceability: 0.78,
+                    valence: 0.68,
+                    acousticness: 0.25,
+                    dynamic_range_dr: 14.0
+                  }
+                }));
+                res.end(JSON.stringify({ results: list }));
+              } catch (err) {
+                res.end(JSON.stringify({ error: err.message, results: [] }));
+              }
+            });
+          }).on('error', (err) => {
+            res.end(JSON.stringify({ error: err.message, results: [] }));
+          });
+        });
+
+        // 3. Audio CORS Proxy for Remote CDNs
         server.middlewares.use('/api/proxy-stream', (req, res) => {
           const urlParams = new URL(req.url, 'http://localhost:5173');
           const targetUrl = urlParams.searchParams.get('url');
