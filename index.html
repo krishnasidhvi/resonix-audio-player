@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Resonix Studio • High-Resolution Audio Engine & Smart Music Manager</title>
+  <meta name="description" content="Open-Source Bit-Perfect High-Resolution Audio Player and Smart Music Manager for Desktop & Mobile with WASAPI Exclusive, CoreAudio, ALSA, AAudio, LDAC Bluetooth Passthrough, and Local Acoustic Vector Cosine Similarity." />
+  <meta name="theme-color" content="#0a0c10" />
+
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./src/index.css" />
+</head>
+<body>
+
+  <!-- Top Audiophile Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V5l12-2v13"></path>
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="18" cy="16" r="3"></circle>
+        </svg>
+      </div>
+      <div class="brand-title-wrap">
+        <h1 data-i18n="header.appName">Resonix Studio</h1>
+        <p data-i18n="header.tagline">High-Resolution Audio Engine & Smart Music Manager</p>
+      </div>
+    </div>
+
+    <!-- Dynamic Stream Badge (WASAPI Exclusive or Bluetooth LDAC Passthrough) -->
+    <div class="header-badges">
+      <div id="active-stream-badge" class="stream-badge-pill badge-cyan-exclusive">
+        <span class="status-dot-pulse"></span>
+        <span id="stream-badge-text">FLAC 24-bit/192kHz • Bit-Perfect WASAPI Exclusive</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btn-open-lang" class="icon-btn-pill" title="Change Language">
+        <span id="lang-flag">🇺🇸</span>
+        <span id="lang-name" data-i18n="header.changeLang">Language</span>
+      </button>
+
+      <button id="btn-import-audio" class="icon-btn-pill" title="Import Audio Files">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span data-i18n="library.addFiles">Import Audio</span>
+      </button>
+      <input type="file" id="file-input-audio" accept="audio/*,.flac,.wav,.aiff,.dsd,.dop,.alac,.mp3,.aac" style="display: none;" />
+    </div>
+  </header>
+
+  <!-- Studio Main Workspace Grid -->
+  <main class="studio-layout">
+
+    <!-- Left Column: Library & Lossless Navigation -->
+    <aside class="glass-panel left-panel">
+      <div class="panel-title-bar">
+        <h2 data-i18n="library.title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          Music Library
+        </h2>
+        <span class="panel-badge" id="library-count-badge">6 Masters</span>
+      </div>
+
+      <div class="search-box-wrap">
+        <svg class="search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="library-search-input" class="search-input" placeholder="Search tracks, artists, albums, or hi-res formats..." data-i18n="library.searchPlaceholder" />
+      </div>
+
+      <!-- Scrollable Track List -->
+      <div class="track-scroll-list" id="track-list-container">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </aside>
+
+    <!-- Center Column: 60FPS High-Res FFT Spectrum Visualizer & 10-Band Parametric EQ -->
+    <section class="center-stage">
+      
+      <!-- 60FPS Spectrum / Oscilloscope Canvas -->
+      <div class="visualizer-card">
+        <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
+        <div class="visualizer-mode-switch">
+          <button class="vis-btn active" data-vis-mode="spectrum">64-FFT</button>
+          <button class="vis-btn" data-vis-mode="oscilloscope">Waveform</button>
+          <button class="vis-btn" data-vis-mode="lissajous">Lissajous</button>
+        </div>
+      </div>
+
+      <!-- 10-Band Audiophile Parametric Equalizer -->
+      <div class="eq-curve-section">
+        <div class="panel-title-bar">
+          <h2 data-i18n="equalizer.title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 21v-7"></path>
+              <path d="M4 10V3"></path>
+              <path d="M12 21v-9"></path>
+              <path d="M12 8V3"></path>
+              <path d="M20 21v-5"></path>
+              <path d="M20 12V3"></path>
+              <circle cx="4" cy="12" r="2"></circle>
+              <circle cx="12" cy="10" r="2"></circle>
+              <circle cx="20" cy="14" r="2"></circle>
+            </svg>
+            10-Band Parametric Equalizer
+          </h2>
+          <div style="display: flex; gap: 8px;">
+            <select id="eq-preset-select" class="icon-btn-pill" style="padding: 4px 10px; font-size: 0.76rem;">
+              <option value="flat">Studio Flat</option>
+              <option value="warm">Audiophile Warmth (Tube)</option>
+              <option value="air">Hi-Res Treble Air</option>
+              <option value="jazz">Acoustic & Jazz</option>
+              <option value="vocal">Vocal Intimacy</option>
+              <option value="bass">Sub-Bass Control</option>
+            </select>
+            <button id="btn-eq-bypass" class="icon-btn-pill" style="padding: 4px 10px; font-size: 0.76rem;">Bypass</button>
+          </div>
+        </div>
+
+        <!-- SVG Live Frequency Response Curve -->
+        <svg id="eq-curve-svg" class="eq-curve-svg" viewBox="0 0 640 140"></svg>
+
+        <!-- Vertical Slider Array -->
+        <div class="eq-sliders-row" id="eq-sliders-container">
+          <!-- Populated dynamically via equalizer.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: 7D Acoustic Profile Radar & Local Cosine Similarity Recommendations -->
+    <aside class="glass-panel right-stage">
+      <div class="panel-title-bar">
+        <h2 data-i18n="smartFlow.radarTitle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Acoustic Profile Radar
+        </h2>
+        <span class="panel-badge">7-D Vector</span>
+      </div>
+
+      <!-- Radar SVG Chart -->
+      <div class="radar-chart-wrap">
+        <svg id="radar-chart-svg" class="radar-svg" viewBox="0 0 320 320"></svg>
+      </div>
+
+      <!-- Local Cosine Similarity Recommendations ("Smart Flow") -->
+      <div class="panel-title-bar" style="margin-top: 10px;">
+        <h2 data-i18n="smartFlow.similarTracks">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M16 12l-4-4-4 4"></path>
+          </svg>
+          Smart Acoustic Matches
+        </h2>
+        <span class="panel-badge">Offline Cosine</span>
+      </div>
+
+      <div class="recommendations-box" id="recommendations-container">
+        <!-- Rendered dynamically via smart-manager.js -->
+      </div>
+
+      <!-- Hardware & Bluetooth Mode Quick Select -->
+      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+        <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 6px;">
+          HARDWARE DAC / BLUETOOTH PASSTHROUGH
+        </label>
+        <select id="hardware-output-select" class="icon-btn-pill" style="width: 100%; justify-content: space-between; font-size: 0.78rem;">
+          <option value="wasapi_exclusive">WASAPI Exclusive (AudioQuest DragonFly)</option>
+          <option value="android_direct">Android AAudio Direct USB DAC</option>
+          <option value="coreaudio_bitperfect">CoreAudio Bit-Perfect Direct</option>
+          <option value="alsa_hw_direct">ALSA Direct hw:0,0 Bit-Perfect</option>
+          <option value="bluetooth_passthrough">Sony WH-1000XM5 (LDAC 990kbps)</option>
+        </select>
+
+        <div id="bt-codec-row" style="display: none; margin-top: 8px;">
+          <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 4px;">
+            TEST WIRELESS CODEC
+          </label>
+          <select id="bluetooth-codec-select" class="icon-btn-pill" style="width: 100%; font-size: 0.75rem;">
+            <option value="ldac990">LDAC 990 kbps (Hi-Res Audio Wireless)</option>
+            <option value="ldac660">LDAC 660 kbps</option>
+            <option value="aptxLossless">Qualcomm aptX Lossless (16-bit/44.1k)</option>
+            <option value="aptxHd">Qualcomm aptX HD (24-bit/48k)</option>
+            <option value="aptxAdaptive">Qualcomm aptX Adaptive (40ms Low Latency)</option>
+            <option value="aac">Apple AAC (256 kbps)</option>
+            <option value="sbc">Standard SBC (328 kbps)</option>
+          </select>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Bottom Audiophile Playback Bar -->
+  <footer class="bottom-player-bar">
+    <div class="player-now-playing">
+      <div class="player-art-square">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </div>
+      <div style="overflow: hidden;">
+        <div id="player-track-title" class="player-title">Nocturne in C-Sharp Minor</div>
+        <div id="player-track-artist" class="player-artist">Frédéric Chopin / Valentina Lisitsa</div>
+      </div>
+    </div>
+
+    <!-- Center Playback Controls & Scrubber -->
+    <div class="player-center-controls">
+      <div class="control-buttons-row">
+        <button id="btn-shuffle" class="btn-ctrl" title="Shuffle">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 3 21 3 21 8"></polyline>
+            <line x1="4" y1="20" x2="21" y2="3"></line>
+            <polyline points="21 16 21 21 16 21"></polyline>
+            <line x1="15" y1="15" x2="21" y2="21"></line>
+            <line x1="4" y1="4" x2="9" y2="9"></line>
+          </svg>
+        </button>
+
+        <button id="btn-prev-track" class="btn-ctrl" title="Previous Track">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+            <line x1="5" y1="19" x2="5" y2="5"></line>
+          </svg>
+        </button>
+
+        <button id="btn-play-pause" class="btn-play-pause-main" title="Play / Pause">
+          <svg id="play-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+
+        <button id="btn-next-track" class="btn-ctrl" title="Next Track">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+            <line x1="19" y1="5" x2="19" y2="19"></line>
+          </svg>
+        </button>
+
+        <button id="btn-repeat" class="btn-ctrl" title="Repeat Track">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="17 1 21 5 17 9"></polyline>
+            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+            <polyline points="7 23 3 19 7 15"></polyline>
+            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="scrubber-timeline-row">
+        <span id="player-time-current" class="time-stamp">00:00</span>
+        <input type="range" id="player-seek-slider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
+        <span id="player-time-total" class="time-stamp">04:14</span>
+      </div>
+    </div>
+
+    <!-- Right Dock: Ring Buffer Stats, Dynamic Volume, Underflow Counter -->
+    <div class="player-right-dock">
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
+        <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-cyan);">
+          SPSC RINGBUF: <span id="metric-ringbuf">98.4%</span>
+        </span>
+        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary);">
+          UNDERFLOWS: <span id="metric-underflows">0</span>
+        </span>
+      </div>
+
+      <div class="volume-slider-wrap">
+        <button id="btn-volume-mute" class="btn-ctrl" title="Mute">
+          <svg id="volume-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.85" />
+      </div>
+    </div>
+  </footer>
+
+  <!-- Preferred Language Selection Modal -->
+  <div id="lang-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 data-i18n="modal.title">Select Preferred Language</h3>
+        <p style="font-size: 0.82rem; color: var(--text-secondary);" data-i18n="modal.desc">
+          Resonix Studio supports universal typography and bidirectional LTR/RTL layouts.
+        </p>
+      </div>
+
+      <div class="lang-grid" id="lang-options-container">
+        <!-- Rendered in main.js -->
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+        <button id="btn-close-lang-modal" class="icon-btn-pill" style="background: var(--accent-cyan); color: #000; font-weight: 700; border: none; padding: 8px 18px;" data-i18n="modal.confirm">
+          Save & Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
