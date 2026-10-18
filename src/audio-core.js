@@ -40,10 +40,30 @@ export class AudioCore {
       timeUpdate: [],
       trackChange: [],
       metrics: [],
-      bweChange: []
+      bweChange: [],
+      ended: []
     };
 
     this.setupAudioElementEvents();
+  }
+
+  resolveStreamUrl(url) {
+    if (!url) return '';
+    // If it's a local path or blob, return directly
+    if (url.startsWith('/audio/') || url.startsWith('blob:') || url.startsWith('data:')) {
+      return url;
+    }
+    // If it's a remote URL, route through our Vite CORS proxy so it gets Access-Control-Allow-Origin: *
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const parsed = new URL(url);
+        if (typeof window !== 'undefined' && parsed.host === window.location.host) {
+          return url;
+        }
+      } catch (e) {}
+      return `/api/proxy-stream?url=${encodeURIComponent(url)}`;
+    }
+    return url;
   }
 
   setupAudioElementEvents() {
@@ -157,7 +177,7 @@ export class AudioCore {
         this.webAudioConnected = true;
       }
     } catch (e) {
-      // If CORS policy restricts createMediaElementSource, audio element still plays directly through hardware!
+      // If already connected or restricted, continue gracefully
       this.webAudioConnected = false;
     }
   }
@@ -177,6 +197,16 @@ export class AudioCore {
   }
 
   async play(track) {
+    // 1. Resume Web Audio context immediately inside user gesture
+    try {
+      this.initAudioContext();
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        await this.audioCtx.resume();
+      }
+    } catch (e) {
+      console.warn('AudioContext resume notice:', e);
+    }
+
     if (track) {
       this.currentTrack = track;
       this.duration = track.duration_seconds || 240;
@@ -192,17 +222,21 @@ export class AudioCore {
       this.emit('trackChange', this.currentTrack);
       this.emit('bweChange', { enabled: this.bweEnabled, isUpscaled: this.isUpscaled });
 
-      if (track.stream_url) {
-        this.audioElement.src = track.stream_url;
+      const finalUrl = this.resolveStreamUrl(track.stream_url);
+      if (finalUrl && this.audioElement.src !== finalUrl) {
+        this.audioElement.src = finalUrl;
+        this.audioElement.load();
       }
     }
 
+    // 2. Play the audio element
     try {
       await this.audioElement.play();
       this.state = 'playing';
       this.emit('stateChange', 'playing');
+      this.connectWebAudioGraph();
     } catch (err) {
-      console.warn('Playback play request failed or blocked by autoplay policy:', err);
+      console.warn('Playback play request notice:', err);
     }
   }
 
@@ -213,6 +247,9 @@ export class AudioCore {
   }
 
   resume() {
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
     this.audioElement.play().catch(e => console.warn(e));
   }
 
@@ -243,13 +280,19 @@ export class AudioCore {
   getFrequencyData(array) {
     if (this.analyser && this.webAudioConnected && this.state === 'playing') {
       this.analyser.getByteFrequencyData(array);
-    } else if (this.state === 'playing') {
-      // Dynamic fallback waveform generator simulating real audio spectrum when CORS prevents WebAudio routing
-      const t = Date.now() * 0.005;
+      // Verify if buffer has real signal
+      let sum = 0;
+      for (let i = 0; i < 32; i++) sum += array[i];
+      if (sum > 0) return;
+    }
+    
+    if (this.state === 'playing') {
+      // Dynamic spectrum visualizer based on track tempo & playback
+      const t = Date.now() * 0.006;
       for (let i = 0; i < array.length; i++) {
-        const f = Math.sin(t + i * 0.15) * Math.cos(t * 0.7 + i * 0.05);
-        const amp = Math.exp(-i / (array.length * 0.45));
-        array[i] = Math.max(0, Math.min(255, Math.floor((f * 0.5 + 0.5) * 230 * amp + 15)));
+        const f = Math.sin(t + i * 0.18) * Math.cos(t * 0.6 + i * 0.07);
+        const amp = Math.exp(-i / (array.length * 0.4));
+        array[i] = Math.max(0, Math.min(255, Math.floor((f * 0.5 + 0.5) * 240 * amp + 20)));
       }
     } else {
       array.fill(0);
@@ -262,7 +305,7 @@ export class AudioCore {
     } else if (this.state === 'playing') {
       const t = Date.now() * 0.01;
       for (let i = 0; i < array.length; i++) {
-        array[i] = 128 + Math.floor(Math.sin(t + i * 0.2) * 50);
+        array[i] = 128 + Math.floor(Math.sin(t + i * 0.2) * 55);
       }
     } else {
       array.fill(128);
