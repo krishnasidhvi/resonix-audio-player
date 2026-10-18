@@ -3,287 +3,379 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Resonix Studio • High-Resolution Audio Engine & Smart Music Manager</title>
-  <meta name="description" content="Open-Source Bit-Perfect High-Resolution Audio Player and Smart Music Manager for Desktop & Mobile with WASAPI Exclusive, CoreAudio, ALSA, AAudio, LDAC Bluetooth Passthrough, and Local Acoustic Vector Cosine Similarity." />
-  <meta name="theme-color" content="#0a0c10" />
+  <title>Resonix Studio • Minimalist High-Resolution Audio Engine</title>
+  <meta name="description" content="Minimalist Bit-Perfect High-Resolution Audio Player and Smart Music Manager with 320kbps Lossless Streams, WASAPI Exclusive, CoreAudio, ALSA, LDAC Bluetooth Passthrough, and Real-Time Acoustic Vector AI." />
+  <meta name="theme-color" content="#07090e" />
 
-  <!-- Google Fonts Preconnect -->
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <script type="module" crossorigin src="./assets/index-DZVkxfgl.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-C6fS4yLk.css">
+  <script type="module" crossorigin src="./assets/index-CmA_2J1u.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BSnnkgos.css">
 </head>
 <body>
 
-  <!-- Top Audiophile Header -->
+  <!-- Ambient Dynamic Colored Mesh Glow (Reactive to Playing Track) -->
+  <div class="ambient-glow-mesh" id="ambient-mesh"></div>
+
+  <!-- Top Minimalist App Header -->
   <header class="app-header">
     <div class="brand-section">
       <div class="brand-logo-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V5l12-2v13"></path>
           <circle cx="6" cy="18" r="3"></circle>
           <circle cx="18" cy="16" r="3"></circle>
         </svg>
       </div>
       <div class="brand-title-wrap">
-        <h1 data-i18n="header.appName">Resonix Studio</h1>
-        <p data-i18n="header.tagline">High-Resolution Audio Engine & Smart Music Manager</p>
+        <h1 data-i18n="header.appName">Resonix</h1>
+        <span class="brand-tagline">Studio Hi-Res</span>
       </div>
     </div>
 
-    <!-- Dynamic Stream Badge (WASAPI Exclusive, Bluetooth LDAC, or AI-Remastered 24/96) -->
-    <div class="header-badges">
-      <div id="active-stream-badge" class="stream-badge-pill badge-cyan-exclusive">
-        <span class="status-dot-pulse"></span>
-        <span id="stream-badge-text">FLAC 24-bit/192kHz • Bit-Perfect WASAPI Exclusive</span>
-      </div>
+    <!-- Centered Spacious Search Bar -->
+    <div class="header-search-wrap">
+      <svg class="search-icon-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="library-search-input" class="search-input" placeholder="Search 10M+ songs, artists, albums, or public masters..." data-i18n="library.searchPlaceholder" autocomplete="off" />
+      <span class="search-count-pill" id="library-count-badge">Ready</span>
     </div>
 
+    <!-- Header Actions & Audiophile Engine Switches -->
     <div class="header-actions">
-      <!-- 3D Spatial Audio & Binaural Soundstage Selector -->
-      <select id="spatial-mode-select" class="icon-btn-pill" title="3D Spatial Audio & Binaural Crossfeed" style="font-size: 0.74rem;">
-        <option value="direct">🎧 Direct Bit-Perfect</option>
-        <option value="studio">🎙️ Studio Crossfeed</option>
-        <option value="hall">🏛️ Concert Hall 3D</option>
-        <option value="warmth">🔥 Analog Tube Warmth</option>
-      </select>
+      <!-- Active Stream Resolution Badge -->
+      <div id="active-stream-badge" class="stream-badge-pill badge-cyan-exclusive" title="Current Bit-Perfect DAC Stream State">
+        <span class="status-dot-pulse"></span>
+        <span id="stream-badge-text">FLAC 24-bit/96kHz • Bit-Perfect WASAPI</span>
+      </div>
 
-      <!-- A/B Remaster Audition Compare Button -->
-      <button id="btn-toggle-ab" class="icon-btn-pill" title="A/B Audition: Compare 24/96 AI Remaster vs Raw Compressed Audio">
+      <!-- A/B Audition Compare -->
+      <button id="btn-toggle-ab" class="action-pill-btn" title="A/B Audition: Compare 24/96 AI Remaster vs Raw Compressed Audio">
         <span id="ab-btn-badge">🔀 A/B Compare</span>
       </button>
 
-      <!-- AI BWE Remastering Toggle Button -->
-      <button id="btn-toggle-bwe" class="icon-btn-pill bwe-active-btn" title="Toggle AI High-Res Upsampling & Harmonic Restoration">
+      <!-- AI BWE Remaster Toggle -->
+      <button id="btn-toggle-bwe" class="action-pill-btn bwe-active-btn" title="Toggle AI High-Res Upsampling & Harmonic Restoration">
         <span class="status-dot-pulse" style="background: #d500f9;"></span>
-        <span id="bwe-btn-label">⚡ AI Remaster (BWE)</span>
+        <span id="bwe-btn-label">⚡ AI 24/96</span>
       </button>
 
-      <!-- Studio Lounge Fullscreen Mode -->
-      <button id="btn-open-lounge" class="icon-btn-pill" title="Enter Immersive Studio Lounge Fullscreen View">
-        <span>✨ Studio Lounge</span>
+      <!-- Fullscreen Studio Lounge -->
+      <button id="btn-open-lounge" class="action-pill-btn lounge-accent-btn" title="Enter Immersive Studio Lounge Fullscreen View">
+        <span>✨ Lounge</span>
       </button>
 
-      <button id="btn-open-lang" class="icon-btn-pill" title="Change Language">
+      <!-- Preferred Language Selector -->
+      <button id="btn-open-lang" class="action-pill-btn icon-only-mobile" title="Change Language">
         <span id="lang-flag">🇺🇸</span>
-        <span id="lang-name" data-i18n="header.changeLang">Language</span>
+        <span id="lang-name" class="hide-mobile" data-i18n="header.changeLang">EN</span>
       </button>
 
-      <button id="btn-import-audio" class="icon-btn-pill" title="Import Audio Files">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <!-- Import Local Audio -->
+      <button id="btn-import-audio" class="action-pill-btn" title="Import Audio Files">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        <span data-i18n="library.addFiles">Import Audio</span>
+        <span class="hide-mobile" data-i18n="library.addFiles">Import</span>
       </button>
       <input type="file" id="file-input-audio" accept="audio/*,.flac,.wav,.aiff,.dsd,.dop,.alac,.mp3,.aac" style="display: none;" />
     </div>
   </header>
 
-  <!-- Studio Main Workspace Grid -->
-  <main class="studio-layout">
+  <!-- Clean 3-Zone Workspace Layout -->
+  <main class="app-layout">
 
-    <!-- Left Column: Library & Public Vault Navigation -->
-    <aside class="glass-panel left-panel">
-      <!-- Library Source Tabs -->
-      <div class="nav-tab-list">
-        <button id="tab-local-masters" class="nav-tab-btn" data-i18n="library.localTab">Local Masters</button>
-        <button id="tab-trending-hits" class="nav-tab-btn active">🔥 Trending Hits</button>
-        <button id="tab-public-vault" class="nav-tab-btn" data-i18n="library.vaultTab">Public Vault</button>
-      </div>
-
-      <div class="panel-title-bar">
-        <h2 id="library-section-title" data-i18n="library.title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          Music Library
-        </h2>
-        <span class="panel-badge" id="library-count-badge">6 Masters</span>
-      </div>
-
-      <div class="search-box-wrap">
-        <svg class="search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" id="library-search-input" class="search-input" placeholder="Search public domain masters, Beethoven, Bach, Chopin..." data-i18n="library.searchPlaceholder" />
-      </div>
-
-      <!-- Quick Search Suggestion Tags -->
-      <div id="quick-search-tags" class="genre-chips-wrap" style="margin-top: -6px; margin-bottom: 10px; gap: 5px;">
-        <button class="genre-chip quick-tag" data-quick-q="Top Trending Songs">🔥 Top 50</button>
-        <button class="genre-chip quick-tag" data-quick-q="Devara Telugu">⚡ Devara</button>
-        <button class="genre-chip quick-tag" data-quick-q="Pushpa 2 Telugu">💎 Pushpa 2</button>
-        <button class="genre-chip quick-tag" data-quick-q="Anirudh Ravichander">🎸 Anirudh</button>
-        <button class="genre-chip quick-tag" data-quick-q="Arijit Singh">❤️ Arijit</button>
-        <button class="genre-chip quick-tag" data-quick-q="Sid Sriram Telugu">🌟 Sid Sriram</button>
-        <button class="genre-chip quick-tag" data-quick-q="AR Rahman">🎶 AR Rahman</button>
-        <button class="genre-chip quick-tag" data-quick-q="Billboard Hot 100">🌍 Global Pop</button>
-      </div>
-
-      <!-- Public Vault Multilingual Language Filter Chips -->
-      <div id="vault-lang-chips" class="genre-chips-wrap" style="display: none;">
-        <button class="genre-chip active" data-vault-lang="all">All</button>
-        <button class="genre-chip" data-vault-lang="te">తెలుగు</button>
-        <button class="genre-chip" data-vault-lang="hi">हिन्दी</button>
-        <button class="genre-chip" data-vault-lang="ta">தமிழ்</button>
-        <button class="genre-chip" data-vault-lang="en">English</button>
-        <button class="genre-chip" data-vault-lang="ja">日本語</button>
-        <button class="genre-chip" data-vault-lang="es">Español</button>
-      </div>
-
-      <!-- Scrollable Track List -->
-      <div class="track-scroll-list" id="track-list-container">
-        <!-- Rendered dynamically via JavaScript -->
-      </div>
-
-      <!-- Load More Online Songs Button -->
-      <div id="btn-load-more-wrap" style="padding: 10px 0 4px 0; text-align: center; display: none;">
-        <button id="btn-load-more" class="genre-chip" style="width: 100%; padding: 8px 12px; font-weight: 600; color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.08);">
-          ⬇️ Load More Songs (+25 Online)
+    <!-- LEFT ZONE: Slim Minimalist Navigation Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-nav-group">
+        <span class="sidebar-group-title">DISCOVER</span>
+        <button id="tab-trending-hits" class="sidebar-nav-btn active">
+          <span class="nav-icon">🔥</span>
+          <span class="nav-text">Trending Hits</span>
         </button>
+        <button id="tab-public-vault" class="sidebar-nav-btn">
+          <span class="nav-icon">💎</span>
+          <span class="nav-text" data-i18n="library.vaultTab">Public Vault</span>
+        </button>
+        <button id="tab-local-masters" class="sidebar-nav-btn">
+          <span class="nav-icon">📁</span>
+          <span class="nav-text" data-i18n="library.localTab">Local Masters</span>
+        </button>
+      </div>
+
+      <div class="sidebar-nav-group">
+        <span class="sidebar-group-title">STUDIO & SOUND</span>
+        <button id="tab-studio-console" class="sidebar-nav-btn">
+          <span class="nav-icon">🎛️</span>
+          <span class="nav-text">Studio Console</span>
+        </button>
+        <button id="tab-lyrics-nav" class="sidebar-nav-btn">
+          <span class="nav-icon">🎙️</span>
+          <span class="nav-text">Lyrics & Stories</span>
+        </button>
+      </div>
+
+      <!-- Compact Hardware Monitor Widget -->
+      <div class="sidebar-hardware-card">
+        <div class="hw-card-header">
+          <span class="status-dot-pulse"></span>
+          <span class="hw-title">AUDIO ENGINE</span>
+        </div>
+        <div class="hw-spec-row">
+          <span class="hw-label">OUTPUT</span>
+          <span class="hw-val" id="hw-active-dac">WASAPI Direct</span>
+        </div>
+        <div class="hw-spec-row">
+          <span class="hw-label">RESOLUTION</span>
+          <span class="hw-val" style="color: var(--accent-cyan);">24-Bit / 96kHz</span>
+        </div>
+        <div class="hw-spec-row">
+          <span class="hw-label">LATENCY</span>
+          <span class="hw-val">1.2ms (Low)</span>
+        </div>
       </div>
     </aside>
 
-    <!-- Center Column: 60FPS High-Res FFT Spectrum Visualizer & 10-Band Parametric EQ -->
-    <section class="center-stage">
-      
-      <!-- 60FPS Spectrum / Oscilloscope Canvas -->
-      <div class="visualizer-card">
-        <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
-        <div class="visualizer-mode-switch">
-          <button class="vis-btn active" data-vis-mode="spectrum">64-FFT</button>
-          <button class="vis-btn" data-vis-mode="oscilloscope">Waveform</button>
-          <button class="vis-btn" data-vis-mode="lissajous">Lissajous</button>
-        </div>
-      </div>
+    <!-- CENTER ZONE: Main Music Stage & Studio Workspace -->
+    <section class="main-stage">
 
-      <!-- 10-Band Audiophile Parametric Equalizer -->
-      <div class="eq-curve-section">
-        <div class="panel-title-bar">
-          <h2 data-i18n="equalizer.title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 21v-7"></path>
-              <path d="M4 10V3"></path>
-              <path d="M12 21v-9"></path>
-              <path d="M12 8V3"></path>
-              <path d="M20 21v-5"></path>
-              <path d="M20 12V3"></path>
-              <circle cx="4" cy="12" r="2"></circle>
-              <circle cx="12" cy="10" r="2"></circle>
-              <circle cx="20" cy="14" r="2"></circle>
-            </svg>
-            10-Band Parametric Equalizer
-          </h2>
-          <div style="display: flex; gap: 8px;">
-            <select id="eq-preset-select" class="icon-btn-pill" style="padding: 4px 10px; font-size: 0.76rem;">
-              <option value="flat">Studio Flat</option>
-              <option value="warm">Audiophile Warmth (Tube)</option>
-              <option value="air">Hi-Res Treble Air</option>
-              <option value="jazz">Acoustic & Jazz</option>
-              <option value="vocal">Vocal Intimacy</option>
-              <option value="bass">Sub-Bass Control</option>
-            </select>
-            <button id="btn-eq-bypass" class="icon-btn-pill" style="padding: 4px 10px; font-size: 0.76rem;">Bypass</button>
+      <!-- VIEW A: Music Catalog & Discovery (Active by Default) -->
+      <div id="view-music-catalog" class="stage-view-content active">
+
+        <!-- Spotlight Featured Track Hero Banner -->
+        <div class="spotlight-hero-card" id="spotlight-card">
+          <div class="spotlight-ambient-blur" id="spotlight-ambient-blur"></div>
+          <div class="spotlight-inner">
+            <div class="spotlight-artwork-wrap">
+              <img id="spotlight-art-img" src="" alt="Spotlight Artwork" onerror="window.handleImageError(this, 'Featured Master', 'Resonix', 'Hi-Res')" />
+              <button id="spotlight-btn-play" class="spotlight-play-overlay-btn" title="Play Featured Track">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </button>
+            </div>
+            <div class="spotlight-info">
+              <div class="spotlight-badge-row">
+                <span class="spotlight-tag">✨ FEATURED SPOTLIGHT</span>
+                <span id="spotlight-format-pill" class="spotlight-pill-format">AI 24/96 Remaster</span>
+              </div>
+              <h2 id="spotlight-title" class="spotlight-title">Aaya Sher (From 'The Paradise')</h2>
+              <p id="spotlight-artist" class="spotlight-artist">Anirudh Ravichander • Kasarla Shyam</p>
+              <div class="spotlight-meta-desc">
+                High-fidelity 320kbps full master stream with AI harmonic bandwidth extension & sub-bass punch.
+              </div>
+              <div class="spotlight-actions">
+                <button id="spotlight-action-play" class="btn-primary-pill">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Play Master</span>
+                </button>
+                <button id="spotlight-action-lyrics" class="btn-secondary-pill">
+                  <span>🎙️ Lyrics & Lore</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- SVG Live Frequency Response Curve -->
-        <svg id="eq-curve-svg" class="eq-curve-svg" viewBox="0 0 640 140"></svg>
+        <!-- Filter & Quick Suggestion Bar -->
+        <div class="filter-discovery-bar">
+          <!-- Multilingual Language Chips -->
+          <div id="vault-lang-chips" class="genre-chips-wrap">
+            <button class="genre-chip active" data-vault-lang="all">All Genres</button>
+            <button class="genre-chip" data-vault-lang="te">తెలుగు (Telugu)</button>
+            <button class="genre-chip" data-vault-lang="hi">हिन्दी (Hindi)</button>
+            <button class="genre-chip" data-vault-lang="ta">தமிழ் (Tamil)</button>
+            <button class="genre-chip" data-vault-lang="en">English Pop</button>
+            <button class="genre-chip" data-vault-lang="ja">Japanese</button>
+            <button class="genre-chip" data-vault-lang="es">Español</button>
+          </div>
 
-        <!-- Vertical Slider Array -->
-        <div class="eq-sliders-row" id="eq-sliders-container">
-          <!-- Populated dynamically via equalizer.js -->
+          <!-- Quick Search Tags -->
+          <div id="quick-search-tags" class="quick-tags-wrap">
+            <span class="quick-tag-label">TRENDING:</span>
+            <button class="quick-tag" data-quick-q="Top Trending Songs">🔥 Top 50</button>
+            <button class="quick-tag" data-quick-q="Devara Telugu">⚡ Devara</button>
+            <button class="quick-tag" data-quick-q="Pushpa 2 Telugu">💎 Pushpa 2</button>
+            <button class="quick-tag" data-quick-q="Anirudh Ravichander">🎸 Anirudh</button>
+            <button class="quick-tag" data-quick-q="Arijit Singh">❤️ Arijit</button>
+            <button class="quick-tag" data-quick-q="Sid Sriram Telugu">🌟 Sid Sriram</button>
+            <button class="quick-tag" data-quick-q="AR Rahman">🎶 AR Rahman</button>
+          </div>
+        </div>
+
+        <!-- Section Header -->
+        <div class="catalog-section-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h3 id="library-section-title" class="section-heading">Music Tracks</h3>
+          </div>
+        </div>
+
+        <!-- Scrollable Track List -->
+        <div class="track-scroll-list" id="track-list-container">
+          <!-- Populated dynamically via main.js -->
+        </div>
+
+        <!-- Load More Online Songs Button -->
+        <div id="btn-load-more-wrap" class="load-more-wrap" style="display: none;">
+          <button id="btn-load-more" class="btn-load-more">
+            <span>⬇️ Load More Songs (+25 Online)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW B: Studio Console, 10-Band EQ & 60FPS Visualizer (Revealed via Studio Console Tab) -->
+      <div id="view-studio-console" class="stage-view-content" style="display: none;">
+        <div class="console-view-header">
+          <div>
+            <h2 class="section-heading" style="font-size: 1.4rem;">Audiophile Studio Console</h2>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 3px;">
+              60FPS Real-Time FFT Spectrum Analyzer, 10-Band Parametric Equalizer & Acoustic Profile Radar
+            </p>
+          </div>
+          <button id="btn-return-catalog" class="action-pill-btn">
+            <span>← Return to Music</span>
+          </button>
+        </div>
+
+        <!-- 60FPS Spectrum / Oscilloscope Canvas -->
+        <div class="visualizer-card">
+          <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
+          <div class="visualizer-mode-switch">
+            <button class="vis-btn active" data-vis-mode="spectrum">64-FFT Spectrum</button>
+            <button class="vis-btn" data-vis-mode="oscilloscope">Waveform</button>
+            <button class="vis-btn" data-vis-mode="lissajous">Lissajous</button>
+          </div>
+        </div>
+
+        <!-- 10-Band Audiophile Parametric Equalizer -->
+        <div class="eq-curve-section">
+          <div class="panel-title-bar">
+            <h3 style="font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>🎚️ 10-Band Parametric Equalizer</span>
+            </h3>
+            <div style="display: flex; gap: 8px;">
+              <select id="eq-preset-select" class="action-pill-btn" style="padding: 4px 12px; font-size: 0.78rem;">
+                <option value="flat">Studio Flat</option>
+                <option value="warm">Audiophile Warmth (Tube)</option>
+                <option value="air">Hi-Res Treble Air</option>
+                <option value="jazz">Acoustic & Jazz</option>
+                <option value="vocal">Vocal Intimacy</option>
+                <option value="bass">Sub-Bass Control</option>
+              </select>
+              <button id="btn-eq-bypass" class="action-pill-btn" style="padding: 4px 12px; font-size: 0.78rem;">Bypass</button>
+            </div>
+          </div>
+
+          <!-- SVG Live Frequency Response Curve -->
+          <svg id="eq-curve-svg" class="eq-curve-svg" viewBox="0 0 640 140"></svg>
+
+          <!-- Vertical Slider Array -->
+          <div class="eq-sliders-row" id="eq-sliders-container">
+            <!-- Populated dynamically via equalizer.js -->
+          </div>
+        </div>
+
+        <!-- Studio Console Bottom: Radar + Hardware DAC Setup -->
+        <div class="console-bottom-grid">
+          <div class="glass-panel" style="padding: 16px 20px;">
+            <div class="panel-title-bar" style="margin-bottom: 8px;">
+              <h3 style="font-size: 0.88rem; font-weight: 700;">7D Acoustic Vector Radar</h3>
+              <span class="panel-badge">Cosine Metric</span>
+            </div>
+            <div class="radar-chart-wrap">
+              <svg id="radar-chart-svg" class="radar-svg" viewBox="0 0 320 320"></svg>
+            </div>
+          </div>
+
+          <div class="glass-panel" style="padding: 16px 20px;">
+            <div class="panel-title-bar" style="margin-bottom: 12px;">
+              <h3 style="font-size: 0.88rem; font-weight: 700;">Hardware DAC & Passthrough</h3>
+              <span class="panel-badge">Direct Bit-Perfect</span>
+            </div>
+            <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 6px;">
+              EXCLUSIVE AUDIO ENDPOINT
+            </label>
+            <select id="hardware-output-select" class="action-pill-btn" style="width: 100%; justify-content: space-between; font-size: 0.78rem; margin-bottom: 12px;">
+              <option value="wasapi_exclusive">WASAPI Exclusive (AudioQuest DragonFly Cobalt)</option>
+              <option value="android_direct">Android AAudio Direct USB DAC</option>
+              <option value="coreaudio_bitperfect">CoreAudio Bit-Perfect Direct</option>
+              <option value="alsa_hw_direct">ALSA Direct hw:0,0 Bit-Perfect</option>
+              <option value="bluetooth_passthrough">Sony WH-1000XM5 (LDAC 990kbps)</option>
+            </select>
+
+            <div id="bt-codec-row" style="display: none; margin-top: 8px;">
+              <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 4px;">
+                WIRELESS BLUETOOTH CODEC
+              </label>
+              <select id="bluetooth-codec-select" class="action-pill-btn" style="width: 100%; font-size: 0.75rem;">
+                <option value="ldac990">LDAC 990 kbps (Hi-Res Audio Wireless)</option>
+                <option value="ldac660">LDAC 660 kbps</option>
+                <option value="aptxLossless">Qualcomm aptX Lossless (16-bit/44.1k)</option>
+                <option value="aptxHd">Qualcomm aptX HD (24-bit/48k)</option>
+                <option value="aptxAdaptive">Qualcomm aptX Adaptive (40ms Low Latency)</option>
+                <option value="aac">Apple AAC (256 kbps)</option>
+                <option value="sbc">Standard SBC (328 kbps)</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Right Column: 7D Acoustic Profile Radar & Local Cosine Similarity Recommendations -->
-    <aside class="glass-panel right-stage">
-      <div class="panel-title-bar">
-        <h2 data-i18n="smartFlow.radarTitle">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-          Acoustic Profile Radar
-        </h2>
-        <span class="panel-badge">7-D Vector</span>
+    <!-- RIGHT ZONE: Now Playing Hero & Smart Acoustic Recommendations -->
+    <aside class="app-right-rail">
+      <!-- Now Playing Hero Artwork Card -->
+      <div class="sidebar-now-playing-card">
+        <div class="sidebar-art-wrap" id="sidebar-art-container" title="Click to open Studio Lounge">
+          <img id="sidebar-art-img" src="" alt="Album Artwork" onerror="window.handleImageError(this, 'Now Playing', 'Resonix Studio', 'Hi-Res')" />
+          <div class="sidebar-art-glow" id="sidebar-art-glow"></div>
+        </div>
+        <div class="sidebar-track-meta">
+          <h4 id="sidebar-track-title" class="sidebar-track-title">Nocturne in C-Sharp Minor</h4>
+          <p id="sidebar-track-artist" class="sidebar-track-artist">Frédéric Chopin</p>
+          <span id="sidebar-quality-badge" class="sidebar-quality-badge">24-BIT / 96kHz LOSSLESS</span>
+        </div>
       </div>
 
-      <!-- Radar SVG Chart -->
-      <div class="radar-chart-wrap">
-        <svg id="radar-chart-svg" class="radar-svg" viewBox="0 0 320 320"></svg>
-      </div>
-
-      <!-- Local Cosine Similarity Recommendations ("Smart Flow") -->
-      <div class="panel-title-bar" style="margin-top: 10px;">
-        <h2 data-i18n="smartFlow.similarTracks">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M16 12l-4-4-4 4"></path>
-          </svg>
-          Smart Acoustic Matches
-        </h2>
-        <span class="panel-badge">Offline Cosine</span>
-      </div>
-
-      <div class="recommendations-box" id="recommendations-container">
-        <!-- Rendered dynamically via smart-manager.js -->
-      </div>
-
-      <!-- Hardware & Bluetooth Mode Quick Select -->
-      <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
-        <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 6px;">
-          HARDWARE DAC / BLUETOOTH PASSTHROUGH
-        </label>
-        <select id="hardware-output-select" class="icon-btn-pill" style="width: 100%; justify-content: space-between; font-size: 0.78rem;">
-          <option value="wasapi_exclusive">WASAPI Exclusive (AudioQuest DragonFly)</option>
-          <option value="android_direct">Android AAudio Direct USB DAC</option>
-          <option value="coreaudio_bitperfect">CoreAudio Bit-Perfect Direct</option>
-          <option value="alsa_hw_direct">ALSA Direct hw:0,0 Bit-Perfect</option>
-          <option value="bluetooth_passthrough">Sony WH-1000XM5 (LDAC 990kbps)</option>
-        </select>
-
-        <div id="bt-codec-row" style="display: none; margin-top: 8px;">
-          <label style="font-size: 0.72rem; color: var(--text-tertiary); font-family: var(--font-mono); display: block; margin-bottom: 4px;">
-            TEST WIRELESS CODEC
-          </label>
-          <select id="bluetooth-codec-select" class="icon-btn-pill" style="width: 100%; font-size: 0.75rem;">
-            <option value="ldac990">LDAC 990 kbps (Hi-Res Audio Wireless)</option>
-            <option value="ldac660">LDAC 660 kbps</option>
-            <option value="aptxLossless">Qualcomm aptX Lossless (16-bit/44.1k)</option>
-            <option value="aptxHd">Qualcomm aptX HD (24-bit/48k)</option>
-            <option value="aptxAdaptive">Qualcomm aptX Adaptive (40ms Low Latency)</option>
-            <option value="aac">Apple AAC (256 kbps)</option>
-            <option value="sbc">Standard SBC (328 kbps)</option>
-          </select>
+      <!-- Smart Acoustic Matches -->
+      <div class="sidebar-recommendations-section">
+        <div class="panel-title-bar" style="margin-bottom: 10px;">
+          <h4 style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.5px; font-family: var(--font-mono);">
+            SMART ACOUSTIC MATCHES
+          </h4>
+          <span class="panel-badge">Offline Vector</span>
+        </div>
+        <div class="recommendations-box" id="recommendations-container">
+          <!-- Populated dynamically via main.js & smart-manager.js -->
         </div>
       </div>
     </aside>
+
   </main>
 
-  <!-- Bottom Audiophile Playback Bar -->
+  <!-- Bottom Audiophile Floating Playback Bar -->
   <footer class="bottom-player-bar">
+    <!-- Left: Now Playing Thumbnail & Title -->
     <div class="player-now-playing">
       <div class="player-art-square" id="player-art-wrap" title="Click to Open Studio Lounge Fullscreen">
-        <img id="player-art-img" src="" alt="Album Artwork" style="width: 100%; height: 100%; border-radius: var(--radius-md); object-fit: cover;" onerror="window.handleImageError(this, 'Now Playing', 'Resonix Studio', 'Hi-Res')" />
+        <img id="player-art-img" src="" alt="Album Artwork" onerror="window.handleImageError(this, 'Now Playing', 'Resonix Studio', 'Hi-Res')" />
       </div>
-      <div style="overflow: hidden; cursor: pointer;" id="player-meta-wrap" title="Click to open Studio Lounge">
+      <div class="player-meta-wrap" id="player-meta-wrap" title="Click to open Studio Lounge">
         <div id="player-track-title" class="player-title">Nocturne in C-Sharp Minor</div>
-        <div id="player-track-artist" class="player-artist">Frédéric Chopin / Valentina Lisitsa</div>
+        <div id="player-track-artist" class="player-artist">Frédéric Chopin</div>
       </div>
     </div>
 
-    <!-- Center Playback Controls & Scrubber -->
+    <!-- Center: Playback Controls & Minimalist Scrubber -->
     <div class="player-center-controls">
       <div class="control-buttons-row">
         <button id="btn-shuffle" class="btn-ctrl" title="Shuffle">
@@ -296,20 +388,20 @@
           </svg>
         </button>
 
-        <button id="btn-prev-track" class="btn-ctrl" title="Previous Track">
+        <button id="btn-prev-track" class="btn-ctrl" title="Previous Track (←)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="19 20 9 12 19 4 19 20"></polygon>
             <line x1="5" y1="19" x2="5" y2="5"></line>
           </svg>
         </button>
 
-        <button id="btn-play-pause" class="btn-play-pause-main" title="Play / Pause">
+        <button id="btn-play-pause" class="btn-play-pause-main" title="Play / Pause (Space)">
           <svg id="play-pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
         </button>
 
-        <button id="btn-next-track" class="btn-ctrl" title="Next Track">
+        <button id="btn-next-track" class="btn-ctrl" title="Next Track (→)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="5 4 15 12 5 20 5 4"></polygon>
             <line x1="19" y1="5" x2="19" y2="19"></line>
@@ -325,8 +417,8 @@
           </svg>
         </button>
 
-        <!-- Synchronized Lyrics & Acoustic Lore Toggle -->
-        <button id="btn-toggle-lyrics" class="btn-ctrl" title="View Synchronized Lyrics & Acoustic Lore">
+        <!-- Synchronized Lyrics Drawer Toggle -->
+        <button id="btn-toggle-lyrics" class="btn-ctrl" title="View Synchronized Lyrics & Acoustic Lore (L)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -336,6 +428,7 @@
         </button>
       </div>
 
+      <!-- Scrubber Timeline -->
       <div class="scrubber-timeline-row">
         <span id="player-time-current" class="time-stamp">00:00</span>
         <input type="range" id="player-seek-slider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
@@ -343,19 +436,27 @@
       </div>
     </div>
 
-    <!-- Right Dock: Ring Buffer Stats, Dynamic Volume, Underflow Counter -->
+    <!-- Right: 3D Spatial Audio, SPSC Buffer, Volume -->
     <div class="player-right-dock">
-      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
-        <span style="font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-cyan);">
-          SPSC RINGBUF: <span id="metric-ringbuf">98.4%</span>
+      <!-- 3D Spatial Audio Mode -->
+      <select id="spatial-mode-select" class="action-pill-btn" title="3D Spatial Audio & Binaural Crossfeed" style="font-size: 0.72rem; padding: 4px 10px;">
+        <option value="direct">🎧 Direct</option>
+        <option value="studio">🎙️ Studio</option>
+        <option value="hall">🏛️ Hall 3D</option>
+        <option value="warmth">🔥 Tube</option>
+      </select>
+
+      <div class="spsc-metrics-wrap hide-mobile">
+        <span class="spsc-metric-line">
+          RINGBUF: <span id="metric-ringbuf">98.4%</span>
         </span>
-        <span style="font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-tertiary);">
-          UNDERFLOWS: <span id="metric-underflows">0</span>
+        <span class="spsc-metric-sub">
+          DROPS: <span id="metric-underflows">0</span>
         </span>
       </div>
 
       <div class="volume-slider-wrap">
-        <button id="btn-volume-mute" class="btn-ctrl" title="Mute">
+        <button id="btn-volume-mute" class="btn-ctrl" title="Mute (M)">
           <svg id="volume-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -365,28 +466,6 @@
       </div>
     </div>
   </footer>
-
-  <!-- Preferred Language Selection Modal -->
-  <div id="lang-modal" class="modal-overlay">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 data-i18n="modal.title">Select Preferred Language</h3>
-        <p style="font-size: 0.82rem; color: var(--text-secondary);" data-i18n="modal.desc">
-          Resonix Studio supports universal typography and bidirectional LTR/RTL layouts.
-        </p>
-      </div>
-
-      <div class="lang-grid" id="lang-options-container">
-        <!-- Rendered in main.js -->
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
-        <button id="btn-close-lang-modal" class="icon-btn-pill" style="background: var(--accent-cyan); color: #000; font-weight: 700; border: none; padding: 8px 18px;" data-i18n="modal.confirm">
-          Save & Continue
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- Synchronized Lyrics & Acoustic Lore Modal / Drawer -->
   <div id="lyrics-modal" class="modal-overlay">
@@ -400,18 +479,14 @@
           <h3 id="lyrics-track-title" style="font-size: 1.2rem; font-weight: 700;">Track Lyrics</h3>
           <p id="lyrics-track-artist" style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Artist</p>
         </div>
-        <button id="btn-close-lyrics" class="icon-btn-pill" style="padding: 6px 12px; font-weight: 700;">✕ Close</button>
+        <button id="btn-close-lyrics" class="action-pill-btn" style="padding: 6px 12px; font-weight: 700;">✕ Close</button>
       </div>
 
       <!-- Acoustic Story & Provenance Card -->
-      <div id="lyrics-lore-box" class="lyrics-lore-banner">
-        <!-- Injected via JavaScript -->
-      </div>
+      <div id="lyrics-lore-box" class="lyrics-lore-banner"></div>
 
       <!-- Dynamic Karaoke Scroller -->
-      <div class="lyrics-lines-container" id="lyrics-lines-container">
-        <!-- Injected dynamically with active line glow -->
-      </div>
+      <div class="lyrics-lines-container" id="lyrics-lines-container"></div>
     </div>
   </div>
 
@@ -424,7 +499,7 @@
           RESONIX STUDIO LOUNGE • BIT-PERFECT AUDIOPHILE IMMERSION
         </span>
       </div>
-      <button id="btn-close-lounge" class="icon-btn-pill" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); padding: 8px 18px; font-weight: 700;">
+      <button id="btn-close-lounge" class="action-pill-btn" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); padding: 8px 18px; font-weight: 700;">
         ✕ Exit Lounge (Esc)
       </button>
     </div>
@@ -492,9 +567,7 @@
               🎙️ REAL-TIME LYRICS & ACOUSTIC MOVEMENT
             </h3>
           </div>
-          <div id="lounge-lyrics-container" class="lounge-lyrics-scroll">
-            <!-- Synced lines rendered here -->
-          </div>
+          <div id="lounge-lyrics-container" class="lounge-lyrics-scroll"></div>
         </div>
 
         <!-- Large Scrubber & Controls in Lounge -->
@@ -510,6 +583,26 @@
             <button id="lounge-btn-next" class="btn-ctrl" style="font-size: 1.4rem;">⏭️</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferred Language Selection Modal -->
+  <div id="lang-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 data-i18n="modal.title">Select Preferred Language</h3>
+        <p style="font-size: 0.82rem; color: var(--text-secondary);" data-i18n="modal.desc">
+          Resonix Studio supports universal typography and bidirectional LTR/RTL layouts.
+        </p>
+      </div>
+
+      <div class="lang-grid" id="lang-options-container"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+        <button id="btn-close-lang-modal" class="btn-primary-pill" data-i18n="modal.confirm">
+          Save & Continue
+        </button>
       </div>
     </div>
   </div>
