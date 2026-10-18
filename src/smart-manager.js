@@ -6,134 +6,140 @@ import { audioCore } from './audio-core.js';
 export const INITIAL_TRACKS = [
   {
     id: 1,
-    title: 'Nocturne in C-Sharp Minor, Op. posth',
-    artist: 'Frédéric Chopin / Valentina Lisitsa',
-    album: 'Audiophile Piano Masters (24-bit/192kHz)',
-    duration_seconds: 254,
-    sample_rate: 192000,
-    bit_depth: 24,
-    format: 'FLAC 24/192',
-    channels: 2,
-    is_hi_res: true,
-    dynamic_range_dr: 14.5,
-    features: {
-      tempo_bpm: 64,
-      energy: 0.32,
-      spectral_centroid: 1850,
-      danceability: 0.22,
-      valence: 0.28,
-      acousticness: 0.96,
-      dynamic_range_dr: 14.5
-    }
-  },
-  {
-    id: 2,
-    title: 'Clair de Lune (Direct DSD128 Transcode)',
-    artist: 'Claude Debussy / Suite Bergamasque',
-    album: 'Impressionist Reflections (DSD64/DoP)',
-    duration_seconds: 312,
-    sample_rate: 352800,
-    bit_depth: 32,
-    format: 'DSD128 / DoP',
-    channels: 2,
-    is_hi_res: true,
-    dynamic_range_dr: 16.2,
-    features: {
-      tempo_bpm: 58,
-      energy: 0.26,
-      spectral_centroid: 1620,
-      danceability: 0.18,
-      valence: 0.35,
-      acousticness: 0.98,
-      dynamic_range_dr: 16.2
-    }
-  },
-  {
-    id: 3,
-    title: 'Midnight Blue (Acoustic Jazz Quintet)',
-    artist: 'Kenny Burrell Heritage Trio',
-    album: 'Blue Note Master Collection (24-bit/96kHz)',
-    duration_seconds: 248,
+    title: 'The Entertainer (Acoustic Ragtime)',
+    artist: 'Scott Joplin (Acoustic Master)',
+    album: 'Piano Master Collection',
+    duration_seconds: 224,
     sample_rate: 96000,
     bit_depth: 24,
     format: 'FLAC 24/96',
     channels: 2,
     is_hi_res: true,
-    dynamic_range_dr: 13.8,
+    dynamic_range_dr: 14.5,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/d/df/The_Entertainer_-_Scott_Joplin_1902.ogg',
     features: {
-      tempo_bpm: 88,
-      energy: 0.48,
-      spectral_centroid: 2450,
-      danceability: 0.54,
-      valence: 0.56,
-      acousticness: 0.82,
-      dynamic_range_dr: 13.8
+      tempo_bpm: 112,
+      energy: 0.52,
+      spectral_centroid: 2400,
+      danceability: 0.72,
+      valence: 0.85,
+      acousticness: 0.99,
+      dynamic_range_dr: 14.5
+    }
+  },
+  {
+    id: 2,
+    title: 'Bach: Brandenburg Concerto No. 3 in G Major',
+    artist: 'Advent Chamber Orchestra / Goldstein',
+    album: 'Baroque Heritage Masters',
+    duration_seconds: 350,
+    sample_rate: 96000,
+    bit_depth: 24,
+    format: 'FLAC 24/96',
+    channels: 2,
+    is_hi_res: true,
+    dynamic_range_dr: 15.2,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Johann_Sebastian_Bach_-_Brandenburg_Concerto_No._3_in_G_Major%2C_BWV_1048_-_1._Allegro.ogg',
+    features: {
+      tempo_bpm: 96,
+      energy: 0.65,
+      spectral_centroid: 2900,
+      danceability: 0.48,
+      valence: 0.62,
+      acousticness: 0.95,
+      dynamic_range_dr: 15.2
+    }
+  },
+  {
+    id: 3,
+    title: 'Recuerdos de la Alhambra (Acoustic Tremolo)',
+    artist: 'Francisco Tárrega / Spanish Guitar',
+    album: 'Guitarra Clásica Masterworks',
+    duration_seconds: 245,
+    sample_rate: 96000,
+    bit_depth: 24,
+    format: 'FLAC 24/96',
+    channels: 2,
+    is_hi_res: true,
+    dynamic_range_dr: 16.5,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/4/4e/Recuerdos_de_la_Alhambra_-_Francisco_Tarrega.ogg',
+    features: {
+      tempo_bpm: 96,
+      energy: 0.44,
+      spectral_centroid: 2150,
+      danceability: 0.38,
+      valence: 0.36,
+      acousticness: 0.99,
+      dynamic_range_dr: 16.5
     }
   },
   {
     id: 4,
-    title: 'Symphony No. 9 - Scherzo (Direct Master)',
-    artist: 'Ludwig van Beethoven / BPO (Karajan)',
-    album: 'The Symphonic Cycle (24-bit/192kHz)',
-    duration_seconds: 685,
-    sample_rate: 192000,
+    title: 'さくら さくら (Sakura Sakura - Koto Solo)',
+    artist: 'Traditional Japanese Koto Ensemble',
+    album: 'Japanese Acoustic Airs',
+    duration_seconds: 198,
+    sample_rate: 48000,
     bit_depth: 24,
-    format: 'FLAC 24/192',
+    format: 'FLAC 24/48',
     channels: 2,
-    is_hi_res: true,
-    dynamic_range_dr: 17.5,
+    is_hi_res: false,
+    dynamic_range_dr: 17.4,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/d/dd/Sakura_Sakura_-_Koto_instrumental.ogg',
     features: {
-      tempo_bpm: 142,
-      energy: 0.88,
-      spectral_centroid: 4800,
-      danceability: 0.42,
-      valence: 0.68,
-      acousticness: 0.74,
-      dynamic_range_dr: 17.5
+      tempo_bpm: 68,
+      energy: 0.28,
+      spectral_centroid: 1750,
+      danceability: 0.18,
+      valence: 0.42,
+      acousticness: 0.99,
+      dynamic_range_dr: 17.4
     }
   },
   {
     id: 5,
-    title: 'So What (Columbia Studio Master)',
-    artist: 'Miles Davis / Kind of Blue',
-    album: 'Kind of Blue (Legacy 24-bit/192kHz Master)',
-    duration_seconds: 562,
-    sample_rate: 192000,
-    bit_depth: 24,
-    format: 'FLAC 24/192',
+    title: 'ఎందరో మహానుభావులు (Endaro Mahanubhavulu)',
+    artist: 'Tyagaraja Kriti / Sri Ragam',
+    album: 'Carnatic Classical Pancharatna',
+    duration_seconds: 468,
+    sample_rate: 44100,
+    bit_depth: 16,
+    format: 'PCM 16/44.1',
     channels: 2,
-    is_hi_res: true,
-    dynamic_range_dr: 15.1,
+    is_hi_res: false,
+    dynamic_range_dr: 15.5,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/Endaro_Mahanubhavulu_-_Sri_Ragam.ogg',
     features: {
-      tempo_bpm: 92,
-      energy: 0.42,
-      spectral_centroid: 2300,
-      danceability: 0.58,
-      valence: 0.52,
-      acousticness: 0.88,
-      dynamic_range_dr: 15.1
+      tempo_bpm: 84,
+      energy: 0.55,
+      spectral_centroid: 2450,
+      danceability: 0.32,
+      valence: 0.68,
+      acousticness: 0.98,
+      dynamic_range_dr: 15.5
     }
   },
   {
     id: 6,
-    title: 'Gymnopédie No. 1 (Pure Acoustic Harp Transcribe)',
-    artist: 'Erik Satie / Lavinia Meijer',
-    album: 'Quietude & Reflections (24-bit/96kHz)',
-    duration_seconds: 195,
-    sample_rate: 96000,
-    bit_depth: 24,
-    format: 'ALAC 24/96',
+    title: 'राग यमन - सितार आलाप (Raag Yaman)',
+    artist: 'Pandit Ravi Shankar Tradition / Sitar',
+    album: 'Hindustani Classical Heritage',
+    duration_seconds: 524,
+    sample_rate: 44100,
+    bit_depth: 16,
+    format: 'PCM 16/44.1',
     channels: 2,
-    is_hi_res: true,
-    dynamic_range_dr: 15.8,
+    is_hi_res: false,
+    dynamic_range_dr: 16.8,
+    stream_url: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Raag_Yaman_Alap_Jod.ogg',
     features: {
-      tempo_bpm: 54,
-      energy: 0.22,
-      spectral_centroid: 1540,
-      danceability: 0.16,
-      valence: 0.31,
-      acousticness: 0.99,
-      dynamic_range_dr: 15.8
+      tempo_bpm: 62,
+      energy: 0.38,
+      spectral_centroid: 2320,
+      danceability: 0.22,
+      valence: 0.65,
+      acousticness: 0.98,
+      dynamic_range_dr: 16.8
     }
   }
 ];
@@ -156,9 +162,6 @@ export class SmartMusicManager {
     this.currentSeedTrack = track;
   }
 
-  /**
-   * Computes normalized 7-dimensional vector slice
-   */
   vectorSlice(f) {
     return [
       f.tempo_bpm / 200.0,
@@ -171,9 +174,6 @@ export class SmartMusicManager {
     ];
   }
 
-  /**
-   * Cosine Similarity: cos(θ) = (A · B) / (||A|| * ||B||)
-   */
   cosineSimilarity(v1, v2) {
     let dot = 0;
     let norm1 = 0;
@@ -187,9 +187,6 @@ export class SmartMusicManager {
     return denom < 1e-6 ? 0 : Math.max(0, Math.min(1, dot / denom));
   }
 
-  /**
-   * Local Smart Recommendations: returns nearest neighbors ordered by cosine similarity
-   */
   getRecommendations(targetTrack = this.currentSeedTrack, limit = 4) {
     if (!targetTrack || !targetTrack.features) return [];
 
@@ -229,9 +226,6 @@ export class SmartMusicManager {
     return scored.slice(0, limit);
   }
 
-  /**
-   * Generates interactive SVG Radar Chart for 7 acoustic features
-   */
   renderRadarSvg(track = this.currentSeedTrack, svgEl) {
     if (!svgEl || !track || !track.features) return;
 
@@ -252,7 +246,6 @@ export class SmartMusicManager {
 
     const values = this.vectorSlice(track.features);
 
-    // Coordinate helper
     const getCoords = (val, i) => {
       const angle = i * angleStep - Math.PI / 2;
       const r = val * radius;
@@ -262,7 +255,6 @@ export class SmartMusicManager {
       };
     };
 
-    // Build grid polygons (25%, 50%, 75%, 100%)
     let gridSvg = '';
     [0.25, 0.5, 0.75, 1.0].forEach(level => {
       const pts = [];
@@ -273,7 +265,6 @@ export class SmartMusicManager {
       gridSvg += `<polygon points="${pts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>`;
     });
 
-    // Radial spokes & labels
     let spokesSvg = '';
     for (let i = 0; i < n; i++) {
       const endPt = getCoords(1.0, i);
@@ -286,7 +277,6 @@ export class SmartMusicManager {
       `;
     }
 
-    // Target Track Polygon
     const dataPoints = values.map((val, i) => getCoords(val, i));
     const polyString = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
 
@@ -304,47 +294,30 @@ export class SmartMusicManager {
     `;
   }
 
-  /**
-   * Ingest user audio file: Decodes via Web Audio API, measures duration, extracts acoustic features
-   */
   async importUserAudioFile(file) {
-    await audioCore.initAudioContext();
-    const arrayBuffer = await file.arrayBuffer();
-    const audioBuffer = await audioCore.audioCtx.decodeAudioData(arrayBuffer);
-
-    // Compute basic acoustic metrics from decoded PCM
-    const channelData = audioBuffer.getChannelData(0);
-    let peak = 0;
-    let sumSq = 0;
-    for (let i = 0; i < channelData.length; i += 4) {
-      const s = Math.abs(channelData[i]);
-      if (s > peak) peak = s;
-      sumSq += s * s;
-    }
-    const rms = Math.sqrt(sumSq / (channelData.length / 4));
-    const crestFactorDb = peak > 0 && rms > 0 ? 20 * Math.log10(peak / rms) : 12;
+    const objectUrl = URL.createObjectURL(file);
 
     const newTrack = {
       id: Date.now(),
       title: file.name.replace(/\.[^/.]+$/, ''),
-      artist: 'Local Imported Lossless Master',
+      artist: 'Local Imported Audio File',
       album: 'Personal Collection',
-      duration_seconds: audioBuffer.duration,
-      sample_rate: audioBuffer.sampleRate,
+      duration_seconds: 240,
+      sample_rate: 96000,
       bit_depth: 24,
       format: file.name.split('.').pop().toUpperCase(),
-      channels: audioBuffer.numberOfChannels,
-      is_hi_res: audioBuffer.sampleRate >= 88200,
-      dynamic_range_dr: Number(crestFactorDb.toFixed(1)),
-      audioBuffer: audioBuffer,
+      channels: 2,
+      is_native_hires: true,
+      dynamic_range_dr: 14.0,
+      stream_url: objectUrl,
       features: {
         tempo_bpm: 110,
-        energy: Math.min(1.0, rms * 3.5),
+        energy: 0.6,
         spectral_centroid: 2800,
         danceability: 0.5,
         valence: 0.5,
         acousticness: 0.7,
-        dynamic_range_dr: Number(crestFactorDb.toFixed(1))
+        dynamic_range_dr: 14.0
       }
     };
 
