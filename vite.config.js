@@ -22,6 +22,7 @@ function decryptMediaUrl(enc) {
 }
 
 export default defineConfig({
+  base: './',
   server: {
     port: 5173,
     cors: true
