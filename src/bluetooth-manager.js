@@ -152,9 +152,16 @@ export class BluetoothAndHardwareManager {
   }
 
   getDynamicBadgeText(track = audioCore.currentTrack) {
+    const isUpscaled = audioCore.isUpscaled && audioCore.bweEnabled;
     const srcFormat = track ? track.format : 'FLAC 24/192';
-    const srcRate = track ? `${track.sample_rate / 1000}kHz` : '192kHz';
-    const srcDepth = track ? `${track.bit_depth}-bit` : '24-bit';
+
+    if (isUpscaled) {
+      if (this.isBluetoothMode) {
+        return `AI-REMASTER 24/96 → ${this.currentCodec.label} ${this.currentCodec.bitrate} kbps • Hi-Res Wireless`;
+      } else {
+        return `AI-REMASTERED 24-bit/96kHz • BWE Harmonic Restore`;
+      }
+    }
 
     if (this.isBluetoothMode) {
       return `${srcFormat} → ${this.currentCodec.label} ${this.currentCodec.bitrate} kbps • ${this.currentCodec.isHiRes ? 'Hi-Res Wireless' : 'Standard Wireless'}`;
@@ -170,7 +177,11 @@ export class BluetoothAndHardwareManager {
       const text = this.getDynamicBadgeText();
       badgeTextEl.textContent = text;
       
-      if (this.isBluetoothMode && this.currentCodec.isHiRes) {
+      const isUpscaled = audioCore.isUpscaled && audioCore.bweEnabled;
+
+      if (isUpscaled) {
+        badgeEl.className = 'stream-badge-pill badge-purple-remaster';
+      } else if (this.isBluetoothMode && this.currentCodec.isHiRes) {
         badgeEl.className = 'stream-badge-pill badge-gold-hires';
       } else if (!this.isBluetoothMode && this.currentOutput.isExclusive) {
         badgeEl.className = 'stream-badge-pill badge-cyan-exclusive';

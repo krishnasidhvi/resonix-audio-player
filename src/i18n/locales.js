@@ -17,7 +17,8 @@ export const locales = {
       bitPerfectActive: 'Bit-Perfect Direct',
       exclusiveActive: 'WASAPI Exclusive',
       hiResBadge: '24-bit / 192 kHz',
-      changeLang: 'Language'
+      changeLang: 'Language',
+      bweToggle: 'AI Hi-Res Remaster (BWE)'
     },
     player: {
       format: 'Format',
@@ -35,9 +36,11 @@ export const locales = {
       dopDsd: 'DSD over PCM'
     },
     library: {
-      title: 'Local Music Library',
+      title: 'Music Library',
       subtitle: 'Bit-perfect lossless & Hi-Res catalog indexed in local SQLite',
-      searchPlaceholder: 'Search tracks, artists, albums, or hi-res formats...',
+      localTab: 'Local Masters',
+      vaultTab: 'Public Vault (Open Hi-Res)',
+      searchPlaceholder: 'Search public domain masters, Beethoven, Bach, Chopin...',
       addFiles: 'Import Audio Files',
       scanFolder: 'Scan Directory',
       trackCol: 'Title',
@@ -47,7 +50,9 @@ export const locales = {
       drCol: 'Dynamic Range',
       actionsCol: 'Actions',
       playNow: 'Play Now',
-      findSimilar: 'Smart Match'
+      findSimilar: 'Smart Match',
+      nativeMaster: 'Native Hi-Res',
+      bweUpscaled: 'AI Remastered'
     },
     equalizer: {
       title: '10-Band Parametric Equalizer',
@@ -122,27 +127,15 @@ export const locales = {
       bitPerfectActive: 'Bit-Perfekt Direkt',
       exclusiveActive: 'WASAPI Exklusiv',
       hiResBadge: '24-Bit / 192 kHz',
-      changeLang: 'Sprache'
-    },
-    player: {
-      format: 'Format',
-      sampleRate: 'Abtastrate',
-      bitDepth: 'Bittiefe',
-      bufferFill: 'Ringpuffer',
-      underflows: 'Pufferüberläufe',
-      prev: 'Zurück',
-      play: 'Wiedergabe',
-      pause: 'Pause',
-      next: 'Weiter',
-      shuffle: 'Zufall',
-      repeat: 'Wiederholen',
-      volume: 'Lautstärke',
-      dopDsd: 'DSD über PCM'
+      changeLang: 'Sprache',
+      bweToggle: 'KI Hi-Res Remaster (BWE)'
     },
     library: {
-      title: 'Lokale Musikbibliothek',
-      subtitle: 'Bit-perfekter verlustfreier & Hi-Res Katalog in lokalem SQLite indiziert',
-      searchPlaceholder: 'Titel, Künstler, Alben oder Hi-Res-Formate durchsuchen...',
+      title: 'Musikbibliothek',
+      subtitle: 'Bit-perfekter verlustfreier & Hi-Res Katalog',
+      localTab: 'Lokale Titel',
+      vaultTab: 'Öffentlicher Tresor (Open Hi-Res)',
+      searchPlaceholder: 'Meisterwerke, Beethoven, Bach durchsuchen...',
       addFiles: 'Audiodateien importieren',
       scanFolder: 'Ordner scannen',
       trackCol: 'Titel',
@@ -152,31 +145,33 @@ export const locales = {
       drCol: 'Dynamikbereich',
       actionsCol: 'Aktionen',
       playNow: 'Abspielen',
-      findSimilar: 'Ähnliche finden'
+      findSimilar: 'Ähnliche finden',
+      nativeMaster: 'Natives Hi-Res',
+      bweUpscaled: 'KI Remastered'
     },
     equalizer: {
       title: '10-Band Parametrischer Equalizer',
-      subtitle: 'Audiophile Bi-Quad-Filter mit phasenlinearer Kompensation',
+      subtitle: 'Audiophile Bi-Quad-Filter',
       enable: 'Equalizer aktivieren',
       bypass: 'Bypass',
       reset: 'Auf Linear zurücksetzen',
       preset: 'Voreinstellungen',
       presets: {
         flat: 'Studio Linear',
-        warm: 'Audiophile Wärme (Röhrensound)',
+        warm: 'Audiophile Wärme (Röhre)',
         air: 'Hi-Res Höhen-Luftigkeit',
-        jazz: 'Akustik & Jazz Präsenz',
+        jazz: 'Akustik & Jazz',
         vocal: 'Stimmen-Intimität',
-        bass: 'Präzise Subbass-Kontrolle'
+        bass: 'Subbass-Kontrolle'
       }
     },
     hardware: {
       title: 'Hardware-DAC & Drahtlos-Engine',
-      subtitle: 'Exklusive Tonausgabe unter Umgehung des OS-Mixers und Bluetooth-Codec-Passthrough',
+      subtitle: 'Exklusive Tonausgabe unter Umgehung des OS-Mixers',
       outputMode: 'Aktiver Audioausgang',
-      outputDesc: 'Direkte Hardware-Verbindung mit Abtastraten-Sperre',
+      outputDesc: 'Direkte Hardware-Verbindung',
       exclusiveMode: 'Hardware Exklusiv-Modus',
-      exclusiveNotice: 'Umgeht Windows AudioDG / Android AudioFlinger / CoreAudio Resampler',
+      exclusiveNotice: 'Umgeht Windows AudioDG / Android AudioFlinger',
       bluetoothTitle: 'Bluetooth A2DP Passthrough-Status',
       bluetoothDevice: 'Verbundenes Gerät',
       activeCodec: 'Aktiver Codec',
@@ -187,8 +182,8 @@ export const locales = {
       switchCodec: 'Codec-Umschaltung simulieren'
     },
     smartFlow: {
-      title: 'Intelligenter Musikmanager & Ähnlichkeitsfluss',
-      subtitle: 'Lokale 7-dimensionale akustische Vektor-Kosinus-Ähnlichkeit (100% offline & privat)',
+      title: 'Intelligenter Musikmanager',
+      subtitle: 'Lokale akustische Vektor-Kosinus-Ähnlichkeit (100% offline)',
       currentSeed: 'Referenztitel-Profil',
       similarTracks: 'Nächste akustische Nachbarn',
       similarityScore: 'Klangliche Übereinstimmung',
@@ -198,7 +193,7 @@ export const locales = {
         energy: 'Energie',
         timbre: 'Spektraler Schwerpunkt',
         dance: 'Tanzbarkeit',
-        valence: 'Musikalische Valenz',
+        valence: 'Valenz',
         acoustic: 'Akustik',
         dynamicRange: 'Dynamikumfang (DR)'
       }
@@ -227,27 +222,15 @@ export const locales = {
       bitPerfectActive: 'ビットパーフェクト直接出力',
       exclusiveActive: 'WASAPI排他モード',
       hiResBadge: '24-bit / 192 kHz',
-      changeLang: '言語切替'
-    },
-    player: {
-      format: 'フォーマット',
-      sampleRate: 'サンプリング周波数',
-      bitDepth: '量子化ビット数',
-      bufferFill: 'リングバッファ',
-      underflows: 'アンダーフロー回数',
-      prev: '前の曲',
-      play: '再生',
-      pause: '一時停止',
-      next: '次の曲',
-      shuffle: 'シャッフル',
-      repeat: 'リピート',
-      volume: '音量',
-      dopDsd: 'DSD over PCM'
+      changeLang: '言語切替',
+      bweToggle: 'AIハイレゾ高域復元 (BWE)'
     },
     library: {
-      title: 'ローカル音楽ライブラリ',
-      subtitle: '完全ビットパーフェクト＆ハイレゾ音源のローカルSQLiteインデックス',
-      searchPlaceholder: '楽曲、アーティスト、アルバム、ハイレゾ規格を検索...',
+      title: 'ミュージックライブラリ',
+      subtitle: '完全ビットパーフェクト＆ハイレゾ音源のローカルインデックス',
+      localTab: 'ローカル音源',
+      vaultTab: '公開ハイレゾ保管庫 (Open Hi-Res)',
+      searchPlaceholder: 'パブリックドメイン名盤、ベートーヴェン、バッハを検索...',
       addFiles: '音声ファイルを追加',
       scanFolder: 'フォルダをスキャン',
       trackCol: '曲名',
@@ -257,7 +240,9 @@ export const locales = {
       drCol: 'ダイナミックレンジ',
       actionsCol: '操作',
       playNow: '今すぐ再生',
-      findSimilar: '類似曲検索'
+      findSimilar: '類似曲検索',
+      nativeMaster: 'ネイティブハイレゾ',
+      bweUpscaled: 'AI復元アップスケーリング'
     },
     equalizer: {
       title: '10バンド・パラメトリックイコライザー',
@@ -268,20 +253,20 @@ export const locales = {
       preset: 'プリセット',
       presets: {
         flat: 'スタジオフラット',
-        warm: 'オーディオファイル・ウォーム（真空管調）',
-        air: 'ハイレゾ高域エア感',
-        jazz: 'アコースティック＆ジャズ',
-        vocal: 'ボーカル・インティマシー',
-        bass: 'タイト・サブベース制御'
+        warm: '真空管ウォーム',
+        air: '高域エア感',
+        jazz: 'ジャズ＆アコースティック',
+        vocal: 'ボーカル強調',
+        bass: 'タイト・サブベース'
       }
     },
     hardware: {
       title: 'ハードウェアDAC＆ワイヤレスエンジン',
-      subtitle: 'OSミキサーを完全バイパスする排他出力とBluetoothコーデック直接伝送',
+      subtitle: 'OSミキサー完全バイパス排他出力',
       outputMode: 'アクティブオーディオ出力',
-      outputDesc: '周波数ロック対応ハードウェア直接接続',
+      outputDesc: '周波数ロック対応ハードウェア接続',
       exclusiveMode: 'ハードウェア排他モード',
-      exclusiveNotice: 'Windowsミキサー / Android AudioFlinger / CoreAudioリサンプラーを回避',
+      exclusiveNotice: 'Windowsミキサー / Android AudioFlingerを回避',
       bluetoothTitle: 'Bluetooth A2DPパススルー状態',
       bluetoothDevice: '接続機器',
       activeCodec: '使用中コーデック',
@@ -292,8 +277,8 @@ export const locales = {
       switchCodec: 'コーデック切り替えテスト'
     },
     smartFlow: {
-      title: 'スマート音楽マネージャー＆音響類似度フロー',
-      subtitle: '完全ローカル7次元音響特徴ベクトル・コサイン類似度（完全プライベート・オフライン）',
+      title: 'スマート音楽マネージャー',
+      subtitle: '完全ローカル7次元音響特徴ベクトル・コサイン類似度',
       currentSeed: 'シード曲プロファイル',
       similarTracks: '最も音響特徴が近い曲',
       similarityScore: '音響マッチ度',
@@ -303,7 +288,7 @@ export const locales = {
         energy: 'エネルギー',
         timbre: 'スペクトル重心',
         dance: 'ダンス適性',
-        valence: '音楽的感情価',
+        valence: '感情価',
         acoustic: 'アコースティック感',
         dynamicRange: 'ダイナミックレンジ (DR)'
       }
@@ -332,27 +317,15 @@ export const locales = {
       bitPerfectActive: 'نقل نقي Bit-Perfect مباشر',
       exclusiveActive: 'وضع WASAPI الحصري',
       hiResBadge: '24-بت / 192 كيلوهرتز',
-      changeLang: 'اللغة'
-    },
-    player: {
-      format: 'الصيغة',
-      sampleRate: 'معدل العينة',
-      bitDepth: 'عمق البت',
-      bufferFill: 'سعة المخزن المؤقت',
-      underflows: 'انقطاعات التخزين',
-      prev: 'السابق',
-      play: 'تشغيل',
-      pause: 'إيقاف مؤقت',
-      next: 'التالي',
-      shuffle: 'عشوائي',
-      repeat: 'تكرار',
-      volume: 'مستوى الصوت',
-      dopDsd: 'DSD عبر PCM'
+      changeLang: 'اللغة',
+      bweToggle: 'إعادة ماستر الذكاء الصوتي (BWE)'
     },
     library: {
-      title: 'مكتبة الموسيقى المحلية',
-      subtitle: 'كتالوج غير مضغوط عالي الدقة مفهرس عبر SQLite محلياً',
-      searchPlaceholder: 'ابحث عن المقاطع، الفنانين، الألبومات...',
+      title: 'مكتبة الموسيقى',
+      subtitle: 'كتالوج غير مضغوط عالي الدقة مفهرس محلياً',
+      localTab: 'الملفات المحلية',
+      vaultTab: 'الخزانة العامة (Open Hi-Res)',
+      searchPlaceholder: 'ابحث في الروائع الكلاسيكية، باخ، بيتهوفن...',
       addFiles: 'استيراد ملفات صوتية',
       scanFolder: 'فحص مجلد',
       trackCol: 'العنوان',
@@ -362,29 +335,31 @@ export const locales = {
       drCol: 'النطاق الديناميكي',
       actionsCol: 'إجراءات',
       playNow: 'تشغيل الآن',
-      findSimilar: 'تطابق ذكي'
+      findSimilar: 'تطابق ذكي',
+      nativeMaster: 'ماستر أصلي',
+      bweUpscaled: 'ترقية صوتية BWE'
     },
     equalizer: {
       title: 'معادل صوت بارامتري 10 نطاقات',
-      subtitle: 'فلاتر Bi-quad صوتية دقيقة مع تعويض خطي للأطوار',
+      subtitle: 'فلاتر Bi-quad صوتية دقيقة',
       enable: 'تفعيل المعادل',
       bypass: 'تخطي المعادل',
       reset: 'إعادة ضبط مسطح',
       preset: 'الإعدادات المسبقة',
       presets: {
         flat: 'استوديو مسطح',
-        warm: 'دفء أنبوبي كلاسيكي',
+        warm: 'دفء أنبوبي',
         air: 'هواء الترددات العالية',
-        jazz: 'حضور الجاز والآلات الحية',
-        vocal: 'وضوح الأصوات البشرية',
-        bass: 'تحكم دقيق في الباس العميق'
+        jazz: 'حضور الجاز',
+        vocal: 'وضوح الأصوات',
+        bass: 'تحكم في الباس'
       }
     },
     hardware: {
       title: 'عتاد DAC ومحرك البث اللاسلكي',
-      subtitle: 'إخراج حصري يتجاوز مازجات النظام مع دعم كامل لكوديكات البلوتوث الفائقة',
+      subtitle: 'إخراج حصري يتجاوز مازجات النظام',
       outputMode: 'مخرج الصوت النشط',
-      outputDesc: 'اتصال عتادي مباشر مع تثبيت التردد',
+      outputDesc: 'اتصال عتادي مباشر',
       exclusiveMode: 'الوضع العتادي الحصري',
       exclusiveNotice: 'يتجاوز معالجات Windows AudioDG و Android AudioFlinger',
       bluetoothTitle: 'حالة مسار البلوتوث A2DP',
@@ -398,7 +373,7 @@ export const locales = {
     },
     smartFlow: {
       title: 'المدير الذكي وتدفق التشابه الصوتي',
-      subtitle: 'تشابه جيب التمام الموجه بسبعة أبعاد محلياً (100% غير متصل بالإنترنت ومحمي الخصوصية)',
+      subtitle: 'تشابه جيب التمام الموجه بسبعة أبعاد محلياً (100% غير متصل)',
       currentSeed: 'ملف المقطع الأساسي',
       similarTracks: 'أقرب المقاطع المشابهة نغمياً',
       similarityScore: 'نسبة التطابق الصوتي',
@@ -437,27 +412,15 @@ export const locales = {
       bitPerfectActive: 'Bit-Perfect Direct',
       exclusiveActive: 'WASAPI Exclusif',
       hiResBadge: '24-bit / 192 kHz',
-      changeLang: 'Langue'
-    },
-    player: {
-      format: 'Format',
-      sampleRate: 'Échantillonnage',
-      bitDepth: 'Profondeur de bit',
-      bufferFill: 'Tampon circulaire',
-      underflows: 'Sous-remplissages',
-      prev: 'Précédent',
-      play: 'Lecture',
-      pause: 'Pause',
-      next: 'Suivant',
-      shuffle: 'Aléatoire',
-      repeat: 'Répéter',
-      volume: 'Volume',
-      dopDsd: 'DSD sur PCM'
+      changeLang: 'Langue',
+      bweToggle: 'Restoration Hi-Res IA (BWE)'
     },
     library: {
-      title: 'Bibliothèque Musicale Locale',
-      subtitle: 'Catalogue haute résolution indexé dans une base SQLite locale',
-      searchPlaceholder: 'Rechercher des morceaux, artistes, albums...',
+      title: 'Bibliothèque Musicale',
+      subtitle: 'Catalogue haute résolution indexé localement',
+      localTab: 'Masters Locaux',
+      vaultTab: 'Coffre Public (Open Hi-Res)',
+      searchPlaceholder: 'Rechercher des chefs-d’œuvre, Beethoven, Bach...',
       addFiles: 'Importer des fichiers',
       scanFolder: 'Scanner un dossier',
       trackCol: 'Titre',
@@ -467,31 +430,33 @@ export const locales = {
       drCol: 'Plage Dynamique',
       actionsCol: 'Actions',
       playNow: 'Lire',
-      findSimilar: 'Similaires'
+      findSimilar: 'Similaires',
+      nativeMaster: 'Hi-Res Natif',
+      bweUpscaled: 'Remasterisé IA'
     },
     equalizer: {
       title: 'Égaliseur Paramétrique 10 Bandes',
-      subtitle: 'Filtres bi-quad audiophiles avec compensation de phase linéaire',
+      subtitle: 'Filtres bi-quad audiophiles',
       enable: 'Activer l’EQ',
       bypass: 'Contourner',
       reset: 'Réinitialiser',
       preset: 'Préréglages',
       presets: {
         flat: 'Studio Neutre',
-        warm: 'Chaleur Tube Audiophile',
-        air: 'Clarté Aiguë Hi-Res',
-        jazz: 'Présence Acoustique & Jazz',
+        warm: 'Chaleur Tube',
+        air: 'Clarté Aiguë',
+        jazz: 'Acoustique & Jazz',
         vocal: 'Intimité Vocale',
-        bass: 'Contrôle des Sous-Basses'
+        bass: 'Contrôle des Basses'
       }
     },
     hardware: {
       title: 'Moteur DAC Matériel & Sans-Fil',
-      subtitle: 'Sortie exclusive contournant le mixeur OS et passthrough Bluetooth haute résolution',
+      subtitle: 'Sortie exclusive contournant le mixeur OS',
       outputMode: 'Sortie Audio Active',
       outputDesc: 'Flux matériel direct sans rééchantillonnage',
       exclusiveMode: 'Mode Matériel Exclusif',
-      exclusiveNotice: 'Contourne les mélangeurs Windows, Android AudioFlinger et macOS',
+      exclusiveNotice: 'Contourne les mélangeurs Windows et Android',
       bluetoothTitle: 'État Passthrough Bluetooth A2DP',
       bluetoothDevice: 'Appareil Connecté',
       activeCodec: 'Codec Actif',
@@ -502,10 +467,10 @@ export const locales = {
       switchCodec: 'Simuler Changement de Codec'
     },
     smartFlow: {
-      title: 'Gestionnaire Intelligent & Flux de Similarité',
-      subtitle: 'Similarité cosinus sur vecteur acoustique 7D en local (100% privé & hors ligne)',
+      title: 'Gestionnaire Intelligent',
+      subtitle: 'Similarité cosinus acoustique 7D locale (100% hors ligne)',
       currentSeed: 'Profil du Morceau Référence',
-      similarTracks: 'Voisins Acoustiques les Plus Proches',
+      similarTracks: 'Voisins Acoustiques Proches',
       similarityScore: 'Score de Correspondance',
       radarTitle: 'Radar de Profil Acoustique',
       radarFeatures: {
@@ -513,7 +478,7 @@ export const locales = {
         energy: 'Énergie',
         timbre: 'Centroïde Spectral',
         dance: 'Dansabilité',
-        valence: 'Valence Musicale',
+        valence: 'Valence',
         acoustic: 'Acoustique',
         dynamicRange: 'Plage Dynamique (DR)'
       }
@@ -542,27 +507,15 @@ export const locales = {
       bitPerfectActive: 'Bit-Perfect 硬件直通',
       exclusiveActive: 'WASAPI 独占模式',
       hiResBadge: '24-bit / 192 kHz',
-      changeLang: '切换语言'
-    },
-    player: {
-      format: '母带格式',
-      sampleRate: '采样率',
-      bitDepth: '位深',
-      bufferFill: '环形缓冲区',
-      underflows: '欠载次数',
-      prev: '上一首',
-      play: '播放',
-      pause: '暂停',
-      next: '下一首',
-      shuffle: '随机',
-      repeat: '单曲循环',
-      volume: '主音量',
-      dopDsd: 'DSD over PCM'
+      changeLang: '切换语言',
+      bweToggle: 'AI母带重构与超频 (BWE)'
     },
     library: {
-      title: '本地高解析度音乐库',
+      title: '音乐曲库',
       subtitle: '基于本地嵌入式 SQLite 的纯净无损与母带音轨库',
-      searchPlaceholder: '搜索曲目、艺术家、专辑或母带格式...',
+      localTab: '本地母带',
+      vaultTab: '公共母带金库 (Open Hi-Res)',
+      searchPlaceholder: '搜索公有领域无损母带、贝多芬、巴赫、肖邦...',
       addFiles: '导入音频文件',
       scanFolder: '扫描本地目录',
       trackCol: '曲目名称',
@@ -572,43 +525,45 @@ export const locales = {
       drCol: '动态范围 (DR)',
       actionsCol: '操作',
       playNow: '立即播放',
-      findSimilar: '声学相似推荐'
+      findSimilar: '声学相似推荐',
+      nativeMaster: '原生高解析',
+      bweUpscaled: 'AI母带重构'
     },
     equalizer: {
-      title: '10段专业参量均衡器 (Parametric EQ)',
+      title: '10段专业参量均衡器',
       subtitle: '发烧级双二阶滤波算法与线性相位补偿',
       enable: '启用均衡器',
       bypass: '旁通',
       reset: '重置为平直',
       preset: '音色预设',
       presets: {
-        flat: '录音室参考平直',
-        warm: '发烧温润电子管感',
-        air: '高解析超高频泛音',
-        jazz: '原声与爵士现场',
-        vocal: '人声贴耳亲近',
-        bass: '紧凑深潜超重低音'
+        flat: '参考平直',
+        warm: '温润电子管',
+        air: '超高频泛音',
+        jazz: '原声与爵士',
+        vocal: '人声贴耳',
+        bass: '超重低音'
       }
     },
     hardware: {
       title: '硬件解码器 (DAC) 与无线高清引擎',
-      subtitle: '绕过操作系统混音器的硬件独占直通与蓝牙母带流无损传输',
+      subtitle: '硬件独占直通与蓝牙母带流无损传输',
       outputMode: '当前输出设备',
-      outputDesc: '锁定硬件原生采样率的纯净音频流',
+      outputDesc: '锁定硬件原生采样率',
       exclusiveMode: '硬件独占直通',
-      exclusiveNotice: '彻底避开 Windows 混音器、安卓 AudioFlinger 与 macOS 重采样',
+      exclusiveNotice: '避开 Windows 混音器与安卓 AudioFlinger',
       bluetoothTitle: '蓝牙 A2DP 高清传输状态',
       bluetoothDevice: '已连接接收设备',
       activeCodec: '当前编码协议',
       bitrate: '传输码率',
       latency: '缓冲区延迟',
-      hiResWireless: 'Hi-Res Audio Wireless 小金标认证',
+      hiResWireless: 'Hi-Res Audio Wireless 认证',
       dynamicBadgeTitle: '动态流状态徽标',
       switchCodec: '切换编码协议测试'
     },
     smartFlow: {
       title: '智能音乐分析与声学相似流',
-      subtitle: '本地 7 维声学特征向量余弦相似度推荐（100% 离线、零隐私泄露）',
+      subtitle: '本地 7 维声学特征向量余弦相似度推荐',
       currentSeed: '当前母带声学指纹',
       similarTracks: '最近声学特征邻近曲目',
       similarityScore: '声学相似指数',
@@ -616,7 +571,7 @@ export const locales = {
       radarFeatures: {
         tempo: '节拍速度 (BPM)',
         energy: '能量密度',
-        timbre: '频谱质心 (音色明暗)',
+        timbre: '频谱质心',
         dance: '律动性',
         valence: '情绪愉悦度',
         acoustic: '原声器乐度',

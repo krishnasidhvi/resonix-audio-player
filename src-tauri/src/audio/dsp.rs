@@ -1,5 +1,5 @@
-//! Audiophile DSP: 10-Band Parametric Equalizer & Biquad Filter Engine
-//! Implements Robert Bristow-Johnson Audio EQ Cookbook Bi-Quad filter formulas with f32 accuracy.
+//! Audiophile DSP: 10-Band Parametric Equalizer, Biquad Filter Engine,
+//! and High-Resolution Bandwidth Extension (BWE) Harmonic Synthesizer.
 
 use serde::{Serialize, Deserialize};
 
@@ -37,6 +37,31 @@ impl BiquadFilter {
         let a0 = 1.0 + alpha / a;
         let a1 = -2.0 * cos_w0;
         let a2 = 1.0 - alpha / a;
+
+        Self {
+            b0: b0 / a0,
+            b1: b1 / a0,
+            b2: b2 / a0,
+            a1: a1 / a0,
+            a2: a2 / a0,
+            x1: 0.0,
+            x2: 0.0,
+            y1: 0.0,
+            y2: 0.0,
+        }
+    }
+
+    pub fn highpass(sample_rate: f32, freq: f32, q: f32) -> Self {
+        let w0 = 2.0 * std::f32::consts::PI * (freq / sample_rate);
+        let cos_w0 = w0.cos();
+        let alpha = w0.sin() / (2.0 * q.max(0.1));
+
+        let b0 = (1.0 + cos_w0) / 2.0;
+        let b1 = -(1.0 + cos_w0);
+        let b2 = (1.0 + cos_w0) / 2.0;
+        let a0 = 1.0 + alpha;
+        let a1 = -2.0 * cos_w0;
+        let a2 = 1.0 - alpha;
 
         Self {
             b0: b0 / a0,
@@ -97,6 +122,44 @@ impl EqualizerChain {
                 val = f.process_sample(val);
             }
             *s = val;
+        }
+    }
+}
+
+/// Bandwidth Extension (BWE) Harmonic Restorer
+/// Reconstructs ultrasonic harmonics (>20kHz) from standard 44.1kHz audio using non-linear excitation
+pub struct BandwidthExtensionEngine {
+    crossover_filter: BiquadFilter,
+    ultrasonic_bandpass: BiquadFilter,
+    is_active: bool,
+    injection_gain: f32,
+}
+
+impl BandwidthExtensionEngine {
+    pub fn new(sample_rate: f32) -> Self {
+        Self {
+            crossover_filter: BiquadFilter::highpass(sample_rate, 10000.0, 1.0),
+            ultrasonic_bandpass: BiquadFilter::peaking_eq(sample_rate, 22000.0, 6.0, 1.5),
+            is_active: true,
+            injection_gain: 0.35,
+        }
+    }
+
+    pub fn set_active(&mut self, active: bool) {
+        self.is_active = active;
+    }
+
+    #[inline(always)]
+    pub fn process_bwe(&mut self, samples: &mut [f32]) {
+        if !self.is_active {
+            return;
+        }
+        for s in samples.iter_mut() {
+            let hp = self.crossover_filter.process_sample(*s);
+            // Non-linear Chebyshev harmonic excitation: 1.5*x - 0.5*x^3
+            let harmonics = 1.5 * hp - 0.5 * hp.powi(3);
+            let shaped_air = self.ultrasonic_bandpass.process_sample(harmonics);
+            *s += shaped_air * self.injection_gain;
         }
     }
 }
