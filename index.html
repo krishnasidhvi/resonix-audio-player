@@ -99,6 +99,18 @@
         <input type="text" id="library-search-input" class="search-input" placeholder="Search public domain masters, Beethoven, Bach, Chopin..." data-i18n="library.searchPlaceholder" />
       </div>
 
+      <!-- Quick Search Suggestion Tags -->
+      <div id="quick-search-tags" class="genre-chips-wrap" style="margin-top: -6px; margin-bottom: 10px; gap: 5px;">
+        <button class="genre-chip quick-tag" data-quick-q="Top Trending Songs">🔥 Top 50</button>
+        <button class="genre-chip quick-tag" data-quick-q="Devara Telugu">⚡ Devara</button>
+        <button class="genre-chip quick-tag" data-quick-q="Pushpa 2 Telugu">💎 Pushpa 2</button>
+        <button class="genre-chip quick-tag" data-quick-q="Anirudh Ravichander">🎸 Anirudh</button>
+        <button class="genre-chip quick-tag" data-quick-q="Arijit Singh">❤️ Arijit</button>
+        <button class="genre-chip quick-tag" data-quick-q="Sid Sriram Telugu">🌟 Sid Sriram</button>
+        <button class="genre-chip quick-tag" data-quick-q="AR Rahman">🎶 AR Rahman</button>
+        <button class="genre-chip quick-tag" data-quick-q="Billboard Hot 100">🌍 Global Pop</button>
+      </div>
+
       <!-- Public Vault Multilingual Language Filter Chips -->
       <div id="vault-lang-chips" class="genre-chips-wrap" style="display: none;">
         <button class="genre-chip active" data-vault-lang="all">All</button>
@@ -113,6 +125,13 @@
       <!-- Scrollable Track List -->
       <div class="track-scroll-list" id="track-list-container">
         <!-- Rendered dynamically via JavaScript -->
+      </div>
+
+      <!-- Load More Online Songs Button -->
+      <div id="btn-load-more-wrap" style="padding: 10px 0 4px 0; text-align: center; display: none;">
+        <button id="btn-load-more" class="genre-chip" style="width: 100%; padding: 8px 12px; font-weight: 600; color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.08);">
+          ⬇️ Load More Songs (+25 Online)
+        </button>
       </div>
     </aside>
 
