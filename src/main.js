@@ -1,5 +1,5 @@
 //! Resonix Studio Application Coordinator
-//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Multilingual Public Vault, BWE Engine, and i18n
+//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Live Trending Service, Public Vault, BWE Engine, and i18n
 
 import { i18n } from './i18n/i18n.js';
 import { locales } from './i18n/locales.js';
@@ -8,15 +8,17 @@ import { VisualizerEngine } from './visualizer.js';
 import { EqualizerManager } from './equalizer.js';
 import { smartMusicManager } from './smart-manager.js';
 import { publicVault } from './public-vault.js';
+import { liveTrending } from './trending-service.js';
 import { hwManager, BLUETOOTH_CODECS } from './bluetooth-manager.js';
 
 class ResonixApp {
   constructor() {
     this.currentTrackIndex = 0;
-    this.activeSourceTab = 'local'; // 'local' or 'vault'
-    this.activeVaultLanguage = 'all'; // 'all', 'te', 'hi', 'ta', 'en', 'ja', 'es'
+    this.activeSourceTab = 'trending'; // Default to 'trending' so user sees trending songs immediately!
+    this.activeLanguageFilter = 'all'; // 'all', 'te', 'hi', 'ta', 'en', 'ja', 'es'
     this.visualizer = null;
     this.equalizer = null;
+    this.searchDebounceTimer = null;
   }
 
   async init() {
@@ -43,10 +45,18 @@ class ResonixApp {
     }
 
     // 4. Render Initial Library & Recommendations
+    const initialList = this.getActiveTrackList();
     this.renderTrackList();
-    this.updateCurrentTrackUI(smartMusicManager.getTracks()[0]);
-    this.updateRecommendationsAndRadar();
+    if (initialList.length > 0) {
+      this.updateCurrentTrackUI(initialList[0]);
+      smartMusicManager.setSeedTrack(initialList[0]);
+      this.updateRecommendationsAndRadar();
+    }
     hwManager.updateDynamicBadge();
+
+    // Show language chips by default in Trending mode
+    const langChips = document.getElementById('vault-lang-chips');
+    if (langChips) langChips.style.display = 'flex';
 
     // 5. Setup Listeners
     this.setupEventListeners();
@@ -54,35 +64,50 @@ class ResonixApp {
   }
 
   setupEventListeners() {
-    // Source Navigation Tabs: Local Masters vs Public Vault
+    // Source Navigation Tabs: Local Masters vs Trending Hits vs Public Vault
     const tabLocal = document.getElementById('tab-local-masters');
+    const tabTrending = document.getElementById('tab-trending-hits');
     const tabVault = document.getElementById('tab-public-vault');
     const langChips = document.getElementById('vault-lang-chips');
 
-    if (tabLocal && tabVault) {
-      tabLocal.addEventListener('click', () => {
-        this.activeSourceTab = 'local';
-        tabLocal.classList.add('active');
-        tabVault.classList.remove('active');
-        if (langChips) langChips.style.display = 'none';
-        this.renderTrackList();
-      });
+    const updateTabActive = (activeTab) => {
+      [tabLocal, tabTrending, tabVault].forEach(t => t && t.classList.remove('active'));
+      activeTab.classList.add('active');
+    };
 
-      tabVault.addEventListener('click', () => {
-        this.activeSourceTab = 'vault';
-        tabVault.classList.add('active');
-        tabLocal.classList.remove('active');
+    if (tabTrending) {
+      tabTrending.addEventListener('click', () => {
+        this.activeSourceTab = 'trending';
+        updateTabActive(tabTrending);
         if (langChips) langChips.style.display = 'flex';
         this.renderTrackList();
       });
     }
 
-    // Multilingual Language Chips Filter for Public Vault
+    if (tabVault) {
+      tabVault.addEventListener('click', () => {
+        this.activeSourceTab = 'vault';
+        updateTabActive(tabVault);
+        if (langChips) langChips.style.display = 'flex';
+        this.renderTrackList();
+      });
+    }
+
+    if (tabLocal) {
+      tabLocal.addEventListener('click', () => {
+        this.activeSourceTab = 'local';
+        updateTabActive(tabLocal);
+        if (langChips) langChips.style.display = 'none';
+        this.renderTrackList();
+      });
+    }
+
+    // Multilingual Language Chips Filter
     document.querySelectorAll('[data-vault-lang]').forEach(chip => {
       chip.addEventListener('click', (e) => {
         document.querySelectorAll('[data-vault-lang]').forEach(c => c.classList.remove('active'));
         e.target.classList.add('active');
-        this.activeVaultLanguage = e.target.getAttribute('data-vault-lang');
+        this.activeLanguageFilter = e.target.getAttribute('data-vault-lang');
         this.renderTrackList();
       });
     });
@@ -112,7 +137,7 @@ class ResonixApp {
         } else {
           const list = this.getActiveTrackList();
           const track = list[this.currentTrackIndex] || list[0];
-          audioCore.play(track);
+          if (track) audioCore.play(track);
         }
       });
     }
@@ -190,12 +215,30 @@ class ResonixApp {
       });
     }
 
-    // Library Search Filter (Supporting English, Hindi, Telugu, Tamil, Japanese scripts)
+    // Live Online & Local Search Filter with Debounce
     const searchInput = document.getElementById('library-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
-        this.renderTrackList(q);
+        const q = e.target.value;
+        if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+
+        if (this.activeSourceTab === 'trending' && q.trim().length >= 2) {
+          const badge = document.getElementById('library-count-badge');
+          if (badge) badge.textContent = 'Searching Live...';
+
+          this.searchDebounceTimer = setTimeout(async () => {
+            const liveResults = await liveTrending.searchOnline(q);
+            if (liveResults.length > 0) {
+              this.renderCustomList(liveResults);
+            } else {
+              this.renderTrackList(q);
+            }
+          }, 400);
+        } else {
+          this.searchDebounceTimer = setTimeout(() => {
+            this.renderTrackList(q);
+          }, 150);
+        }
       });
     }
 
@@ -207,8 +250,10 @@ class ResonixApp {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-          btnImport.textContent = 'Analyzing...';
+          btnImport.textContent = 'Importing...';
           const newTrack = await smartMusicManager.importUserAudioFile(file);
+          this.activeSourceTab = 'local';
+          updateTabActive(tabLocal);
           this.renderTrackList();
           this.playTrack(newTrack);
           btnImport.textContent = 'Import Audio';
@@ -284,11 +329,24 @@ class ResonixApp {
     audioCore.on('bweChange', () => {
       hwManager.updateDynamicBadge();
     });
+
+    audioCore.on('ended', () => {
+      this.nextTrack();
+    });
   }
 
   getActiveTrackList(filter = '') {
-    if (this.activeSourceTab === 'vault') {
-      return publicVault.getTracks(filter, this.activeVaultLanguage);
+    if (this.activeSourceTab === 'trending') {
+      const q = filter.trim().toLowerCase();
+      const allTrending = liveTrending.getPrecached(this.activeLanguageFilter);
+      return allTrending.filter(t =>
+        !q ||
+        t.title.toLowerCase().includes(q) ||
+        t.artist.toLowerCase().includes(q) ||
+        t.genre.toLowerCase().includes(q)
+      );
+    } else if (this.activeSourceTab === 'vault') {
+      return publicVault.getTracks(filter, this.activeLanguageFilter);
     } else {
       const tracks = smartMusicManager.getTracks();
       const q = filter.trim().toLowerCase();
@@ -301,6 +359,17 @@ class ResonixApp {
     }
   }
 
+  renderCustomList(list) {
+    const container = document.getElementById('track-list-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const countBadge = document.getElementById('library-count-badge');
+    if (countBadge) countBadge.textContent = `${list.length} Live Results`;
+
+    this.renderCards(list, container);
+  }
+
   renderTrackList(filter = '') {
     const container = document.getElementById('track-list-container');
     if (!container) return;
@@ -310,9 +379,14 @@ class ResonixApp {
 
     const countBadge = document.getElementById('library-count-badge');
     if (countBadge) {
-      countBadge.textContent = `${list.length} ${this.activeSourceTab === 'vault' ? 'Public Masters' : 'Masters'}`;
+      const label = this.activeSourceTab === 'trending' ? 'Trending Hits' : this.activeSourceTab === 'vault' ? 'Public Masters' : 'Masters';
+      countBadge.textContent = `${list.length} ${label}`;
     }
 
+    this.renderCards(list, container);
+  }
+
+  renderCards(list, container) {
     list.forEach((track, idx) => {
       const card = document.createElement('div');
       const isCur = audioCore.currentTrack && audioCore.currentTrack.id === track.id;
@@ -327,15 +401,19 @@ class ResonixApp {
         ? `<span style="font-size: 0.65rem; color: var(--text-tertiary); font-family: var(--font-mono); margin-left: 6px;">• ${track.source_platform}</span>`
         : '';
 
-      card.innerHTML = `
-        <div class="track-info-left">
-          <div class="track-thumb">
+      const thumbImg = track.image
+        ? `<img src="${track.image}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover;" alt="Artwork" />`
+        : `<div class="track-thumb">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18V5l12-2v13"></path>
               <circle cx="6" cy="18" r="3"></circle>
               <circle cx="18" cy="16" r="3"></circle>
             </svg>
-          </div>
+           </div>`;
+
+      card.innerHTML = `
+        <div class="track-info-left">
+          ${thumbImg}
           <div class="track-meta-wrap">
             <div class="track-meta-title">${track.title}</div>
             <div class="track-meta-artist">${track.artist} ${platformLabel}</div>
