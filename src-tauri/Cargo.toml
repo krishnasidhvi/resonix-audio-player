@@ -1,0 +1,61 @@
+[package]
+name = "resonix-audio-player"
+version = "1.0.0"
+description = "High-Performance Cross-Platform Hi-Res Audio Player & Smart Music Manager"
+authors = ["Resonix Audio Engineering Team"]
+license = "MIT"
+edition = "2021"
+
+[lib]
+name = "resonix_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["tray-icon"] }
+tauri-plugin-opener = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Audio Decoding (Pure Rust, supporting FLAC, ALAC, WAV, AIFF, DSD/DoP, MP3, AAC)
+symphonia = { version = "0.5", features = ["all-codecs", "all-formats"] }
+
+# Cross-platform Low-Latency Audio Output
+cpal = "0.15"
+
+# Lock-Free SPSC Ring Buffer between decoder and audio callback thread
+ringbuf = "0.4"
+
+# Local SQLite Database for Metadata & Acoustic Vector Embeddings
+rusqlite = { version = "0.32", features = ["bundled", "blob"] }
+
+# Sample Rate Conversion & DSP
+rubato = "0.15"
+
+# Thread Synchronization & Lock-free primitives
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+anyhow = "1.0"
+thiserror = "1.0"
+log = "0.4"
+
+[target.'cfg(target_os = "android")'.dependencies]
+oboe = { version = "0.6", features = ["java-interface"] }
+jni = "0.21"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_Devices_Bluetooth",
+    "Win32_System_Com"
+] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+coreaudio-sys = "0.2"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+objc = "0.2"

@@ -1,0 +1,27 @@
+{
+  "name": "resonix-audio-player",
+  "version": "1.0.0",
+  "description": "High-Performance Open-Source Cross-Platform Hi-Res Audio Player & Smart Music Manager",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "keywords": [
+    "hires-audio",
+    "audiophile",
+    "flac",
+    "wasapi-exclusive",
+    "tauri",
+    "symphonia",
+    "ldac",
+    "smart-music-manager"
+  ],
+  "author": "Resonix Open Source Team",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
