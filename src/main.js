@@ -1,5 +1,5 @@
 //! Resonix Studio Application Coordinator
-//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Live Trending Service, Public Vault, BWE Engine, and i18n
+//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Live Trending Service, Public Vault, BWE Engine, Spatial Stage, Synced Lyrics, Studio Lounge, and i18n
 
 import { i18n } from './i18n/i18n.js';
 import { locales } from './i18n/locales.js';
@@ -10,6 +10,8 @@ import { smartMusicManager } from './smart-manager.js';
 import { publicVault } from './public-vault.js';
 import { liveTrending } from './trending-service.js';
 import { hwManager, BLUETOOTH_CODECS } from './bluetooth-manager.js';
+import { ArtworkGenerator } from './artwork-generator.js';
+import { lyricsEngine } from './lyrics-engine.js';
 
 class ResonixApp {
   constructor() {
@@ -21,6 +23,8 @@ class ResonixApp {
     this.equalizer = null;
     this.searchDebounceTimer = null;
     this.currentSearchQuery = '';
+    this.currentLyricsData = null;
+    this.lastActiveLineIdx = -1;
   }
 
   async init() {
@@ -46,9 +50,10 @@ class ResonixApp {
       this.equalizer = new EqualizerManager(eqSlidersContainer, eqCurveSvg);
     }
 
-    // 4. Setup Listeners
+    // 4. Setup Listeners & Shortcuts
     this.setupEventListeners();
     this.setupAudioListeners();
+    this.setupKeyboardShortcuts();
 
     // 5. Load Initial Online Trending Songs
     const langChips = document.getElementById('vault-lang-chips');
@@ -74,7 +79,7 @@ class ResonixApp {
 
     const updateTabActive = (activeTab) => {
       [tabLocal, tabTrending, tabVault].forEach(t => t && t.classList.remove('active'));
-      activeTab.classList.add('active');
+      if (activeTab) activeTab.classList.add('active');
     };
 
     if (tabTrending) {
@@ -162,6 +167,22 @@ class ResonixApp {
           btnToggleBwe.classList.remove('bwe-active-btn');
         }
         hwManager.updateDynamicBadge();
+      });
+    }
+
+    // A/B Remaster Audition Compare Button
+    const btnToggleAb = document.getElementById('btn-toggle-ab');
+    if (btnToggleAb) {
+      btnToggleAb.addEventListener('click', () => this.toggleAbAudition());
+    }
+
+    // 3D Spatial Audio Selector
+    const spatialSelect = document.getElementById('spatial-mode-select');
+    if (spatialSelect) {
+      spatialSelect.addEventListener('change', (e) => {
+        audioCore.setSpatialMode(e.target.value);
+        const telSpatial = document.getElementById('tel-spatial');
+        if (telSpatial) telSpatial.textContent = e.target.value.toUpperCase();
       });
     }
 
@@ -319,6 +340,57 @@ class ResonixApp {
       });
     }
 
+    // Synchronized Lyrics Drawer / Modal
+    const btnLyrics = document.getElementById('btn-toggle-lyrics');
+    const btnCloseLyrics = document.getElementById('btn-close-lyrics');
+    if (btnLyrics) {
+      btnLyrics.addEventListener('click', () => this.toggleLyricsModal());
+    }
+    if (btnCloseLyrics) {
+      btnCloseLyrics.addEventListener('click', () => this.toggleLyricsModal(false));
+    }
+
+    // Studio Lounge Fullscreen Listeners
+    const btnOpenLounge = document.getElementById('btn-open-lounge');
+    const playerArtWrap = document.getElementById('player-art-wrap');
+    const playerMetaWrap = document.getElementById('player-meta-wrap');
+    const btnCloseLounge = document.getElementById('btn-close-lounge');
+
+    if (btnOpenLounge) {
+      btnOpenLounge.addEventListener('click', () => this.toggleStudioLounge(true));
+    }
+    if (playerArtWrap) {
+      playerArtWrap.addEventListener('click', () => this.toggleStudioLounge(true));
+    }
+    if (playerMetaWrap) {
+      playerMetaWrap.addEventListener('click', () => this.toggleStudioLounge(true));
+    }
+    if (btnCloseLounge) {
+      btnCloseLounge.addEventListener('click', () => this.toggleStudioLounge(false));
+    }
+
+    // Studio Lounge Internal Controls
+    const loungePlay = document.getElementById('lounge-btn-play');
+    const loungePrev = document.getElementById('lounge-btn-prev');
+    const loungeNext = document.getElementById('lounge-btn-next');
+    const loungeSlider = document.getElementById('lounge-seek-slider');
+
+    if (loungePlay) {
+      loungePlay.addEventListener('click', () => {
+        if (audioCore.state === 'playing') audioCore.pause();
+        else audioCore.resume();
+      });
+    }
+    if (loungePrev) loungePrev.addEventListener('click', () => this.prevTrack());
+    if (loungeNext) loungeNext.addEventListener('click', () => this.nextTrack());
+    if (loungeSlider) {
+      loungeSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        const targetSec = (val / 100) * audioCore.duration;
+        audioCore.seek(targetSec);
+      });
+    }
+
     // Language Modal
     const btnOpenLang = document.getElementById('btn-open-lang');
     if (btnOpenLang) {
@@ -337,12 +409,17 @@ class ResonixApp {
   setupAudioListeners() {
     audioCore.on('stateChange', (state) => {
       const icon = document.getElementById('play-pause-icon');
-      if (icon) {
-        if (state === 'playing') {
-          icon.innerHTML = `<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>`;
-        } else {
-          icon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
-        }
+      const loungeIcon = document.getElementById('lounge-btn-play');
+      const vinylDisc = document.getElementById('lounge-vinyl-record');
+
+      if (state === 'playing') {
+        if (icon) icon.innerHTML = `<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>`;
+        if (loungeIcon) loungeIcon.textContent = '⏸';
+        if (vinylDisc) vinylDisc.classList.add('spinning');
+      } else {
+        if (icon) icon.innerHTML = `<polygon points="5 3 19 12 5 21 5 3"></polygon>`;
+        if (loungeIcon) loungeIcon.textContent = '▶';
+        if (vinylDisc) vinylDisc.classList.remove('spinning');
       }
       this.updateTrackActiveVisuals();
     });
@@ -352,9 +429,22 @@ class ResonixApp {
       const totStamp = document.getElementById('player-time-total');
       const slider = document.getElementById('player-seek-slider');
 
-      if (curStamp) curStamp.textContent = this.formatTime(data.current);
-      if (totStamp) totStamp.textContent = this.formatTime(data.total);
+      const loungeCur = document.getElementById('lounge-time-current');
+      const loungeTot = document.getElementById('lounge-time-total');
+      const loungeSlider = document.getElementById('lounge-seek-slider');
+
+      const curFmt = this.formatTime(data.current);
+      const totFmt = this.formatTime(data.total);
+
+      if (curStamp) curStamp.textContent = curFmt;
+      if (totStamp) totStamp.textContent = totFmt;
       if (slider) slider.value = data.progress * 100;
+
+      if (loungeCur) loungeCur.textContent = curFmt;
+      if (loungeTot) loungeTot.textContent = totFmt;
+      if (loungeSlider) loungeSlider.value = data.progress * 100;
+
+      this.updateLyricsSync(data.current);
     });
 
     audioCore.on('metrics', (metrics) => {
@@ -368,9 +458,160 @@ class ResonixApp {
       hwManager.updateDynamicBadge();
     });
 
+    audioCore.on('abChange', (data) => {
+      const abBtn = document.getElementById('btn-toggle-ab');
+      const badge = document.getElementById('ab-btn-badge');
+      if (data.mode === 'raw') {
+        if (badge) badge.textContent = '⚠️ A/B: RAW 16/44k';
+        if (abBtn) {
+          abBtn.style.borderColor = '#ff3d00';
+          abBtn.style.color = '#ff3d00';
+        }
+      } else {
+        if (badge) badge.textContent = '🔀 A/B: AI 24/96';
+        if (abBtn) {
+          abBtn.style.borderColor = 'var(--border-glow)';
+          abBtn.style.color = 'var(--accent-cyan)';
+        }
+      }
+    });
+
     // Continuous Queue / Autoplay Next Track
     audioCore.on('ended', () => {
       this.nextTrack();
+    });
+  }
+
+  setupKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      // Don't intercept if user is typing in search input or modal
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (audioCore.state === 'playing') audioCore.pause();
+        else audioCore.resume();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        audioCore.seek(audioCore.currentTime + 5);
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        audioCore.seek(Math.max(0, audioCore.currentTime - 5));
+      } else if (e.code === 'ArrowUp') {
+        e.preventDefault();
+        const v = Math.min(1, audioCore.volume + 0.05);
+        audioCore.setVolume(v);
+        const sl = document.getElementById('volume-slider');
+        if (sl) sl.value = v;
+      } else if (e.code === 'ArrowDown') {
+        e.preventDefault();
+        const v = Math.max(0, audioCore.volume - 0.05);
+        audioCore.setVolume(v);
+        const sl = document.getElementById('volume-slider');
+        if (sl) sl.value = v;
+      } else if (e.key === 'm' || e.key === 'M') {
+        const isM = audioCore.toggleMute();
+        const btnMute = document.getElementById('btn-volume-mute');
+        if (btnMute) btnMute.style.opacity = isM ? '0.4' : '1';
+      } else if (e.key === 'l' || e.key === 'L') {
+        this.toggleLyricsModal();
+      } else if (e.key === 'f' || e.key === 'F') {
+        this.toggleStudioLounge();
+      } else if (e.key === 'Escape') {
+        document.getElementById('studio-lounge-overlay')?.classList.remove('open');
+        document.getElementById('lyrics-modal')?.classList.remove('open');
+      } else if (e.key === 'a' || e.key === 'A') {
+        this.toggleAbAudition();
+      }
+    });
+  }
+
+  toggleLyricsModal(forceState = null) {
+    const modal = document.getElementById('lyrics-modal');
+    if (!modal) return;
+    if (forceState !== null) {
+      if (forceState) modal.classList.add('open');
+      else modal.classList.remove('open');
+    } else {
+      modal.classList.toggle('open');
+    }
+  }
+
+  toggleStudioLounge(forceState = null) {
+    const overlay = document.getElementById('studio-lounge-overlay');
+    if (!overlay) return;
+    if (forceState !== null) {
+      if (forceState) overlay.classList.add('open');
+      else overlay.classList.remove('open');
+    } else {
+      overlay.classList.toggle('open');
+    }
+  }
+
+  toggleAbAudition() {
+    audioCore.toggleAbAudition();
+  }
+
+  loadLyricsForTrack(track) {
+    if (!track) return;
+    const lyricsData = lyricsEngine.getLyricsForTrack(track.title);
+    this.currentLyricsData = lyricsData;
+    this.lastActiveLineIdx = -1;
+
+    // Update Lyrics Modal Headers
+    const titleEl = document.getElementById('lyrics-track-title');
+    const artistEl = document.getElementById('lyrics-track-artist');
+    const langBadge = document.getElementById('lyrics-lang-badge');
+    const loreBox = document.getElementById('lyrics-lore-box');
+    const linesContainer = document.getElementById('lyrics-lines-container');
+    const loungeLyricsContainer = document.getElementById('lounge-lyrics-container');
+
+    if (titleEl) titleEl.textContent = track.title;
+    if (artistEl) artistEl.textContent = track.artist;
+    if (langBadge && lyricsData) langBadge.textContent = lyricsData.language || 'High-Resolution Master';
+    if (loreBox && lyricsData) loreBox.textContent = lyricsData.lore || '';
+
+    // Render lines into both modal and lounge ticker
+    const renderLinesHtml = (container) => {
+      if (!container || !lyricsData || !lyricsData.lines) return;
+      container.innerHTML = lyricsData.lines.map((line, idx) => `
+        <div class="lyric-line-item ${idx === 0 ? 'active' : ''}" data-line-idx="${idx}" data-line-time="${line.time}">
+          <div class="lyric-line-text">${line.text}</div>
+          ${line.translation ? `<div class="lyric-line-translation">${line.translation}</div>` : ''}
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.lyric-line-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const t = parseFloat(item.getAttribute('data-line-time'));
+          if (!isNaN(t)) audioCore.seek(t);
+        });
+      });
+    };
+
+    renderLinesHtml(linesContainer);
+    renderLinesHtml(loungeLyricsContainer);
+  }
+
+  updateLyricsSync(currentTime) {
+    if (!this.currentLyricsData || !this.currentLyricsData.lines) return;
+    const activeIdx = lyricsEngine.getActiveLineIndex(this.currentLyricsData, currentTime);
+    if (activeIdx === this.lastActiveLineIdx) return;
+    this.lastActiveLineIdx = activeIdx;
+
+    [document.getElementById('lyrics-lines-container'), document.getElementById('lounge-lyrics-container')].forEach(c => {
+      if (!c) return;
+      const items = c.querySelectorAll('.lyric-line-item');
+      items.forEach((item, idx) => {
+        if (idx === activeIdx) {
+          item.classList.add('active');
+          item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          item.classList.remove('active');
+        }
+      });
     });
   }
 
@@ -405,7 +646,6 @@ class ResonixApp {
 
     const more = await liveTrending.loadMore();
     if (more && more.length > 0) {
-      // Append non-duplicate tracks
       const existingIds = new Set(this.activeDisplayList.map(t => t.id));
       const fresh = more.filter(t => !existingIds.has(t.id));
       this.activeDisplayList = [...this.activeDisplayList, ...fresh];
@@ -488,15 +728,18 @@ class ResonixApp {
         ? `<span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-secondary); margin-left: 6px;">${this.formatTime(track.duration_seconds)}</span>`
         : '';
 
-      const thumbImg = track.image
-        ? `<img src="${track.image}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" alt="Artwork" loading="lazy" />`
-        : `<div class="track-thumb">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18V5l12-2v13"></path>
-              <circle cx="6" cy="18" r="3"></circle>
-              <circle cx="18" cy="16" r="3"></circle>
-            </svg>
-           </div>`;
+      const artUrl = ArtworkGenerator.getArtworkUrl(track);
+      const safeTitleAttr = (track.title || '').replace(/'/g, "\\'");
+      const safeArtistAttr = (track.artist || '').replace(/'/g, "\\'");
+      const safeGenreAttr = (track.genre || track.format || 'Hi-Res').replace(/'/g, "\\'");
+
+      const thumbImg = `
+        <img src="${artUrl}" 
+             style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex-shrink: 0;" 
+             alt="Artwork" 
+             loading="lazy" 
+             onerror="window.handleImageError(this, '${safeTitleAttr}', '${safeArtistAttr}', '${safeGenreAttr}')" />
+      `;
 
       card.innerHTML = `
         <div class="track-info-left" style="overflow: hidden;">
@@ -549,10 +792,56 @@ class ResonixApp {
     const titleEl = document.getElementById('player-track-title');
     const artistEl = document.getElementById('player-track-artist');
     const totStamp = document.getElementById('player-time-total');
+    const artImg = document.getElementById('player-art-img');
 
     if (titleEl) titleEl.textContent = track.title;
     if (artistEl) artistEl.textContent = track.artist;
     if (totStamp) totStamp.textContent = this.formatTime(track.duration_seconds);
+
+    const artUrl = ArtworkGenerator.getArtworkUrl(track);
+    if (artImg) {
+      artImg.src = artUrl;
+      artImg.onerror = () => window.handleImageError(artImg, track.title, track.artist, track.genre);
+    }
+
+    // Update Studio Lounge Fullscreen Metadata
+    const loungeArt = document.getElementById('lounge-vinyl-art');
+    const loungeTitle = document.getElementById('lounge-track-title');
+    const loungeArtist = document.getElementById('lounge-track-artist');
+    const loungeBadge = document.getElementById('lounge-track-badge');
+    const loungeTotTime = document.getElementById('lounge-time-total');
+
+    if (loungeArt) {
+      loungeArt.src = artUrl;
+      loungeArt.onerror = () => window.handleImageError(loungeArt, track.title, track.artist, track.genre);
+    }
+    if (loungeTitle) loungeTitle.textContent = track.title;
+    if (loungeArtist) loungeArtist.textContent = track.artist;
+    if (loungeTotTime) loungeTotTime.textContent = this.formatTime(track.duration_seconds);
+    if (loungeBadge) {
+      loungeBadge.textContent = `${track.format || 'FLAC 24/96'} • ${track.source_platform || 'Studio Master'}`;
+    }
+
+    // Update Lounge Telemetry monitors
+    const telFormat = document.getElementById('tel-format');
+    const telDr = document.getElementById('tel-dr');
+    const telSr = document.getElementById('tel-sample-rate');
+    const telBd = document.getElementById('tel-bit-depth');
+    const telSpatial = document.getElementById('tel-spatial');
+
+    if (telFormat) telFormat.textContent = track.format || 'FLAC 24/96';
+    if (telDr) telDr.textContent = `DR ${(track.dynamic_range_dr || (track.features && track.features.dynamic_range_dr) || 14.2).toFixed(1)}`;
+    if (telSr) telSr.textContent = `${(track.sample_rate || 96000).toLocaleString()} Hz`;
+    if (telBd) telBd.textContent = `${track.bit_depth || 24}-Bit Studio`;
+    if (telSpatial) telSpatial.textContent = audioCore.spatialMode.toUpperCase();
+
+    // Ambient Dynamic Color Glow
+    const palette = ArtworkGenerator.getPalette(track.title);
+    document.documentElement.style.setProperty('--dynamic-glow', palette.glow);
+    document.documentElement.style.setProperty('--dynamic-accent', palette.accent1);
+
+    // Update Lyrics for current track
+    this.loadLyricsForTrack(track);
   }
 
   updateTrackActiveVisuals() {
@@ -585,13 +874,26 @@ class ResonixApp {
     recs.forEach(rec => {
       const item = document.createElement('div');
       item.className = 'rec-item-card';
+
+      const recArtUrl = ArtworkGenerator.getArtworkUrl(rec.track);
+      const safeTitle = (rec.track.title || '').replace(/'/g, "\\'");
+      const safeArtist = (rec.track.artist || '').replace(/'/g, "\\'");
+      const safeGenre = (rec.track.genre || 'Hi-Res').replace(/'/g, "\\'");
+
       item.innerHTML = `
-        <div style="overflow: hidden; max-width: 220px;">
-          <div style="font-size: 0.82rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            ${rec.track.title}
-          </div>
-          <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px;">
-            ${rec.reason}
+        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; max-width: 220px;">
+          <img src="${recArtUrl}" 
+               style="width: 34px; height: 34px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" 
+               alt="Art" 
+               loading="lazy" 
+               onerror="window.handleImageError(this, '${safeTitle}', '${safeArtist}', '${safeGenre}')" />
+          <div style="overflow: hidden;">
+            <div style="font-size: 0.8rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${rec.track.title}
+            </div>
+            <div style="font-size: 0.68rem; color: var(--text-secondary); margin-top: 1px;">
+              ${rec.reason}
+            </div>
           </div>
         </div>
         <span class="rec-score-pill">${rec.scorePercent}%</span>

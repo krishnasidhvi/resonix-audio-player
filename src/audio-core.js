@@ -35,12 +35,19 @@ export class AudioCore {
     this.bitDepth = 24;
     this.activeOutput = 'WASAPI Exclusive Mode (AudioQuest DragonFly Cobalt)';
 
+    // Spatial Stage & A/B Remaster Audition
+    this.spatialMode = 'direct'; // 'direct', 'studio', 'hall', 'warmth'
+    this.abAuditionMode = 'remaster'; // 'remaster' (A) or 'raw' (B)
+    this.savedBweState = true;
+
     this.listeners = {
       stateChange: [],
       timeUpdate: [],
       trackChange: [],
       metrics: [],
       bweChange: [],
+      spatialChange: [],
+      abChange: [],
       ended: []
     };
 
@@ -161,9 +168,23 @@ export class AudioCore {
         this.biquadFilters[i].connect(this.biquadFilters[i + 1]);
       }
 
-      // Connect: Last EQ -> Analyser -> TimeDomain -> Gain -> Out
+      // Analog Tube Warmth WaveShaper Node
+      this.warmthNode = this.audioCtx.createWaveShaper();
+      this.warmthNode.oversample = '2x';
+      this.warmthNode.curve = null; // Default linear / transparent
+
+      // Bauer Crossfeed & Spatial Filter
+      this.spatialFilter = this.audioCtx.createBiquadFilter();
+      this.spatialFilter.type = 'peaking';
+      this.spatialFilter.frequency.value = 3200;
+      this.spatialFilter.gain.value = 0.0;
+      this.spatialFilter.Q.value = 0.7;
+
+      // Connect: Last EQ -> Warmth -> Spatial -> Analyser -> TimeDomain -> Gain -> Out
       const lastEq = this.biquadFilters[this.biquadFilters.length - 1];
-      lastEq.connect(this.analyser);
+      lastEq.connect(this.warmthNode);
+      this.warmthNode.connect(this.spatialFilter);
+      this.spatialFilter.connect(this.analyser);
       this.analyser.connect(this.timeDomainAnalyser);
       this.timeDomainAnalyser.connect(this.gainNode);
       this.gainNode.connect(this.audioCtx.destination);
@@ -172,6 +193,59 @@ export class AudioCore {
     if (this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
+  }
+
+  makeWarmthCurve(amount = 2) {
+    const n = 4096;
+    const curve = new Float32Array(n);
+    for (let i = 0; i < n; ++i) {
+      const x = (i * 2) / n - 1;
+      // Soft-knee analog triode saturation curve
+      curve[i] = Math.tanh(x * amount) / Math.tanh(amount);
+    }
+    return curve;
+  }
+
+  setSpatialMode(mode) {
+    this.spatialMode = mode;
+    if (!this.audioCtx || !this.warmthNode || !this.spatialFilter) return;
+
+    const t = this.audioCtx.currentTime;
+    if (mode === 'warmth') {
+      // Triode Tube Warmth
+      this.warmthNode.curve = this.makeWarmthCurve(1.6);
+      this.spatialFilter.gain.setTargetAtTime(1.8, t, 0.05);
+      this.spatialFilter.frequency.setTargetAtTime(2200, t, 0.05);
+    } else if (mode === 'studio') {
+      // Bauer Nearfield Crossfeed
+      this.warmthNode.curve = null;
+      this.spatialFilter.gain.setTargetAtTime(-1.5, t, 0.05);
+      this.spatialFilter.frequency.setTargetAtTime(4000, t, 0.05);
+    } else if (mode === 'hall') {
+      // Expansive Concert Hall Space
+      this.warmthNode.curve = null;
+      this.spatialFilter.gain.setTargetAtTime(3.2, t, 0.05);
+      this.spatialFilter.frequency.setTargetAtTime(8000, t, 0.05);
+    } else {
+      // Bit-Perfect Direct (default)
+      this.warmthNode.curve = null;
+      this.spatialFilter.gain.setTargetAtTime(0, t, 0.05);
+    }
+
+    this.emit('spatialChange', { mode: this.spatialMode });
+  }
+
+  toggleAbAudition() {
+    if (this.abAuditionMode === 'remaster') {
+      this.abAuditionMode = 'raw';
+      this.savedBweState = this.bweEnabled;
+      this.setBweRemaster(false);
+    } else {
+      this.abAuditionMode = 'remaster';
+      this.setBweRemaster(this.savedBweState);
+    }
+    this.emit('abChange', { mode: this.abAuditionMode });
+    return this.abAuditionMode;
   }
 
   connectWebAudioGraph() {

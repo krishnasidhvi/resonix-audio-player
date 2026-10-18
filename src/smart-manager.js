@@ -2,6 +2,7 @@
 //! 7-Dimensional on-device acoustic feature extraction, Cosine Similarity matching & SVG Radar Chart
 
 import { audioCore } from './audio-core.js';
+import { ArtworkGenerator } from './artwork-generator.js';
 
 export const INITIAL_TRACKS = [
   {
@@ -146,7 +147,10 @@ export const INITIAL_TRACKS = [
 
 export class SmartMusicManager {
   constructor() {
-    this.tracks = [...INITIAL_TRACKS];
+    this.tracks = INITIAL_TRACKS.map(t => ({
+      ...t,
+      image: t.image || ArtworkGenerator.getArtworkUrl(t)
+    }));
     this.currentSeedTrack = this.tracks[0];
   }
 
@@ -297,15 +301,18 @@ export class SmartMusicManager {
   async importUserAudioFile(file) {
     const objectUrl = URL.createObjectURL(file);
 
+    const title = file.name.replace(/\.[^/.]+$/, '');
+    const format = file.name.split('.').pop().toUpperCase();
     const newTrack = {
       id: Date.now(),
-      title: file.name.replace(/\.[^/.]+$/, ''),
-      artist: 'Local Imported Audio File',
-      album: 'Personal Collection',
+      title: title,
+      artist: 'Local Audiophile Master',
+      album: 'Personal Vault',
+      image: ArtworkGenerator.generateSvgDataUri(title, 'Local Master', format),
       duration_seconds: 240,
       sample_rate: 96000,
       bit_depth: 24,
-      format: file.name.split('.').pop().toUpperCase(),
+      format: format,
       channels: 2,
       is_native_hires: true,
       dynamic_range_dr: 14.0,

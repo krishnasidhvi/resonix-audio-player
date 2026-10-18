@@ -2,6 +2,8 @@
 //! Connects JioSaavn Open API + Audius Decentralized Protocol + Curated 320kbps Master Hits
 //! Streams full-length 320kbps audio across Hindi, Telugu, English, Tamil, and Global Masters.
 
+import { ArtworkGenerator } from './artwork-generator.js';
+
 export const PRECACHED_TRENDING_HITS = [
   // --- TELUGU TRENDING HITS ---
   {
@@ -378,7 +380,10 @@ export const PRECACHED_TRENDING_HITS = [
 
 export class LiveTrendingService {
   constructor() {
-    this.precached = [...PRECACHED_TRENDING_HITS];
+    this.precached = PRECACHED_TRENDING_HITS.map(t => ({
+      ...t,
+      image: ArtworkGenerator.getArtworkUrl(t)
+    }));
     this.onlineCache = new Map(); // categoryKey -> track array
     this.currentQuery = '';
     this.currentPage = 1;
@@ -389,6 +394,56 @@ export class LiveTrendingService {
   getPrecached(language = 'all') {
     if (language === 'all') return this.precached;
     return this.precached.filter(t => t.language === language);
+  }
+
+  /**
+   * Client-side direct fallback for GitHub Pages where /api/ endpoints are static
+   */
+  async fetchDirectClientSearch(query, page = 1) {
+    try {
+      const apiUrl = `https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&page=${page}&limit=25`;
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const list = json?.data?.results || [];
+      return list.map(item => {
+        const streamUrlObj = item.downloadUrl?.find(d => d.quality === '320kbps') || item.downloadUrl?.[item.downloadUrl.length - 1];
+        const imgObj = item.image?.find(i => i.quality === '500x500') || item.image?.[item.image.length - 1];
+        const primaryArtist = item.artists?.primary?.map(a => a.name).join(', ') || item.artists?.all?.map(a => a.name).join(', ') || 'Various Artists';
+        const rawTitle = (item.name || 'Unknown Track').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&');
+        const rawImg = imgObj?.url || null;
+
+        return {
+          id: `online_${item.id}`,
+          title: rawTitle,
+          artist: primaryArtist.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&'),
+          album: (item.album?.name || 'Single').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&'),
+          language: item.language || 'en',
+          language_label: (item.language ? item.language.toUpperCase() : 'Global') + ' Hit',
+          genre: 'Streaming Master',
+          duration_seconds: parseInt(item.duration, 10) || 210,
+          sample_rate: 44100,
+          bit_depth: 16,
+          format: 'AAC 320k Direct Stream',
+          is_native_hires: false,
+          source_platform: 'JioSaavn 320k',
+          image: rawImg || ArtworkGenerator.generateSvgDataUri(rawTitle, primaryArtist, '320k Master'),
+          stream_url: streamUrlObj?.url || '',
+          features: {
+            tempo_bpm: 118,
+            energy: 0.72,
+            spectral_centroid: 3200,
+            danceability: 0.68,
+            valence: 0.62,
+            acousticness: 0.45,
+            dynamic_range_dr: 12.0
+          }
+        };
+      }).filter(t => t.stream_url);
+    } catch (e) {
+      console.warn('Direct client search fallback note:', e);
+      return [];
+    }
   }
 
   /**
@@ -416,16 +471,26 @@ export class LiveTrendingService {
     try {
       const searchUrl = `/api/saavn-search?q=${encodeURIComponent(query)}&n=25&p=${page}`;
       const res = await fetch(searchUrl);
+      if (!res.ok) throw new Error(`Vite API HTTP ${res.status}`);
       const json = await res.json();
-      let results = json.results || [];
+      let results = (json.results || []).map(r => ({
+        ...r,
+        image: ArtworkGenerator.getArtworkUrl(r)
+      }));
 
       // If category is 'en' or 'all', also mix in Audius decentralized tracks
       if ((lang === 'en' || lang === 'all') && page === 1) {
         try {
           const audiusRes = await fetch('/api/audius-trending');
-          const audiusJson = await audiusRes.json();
-          if (audiusJson.results && audiusJson.results.length > 0) {
-            results = [...results, ...audiusJson.results.slice(0, 15)];
+          if (audiusRes.ok) {
+            const audiusJson = await audiusRes.json();
+            if (audiusJson.results && audiusJson.results.length > 0) {
+              const audiusList = audiusJson.results.slice(0, 15).map(r => ({
+                ...r,
+                image: ArtworkGenerator.getArtworkUrl(r)
+              }));
+              results = [...results, ...audiusList];
+            }
           }
         } catch (e) {
           console.warn('Audius trending note:', e);
@@ -440,9 +505,17 @@ export class LiveTrendingService {
       this.isLoading = false;
       return combined;
     } catch (e) {
-      console.warn('Failed to load category tracks online, using precached:', e);
+      console.warn('Local proxy unavailable, attempting direct client open API:', e);
+      // Try direct client API
+      const directResults = await this.fetchDirectClientSearch(query, page);
+      const localMatches = this.getPrecached(lang);
+      const combined = directResults.length > 0
+        ? [...localMatches, ...directResults.filter(r => !localMatches.some(l => l.title === r.title))]
+        : localMatches;
+
+      this.onlineCache.set(cacheKey, combined);
       this.isLoading = false;
-      return this.getPrecached(lang);
+      return combined;
     }
   }
 
@@ -461,13 +534,23 @@ export class LiveTrendingService {
     try {
       const searchUrl = `/api/saavn-search?q=${encodeURIComponent(this.currentQuery)}&n=30&p=${page}`;
       const res = await fetch(searchUrl);
+      if (!res.ok) throw new Error(`Vite API HTTP ${res.status}`);
       const json = await res.json();
-      const results = json.results || [];
+      const results = (json.results || []).map(r => ({
+        ...r,
+        image: ArtworkGenerator.getArtworkUrl(r)
+      }));
 
       this.isLoading = false;
       return results;
     } catch (e) {
-      console.warn('Live online search fallback:', e);
+      console.warn('Local proxy unavailable, using direct client search fallback:', e);
+      const directResults = await this.fetchDirectClientSearch(this.currentQuery, page);
+      if (directResults.length > 0) {
+        this.isLoading = false;
+        return directResults;
+      }
+
       this.isLoading = false;
       return this.precached.filter(t =>
         t.title.toLowerCase().includes(query.toLowerCase()) ||
