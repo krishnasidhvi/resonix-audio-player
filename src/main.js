@@ -1,5 +1,5 @@
 //! Resonix Studio Application Coordinator
-//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Public Vault, BWE Engine, and i18n
+//! Connects UI controls, Visualizer, Equalizer, Smart Music Manager, Multilingual Public Vault, BWE Engine, and i18n
 
 import { i18n } from './i18n/i18n.js';
 import { locales } from './i18n/locales.js';
@@ -14,7 +14,7 @@ class ResonixApp {
   constructor() {
     this.currentTrackIndex = 0;
     this.activeSourceTab = 'local'; // 'local' or 'vault'
-    this.activeVaultGenre = 'All';
+    this.activeVaultLanguage = 'all'; // 'all', 'te', 'hi', 'ta', 'en', 'ja', 'es'
     this.visualizer = null;
     this.equalizer = null;
   }
@@ -57,14 +57,14 @@ class ResonixApp {
     // Source Navigation Tabs: Local Masters vs Public Vault
     const tabLocal = document.getElementById('tab-local-masters');
     const tabVault = document.getElementById('tab-public-vault');
-    const genreChips = document.getElementById('vault-genre-chips');
+    const langChips = document.getElementById('vault-lang-chips');
 
     if (tabLocal && tabVault) {
       tabLocal.addEventListener('click', () => {
         this.activeSourceTab = 'local';
         tabLocal.classList.add('active');
         tabVault.classList.remove('active');
-        if (genreChips) genreChips.style.display = 'none';
+        if (langChips) langChips.style.display = 'none';
         this.renderTrackList();
       });
 
@@ -72,17 +72,17 @@ class ResonixApp {
         this.activeSourceTab = 'vault';
         tabVault.classList.add('active');
         tabLocal.classList.remove('active');
-        if (genreChips) genreChips.style.display = 'flex';
+        if (langChips) langChips.style.display = 'flex';
         this.renderTrackList();
       });
     }
 
-    // Genre Chips Filter for Public Vault
-    document.querySelectorAll('.genre-chip').forEach(chip => {
+    // Multilingual Language Chips Filter for Public Vault
+    document.querySelectorAll('[data-vault-lang]').forEach(chip => {
       chip.addEventListener('click', (e) => {
-        document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('[data-vault-lang]').forEach(c => c.classList.remove('active'));
         e.target.classList.add('active');
-        this.activeVaultGenre = e.target.getAttribute('data-genre');
+        this.activeVaultLanguage = e.target.getAttribute('data-vault-lang');
         this.renderTrackList();
       });
     });
@@ -190,7 +190,7 @@ class ResonixApp {
       });
     }
 
-    // Library Search Filter
+    // Library Search Filter (Supporting English, Hindi, Telugu, Tamil, Japanese scripts)
     const searchInput = document.getElementById('library-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -288,13 +288,15 @@ class ResonixApp {
 
   getActiveTrackList(filter = '') {
     if (this.activeSourceTab === 'vault') {
-      return publicVault.getTracks(filter, this.activeVaultGenre);
+      return publicVault.getTracks(filter, this.activeVaultLanguage);
     } else {
       const tracks = smartMusicManager.getTracks();
+      const q = filter.trim().toLowerCase();
       return tracks.filter(t =>
-        t.title.toLowerCase().includes(filter) ||
-        t.artist.toLowerCase().includes(filter) ||
-        t.format.toLowerCase().includes(filter)
+        !q ||
+        t.title.toLowerCase().includes(q) ||
+        t.artist.toLowerCase().includes(q) ||
+        t.format.toLowerCase().includes(q)
       );
     }
   }
@@ -321,6 +323,10 @@ class ResonixApp {
         ? `<span class="track-pill-bwe" title="Auto-Remasters to 24-bit/96kHz via BWE Engine">AI 24/96 Remaster</span>`
         : `<span class="track-pill-hires">Native ${track.format}</span>`;
 
+      const platformLabel = track.source_platform
+        ? `<span style="font-size: 0.65rem; color: var(--text-tertiary); font-family: var(--font-mono); margin-left: 6px;">• ${track.source_platform}</span>`
+        : '';
+
       card.innerHTML = `
         <div class="track-info-left">
           <div class="track-thumb">
@@ -332,7 +338,7 @@ class ResonixApp {
           </div>
           <div class="track-meta-wrap">
             <div class="track-meta-title">${track.title}</div>
-            <div class="track-meta-artist">${track.artist}</div>
+            <div class="track-meta-artist">${track.artist} ${platformLabel}</div>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
