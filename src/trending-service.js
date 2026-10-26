@@ -397,53 +397,125 @@ export class LiveTrendingService {
   }
 
   /**
-   * Client-side direct fallback for GitHub Pages where /api/ endpoints are static
+   * Client-side direct fallback when /api/ endpoints are static, offline, or in Tauri/GitHub Pages
    */
   async fetchDirectClientSearch(query, page = 1) {
-    try {
-      const apiUrl = `https://saavn.dev/api/search/songs?query=${encodeURIComponent(query)}&page=${page}&limit=25`;
-      const res = await fetch(apiUrl);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const list = json?.data?.results || [];
-      return list.map(item => {
-        const streamUrlObj = item.downloadUrl?.find(d => d.quality === '320kbps') || item.downloadUrl?.[item.downloadUrl.length - 1];
-        const imgObj = item.image?.find(i => i.quality === '500x500') || item.image?.[item.image.length - 1];
-        const primaryArtist = item.artists?.primary?.map(a => a.name).join(', ') || item.artists?.all?.map(a => a.name).join(', ') || 'Various Artists';
-        const rawTitle = (item.name || 'Unknown Track').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&');
-        const rawImg = imgObj?.url || null;
+    let results = [];
 
-        return {
-          id: `online_${item.id}`,
-          title: rawTitle,
-          artist: primaryArtist.replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&'),
-          album: (item.album?.name || 'Single').replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, '&'),
-          language: item.language || 'en',
-          language_label: (item.language ? item.language.toUpperCase() : 'Global') + ' Hit',
-          genre: 'Streaming Master',
-          duration_seconds: parseInt(item.duration, 10) || 210,
-          sample_rate: 44100,
-          bit_depth: 16,
-          format: 'AAC 320k Direct Stream',
-          is_native_hires: false,
-          source_platform: 'JioSaavn 320k',
-          image: rawImg || ArtworkGenerator.generateSvgDataUri(rawTitle, primaryArtist, '320k Master'),
-          stream_url: streamUrlObj?.url || '',
-          features: {
-            tempo_bpm: 118,
-            energy: 0.72,
-            spectral_centroid: 3200,
-            danceability: 0.68,
-            valence: 0.62,
-            acousticness: 0.45,
-            dynamic_range_dr: 12.0
-          }
-        };
-      }).filter(t => t.stream_url);
+    // 1. Primary Live API Mirror: High-Speed 320kbps JioSaavn Open Mirror (CORS-enabled)
+    try {
+      const apiUrl = `https://jiosaavn-api-taupe.vercel.app/search/songs?query=${encodeURIComponent(query)}&page=${page}&limit=25`;
+      const res = await fetch(apiUrl);
+      if (res.ok) {
+        const json = await res.json();
+        const list = json?.data?.results || [];
+        const saavnTracks = list.map(item => {
+          const streamObj = item.downloadUrl?.find(d => d.quality === '320kbps') ||
+                            item.downloadUrl?.find(d => d.quality === '160kbps') ||
+                            item.downloadUrl?.[item.downloadUrl.length - 1];
+          const streamUrl = streamObj?.link || streamObj?.url || '';
+
+          const imgObj = item.image?.find(i => i.quality === '500x500') ||
+                         item.image?.[item.image.length - 1];
+          const rawImg = imgObj?.link || imgObj?.url || null;
+
+          const primaryArtist = item.primaryArtists ||
+                                item.artists?.primary?.map(a => a.name).join(', ') ||
+                                item.artists?.all?.map(a => a.name).join(', ') ||
+                                'Popular Artist';
+
+          const rawTitle = (item.name || 'Unknown Track')
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&amp;/g, '&');
+          const cleanArtist = primaryArtist
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&amp;/g, '&');
+          const cleanAlbum = (item.album?.name || 'Single')
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&amp;/g, '&');
+
+          const lang = (item.language || 'en').toLowerCase();
+          const langCode = lang.includes('telugu') ? 'te' : lang.includes('tamil') ? 'ta' : lang.includes('hindi') ? 'hi' : 'en';
+
+          return {
+            id: `online_${item.id}`,
+            title: rawTitle,
+            artist: cleanArtist,
+            album: cleanAlbum,
+            language: langCode,
+            language_label: (item.language ? item.language.toUpperCase() : 'Global') + ' Hit',
+            genre: 'Streaming 320k Master',
+            duration_seconds: parseInt(item.duration, 10) || 210,
+            sample_rate: 44100,
+            bit_depth: 16,
+            format: 'AAC 320k Direct Master',
+            is_native_hires: false,
+            source_platform: 'JioSaavn 320k Master',
+            image: rawImg || ArtworkGenerator.generateSvgDataUri(rawTitle, cleanArtist, '320k Master'),
+            stream_url: streamUrl,
+            features: {
+              tempo_bpm: 118,
+              energy: 0.76,
+              spectral_centroid: 3300,
+              danceability: 0.70,
+              valence: 0.65,
+              acousticness: 0.40,
+              dynamic_range_dr: 13.0
+            }
+          };
+        }).filter(t => t.stream_url);
+
+        results = [...results, ...saavnTracks];
+      }
     } catch (e) {
-      console.warn('Direct client search fallback note:', e);
-      return [];
+      console.warn('JioSaavn direct mirror note:', e);
     }
+
+    // 2. Secondary Decentralized Source: Audius Protocol (Direct CORS API)
+    // If results are low, query Audius for global indie/electronic/pop
+    if (results.length < 5) {
+      try {
+        const audiusUrl = `https://discoveryprovider.audius.co/v1/tracks/search?query=${encodeURIComponent(query)}&limit=15&app_name=RESONIX`;
+        const aRes = await fetch(audiusUrl);
+        if (aRes.ok) {
+          const aJson = await aRes.json();
+          const audiusTracks = (aJson.data || []).map(t => ({
+            id: `audius_${t.id}`,
+            title: t.title || 'Audius Track',
+            artist: t.user?.name || 'Audius Creator',
+            album: t.genre || 'Electronic / Global',
+            language: 'en',
+            language_label: 'GLOBAL',
+            genre: t.genre || 'Global Pop / Indie',
+            duration_seconds: t.duration || 210,
+            sample_rate: 44100,
+            bit_depth: 16,
+            format: 'MP3 320k Lossless',
+            is_native_hires: false,
+            source_platform: 'Audius Global Protocol',
+            image: t.artwork ? (t.artwork['480x480'] || t.artwork['150x150']) : null,
+            stream_url: `https://discoveryprovider.audius.co/v1/tracks/${t.id}/stream?app_name=RESONIX`,
+            features: {
+              tempo_bpm: 122,
+              energy: 0.80,
+              spectral_centroid: 3500,
+              danceability: 0.75,
+              valence: 0.68,
+              acousticness: 0.30,
+              dynamic_range_dr: 13.8
+            }
+          }));
+          results = [...results, ...audiusTracks];
+        }
+      } catch (ae) {
+        console.warn('Audius direct search note:', ae);
+      }
+    }
+
+    return results;
   }
 
   /**
@@ -460,37 +532,90 @@ export class LiveTrendingService {
       return this.onlineCache.get(cacheKey);
     }
 
-    let query = 'Trending Indian Top Hits';
-    if (lang === 'te') query = 'Telugu Trending Hits Tollywood';
-    else if (lang === 'hi') query = 'Bollywood Top 50 Trending Hits';
-    else if (lang === 'ta') query = 'Tamil Top Trending Hits Kollywood';
-    else if (lang === 'en') query = 'Top Pop Billboard Hits 2026';
-    else if (lang === 'ja') query = 'Japanese Classical Koto Airs';
-    else if (lang === 'es') query = 'Spanish Guitar Masterworks';
+    let query = 'Trending Top Songs';
+    if (lang === 'te') query = 'Telugu Trending Hits';
+    else if (lang === 'hi') query = 'Bollywood Top 50 Hits';
+    else if (lang === 'ta') query = 'Tamil Trending Hits';
+    else if (lang === 'en') query = 'Billboard Top Hits';
+    else if (lang === 'ja') query = 'Japanese Hits';
+    else if (lang === 'es') query = 'Spanish Latin Hits';
 
     try {
-      const searchUrl = `/api/saavn-search?q=${encodeURIComponent(query)}&n=25&p=${page}`;
-      const res = await fetch(searchUrl);
-      if (!res.ok) throw new Error(`Vite API HTTP ${res.status}`);
-      const json = await res.json();
-      let results = (json.results || []).map(r => ({
-        ...r,
-        image: ArtworkGenerator.getArtworkUrl(r)
-      }));
+      let results = [];
+
+      // Try local dev server proxy first
+      try {
+        const searchUrl = `/api/saavn-search?q=${encodeURIComponent(query)}&n=25&p=${page}`;
+        const res = await fetch(searchUrl);
+        if (res.ok) {
+          const json = await res.json();
+          results = (json.results || []).map(r => ({
+            ...r,
+            image: ArtworkGenerator.getArtworkUrl(r)
+          }));
+        }
+      } catch (proxyErr) {
+        // Fall back to direct client search below
+      }
+
+      // If local proxy returned nothing or failed, use direct client open API
+      if (results.length === 0) {
+        results = await this.fetchDirectClientSearch(query, page);
+      }
 
       // If category is 'en' or 'all', also mix in Audius decentralized tracks
       if ((lang === 'en' || lang === 'all') && page === 1) {
         try {
-          const audiusRes = await fetch('/api/audius-trending');
-          if (audiusRes.ok) {
-            const audiusJson = await audiusRes.json();
-            if (audiusJson.results && audiusJson.results.length > 0) {
-              const audiusList = audiusJson.results.slice(0, 15).map(r => ({
-                ...r,
-                image: ArtworkGenerator.getArtworkUrl(r)
-              }));
-              results = [...results, ...audiusList];
+          let audiusList = [];
+          // Try local proxy or direct Audius URL
+          try {
+            const audiusRes = await fetch('/api/audius-trending');
+            if (audiusRes.ok) {
+              const audiusJson = await audiusRes.json();
+              if (audiusJson.results && audiusJson.results.length > 0) {
+                audiusList = audiusJson.results.slice(0, 10).map(r => ({
+                  ...r,
+                  image: ArtworkGenerator.getArtworkUrl(r)
+                }));
+              }
             }
+          } catch (e) {}
+
+          if (audiusList.length === 0) {
+            const directAudius = await fetch('https://discoveryprovider.audius.co/v1/tracks/trending?app_name=RESONIX&limit=10');
+            if (directAudius.ok) {
+              const dJson = await directAudius.json();
+              audiusList = (dJson.data || []).map(t => ({
+                id: `audius_${t.id}`,
+                title: t.title,
+                artist: t.user?.name || 'Audius Creator',
+                album: t.genre || 'Electronic / Global',
+                language: 'en',
+                language_label: 'GLOBAL',
+                genre: t.genre || 'Global Pop / Indie',
+                duration_seconds: t.duration || 210,
+                sample_rate: 44100,
+                bit_depth: 16,
+                format: 'MP3 320k Lossless',
+                is_native_hires: false,
+                source_platform: 'Audius Global Protocol',
+                image: t.artwork ? (t.artwork['480x480'] || t.artwork['150x150']) : null,
+                stream_url: `https://discoveryprovider.audius.co/v1/tracks/${t.id}/stream?app_name=RESONIX`,
+                features: {
+                  tempo_bpm: 124,
+                  energy: 0.82,
+                  spectral_centroid: 3500,
+                  danceability: 0.78,
+                  valence: 0.68,
+                  acousticness: 0.25,
+                  dynamic_range_dr: 14.0
+                }
+              }));
+            }
+          }
+
+          if (audiusList.length > 0) {
+            results = [...results, ...audiusList];
           }
         } catch (e) {
           console.warn('Audius trending note:', e);
@@ -505,17 +630,10 @@ export class LiveTrendingService {
       this.isLoading = false;
       return combined;
     } catch (e) {
-      console.warn('Local proxy unavailable, attempting direct client open API:', e);
-      // Try direct client API
-      const directResults = await this.fetchDirectClientSearch(query, page);
+      console.warn('Load category tracks note:', e);
       const localMatches = this.getPrecached(lang);
-      const combined = directResults.length > 0
-        ? [...localMatches, ...directResults.filter(r => !localMatches.some(l => l.title === r.title))]
-        : localMatches;
-
-      this.onlineCache.set(cacheKey, combined);
       this.isLoading = false;
-      return combined;
+      return localMatches;
     }
   }
 
@@ -532,25 +650,39 @@ export class LiveTrendingService {
     this.isLoading = true;
 
     try {
-      const searchUrl = `/api/saavn-search?q=${encodeURIComponent(this.currentQuery)}&n=30&p=${page}`;
-      const res = await fetch(searchUrl);
-      if (!res.ok) throw new Error(`Vite API HTTP ${res.status}`);
-      const json = await res.json();
-      const results = (json.results || []).map(r => ({
-        ...r,
-        image: ArtworkGenerator.getArtworkUrl(r)
-      }));
+      let results = [];
 
-      this.isLoading = false;
-      return results;
-    } catch (e) {
-      console.warn('Local proxy unavailable, using direct client search fallback:', e);
-      const directResults = await this.fetchDirectClientSearch(this.currentQuery, page);
-      if (directResults.length > 0) {
-        this.isLoading = false;
-        return directResults;
+      // 1. Try local dev proxy if available
+      try {
+        const searchUrl = `/api/saavn-search?q=${encodeURIComponent(this.currentQuery)}&n=30&p=${page}`;
+        const res = await fetch(searchUrl);
+        if (res.ok) {
+          const json = await res.json();
+          results = (json.results || []).map(r => ({
+            ...r,
+            image: ArtworkGenerator.getArtworkUrl(r)
+          }));
+        }
+      } catch (proxyErr) {}
+
+      // 2. If proxy returned nothing or failed, use direct client open API
+      if (results.length === 0) {
+        results = await this.fetchDirectClientSearch(this.currentQuery, page);
       }
 
+      if (results.length > 0) {
+        this.isLoading = false;
+        return results;
+      }
+
+      // 3. Fallback: search precached offline tracks
+      this.isLoading = false;
+      return this.precached.filter(t =>
+        t.title.toLowerCase().includes(query.toLowerCase()) ||
+        t.artist.toLowerCase().includes(query.toLowerCase())
+      );
+    } catch (e) {
+      console.warn('Search online note:', e);
       this.isLoading = false;
       return this.precached.filter(t =>
         t.title.toLowerCase().includes(query.toLowerCase()) ||

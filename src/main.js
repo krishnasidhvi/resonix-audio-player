@@ -346,6 +346,7 @@ class ResonixApp {
             }, 200);
           }
         } else {
+          this.currentSearchQuery = q.trim();
           this.searchDebounceTimer = setTimeout(() => {
             this.renderTrackList(q);
           }, 150);
@@ -754,6 +755,23 @@ class ResonixApp {
 
   renderCards(list, container) {
     if (!list || list.length === 0) {
+      if (this.activeSourceTab !== 'trending' && this.currentSearchQuery) {
+        container.innerHTML = `
+          <div style="padding: 32px 20px; text-align: center; color: var(--text-secondary); font-size: 0.88rem;">
+            <p>No tracks matching <strong>"${this.currentSearchQuery}"</strong> in ${this.activeSourceTab === 'local' ? 'Local Masters' : 'Public Vault'}.</p>
+            <button id="btn-search-online-cta" class="btn-primary-pill" style="margin: 14px auto 0; padding: 8px 18px; font-size: 0.82rem; cursor: pointer;">
+              🔍 Search 10M+ Online Tracks for "${this.currentSearchQuery}"
+            </button>
+          </div>
+        `;
+        document.getElementById('btn-search-online-cta')?.addEventListener('click', () => {
+          const tabTrending = document.getElementById('tab-trending-hits');
+          if (tabTrending) tabTrending.click();
+          this.performOnlineSearch(this.currentSearchQuery);
+        });
+        return;
+      }
+
       container.innerHTML = `
         <div style="padding: 24px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
           No tracks found. Try clicking a trending tag or searching above.
