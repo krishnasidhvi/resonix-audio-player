@@ -63,7 +63,7 @@ export class AudioCore {
       }
       return url;
     }
-    // If it's a remote URL, on local dev route through proxy; on GitHub Pages, direct stream works because CDN allows CORS
+    // If it's a remote URL, allow CDNs with CORS to stream directly; only proxy if needed on local dev
     if (url.startsWith('http://') || url.startsWith('https://')) {
       try {
         const parsed = new URL(url);
@@ -71,10 +71,21 @@ export class AudioCore {
           return url;
         }
       } catch (e) {}
-      if (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')) {
+      // CDNs that provide Access-Control-Allow-Origin: * stream directly and support seeking
+      if (
+        url.includes('saavncdn.com') ||
+        url.includes('audius.co') ||
+        url.includes('creatornode.audius.co') ||
+        url.includes('jiosaavn.com') ||
+        (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io'))
+      ) {
         return url;
       }
-      return `/api/proxy-stream?url=${encodeURIComponent(url)}`;
+      // If running with local dev server proxy on 5173 or 3000
+      if (typeof window !== 'undefined' && (window.location.port === '5173' || window.location.port === '3000')) {
+        return `/api/proxy-stream?url=${encodeURIComponent(url)}`;
+      }
+      return url;
     }
     return url;
   }
