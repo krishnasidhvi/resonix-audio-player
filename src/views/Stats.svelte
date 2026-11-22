@@ -1,9 +1,9 @@
 <script lang="ts">
   import { db } from '../lib/db';
   import type { PlayEvent } from '../lib/stores/player.svelte';
-  import { SOURCES } from '../lib/sources';
   import type { SourceId } from '../lib/types';
-  import { fmtDuration } from '../lib/util';
+  import { fmtDuration, fmtHour, t, weekdays, type Key } from '../lib/i18n/i18n.svelte';
+  import { sourceName } from '../lib/i18n/labels';
 
   let plays: PlayEvent[] = $state([]);
   let loaded = $state(false);
@@ -24,7 +24,7 @@
   const artistCount = $derived(new Set(inRange.map((p) => p.artist)).size);
 
   // hour × weekday heatmap (local time), value = minutes
-  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const DAYS = $derived(weekdays());
   const heat = $derived.by(() => {
     const g = Array.from({ length: 7 }, () => new Array(24).fill(0));
     for (const p of inRange) { const d = new Date(p.at); g[(d.getDay() + 6) % 7][d.getHours()] += p.seconds / 60; }
@@ -47,36 +47,36 @@
     const max = Math.max(...h);
     return max > 0 ? h.indexOf(max) : null;
   });
-  const hourLabel = (h: number) => new Date(2000, 0, 1, h).toLocaleTimeString([], { hour: 'numeric' });
+  const hourLabel = fmtHour;
 </script>
 
 <div class="page">
-  <p class="eyebrow">Only on this device · never uploaded</p>
-  <h1 class="page-title">Your listening</h1>
+  <p class="eyebrow">{t('stats.eyebrow')}</p>
+  <h1 class="page-title">{t('stats.title')}</h1>
   <div class="row wrap ranges" role="tablist">
-    {#each [[7, '7 days'], [30, '30 days'], [365, 'Year'], [0, 'All time']] as [v, l]}
-      <button role="tab" class="chip" class:active={range === v} aria-selected={range === v} onclick={() => (range = v as typeof range)}>{l}</button>
+    {#each [[7, 'stats.7d'], [30, 'stats.30d'], [365, 'stats.year'], [0, 'stats.all']] as [v, l]}
+      <button role="tab" class="chip" class:active={range === v} aria-selected={range === v} onclick={() => (range = v as typeof range)}>{t(l as Key)}</button>
     {/each}
   </div>
 
   {#if loaded && !inRange.length}
-    <div class="empty section"><h3>No listening yet in this period</h3><p>Plays longer than 20 seconds are counted here.</p></div>
+    <div class="empty section"><h3>{t('stats.empty')}</h3><p>{t('stats.emptyHint')}</p></div>
   {:else if loaded}
     <div class="tiles">
-      <div class="tile"><span class="k">Listening time</span><span class="v num">{fmtDuration(total)}</span></div>
-      <div class="tile"><span class="k">Plays</span><span class="v num">{inRange.length}</span></div>
-      <div class="tile"><span class="k">Artists</span><span class="v num">{artistCount}</span></div>
-      <div class="tile"><span class="k">Day streak</span><span class="v num">{streak}</span></div>
-      {#if peakHour !== null}<div class="tile"><span class="k">Peak hour</span><span class="v">{hourLabel(peakHour)}</span></div>{/if}
+      <div class="tile"><span class="k">{t('stats.time')}</span><span class="v num">{fmtDuration(total)}</span></div>
+      <div class="tile"><span class="k">{t('stats.plays')}</span><span class="v num">{inRange.length}</span></div>
+      <div class="tile"><span class="k">{t('stats.artists')}</span><span class="v num">{artistCount}</span></div>
+      <div class="tile"><span class="k">{t('stats.streak')}</span><span class="v num">{streak}</span></div>
+      {#if peakHour !== null}<div class="tile"><span class="k">{t('stats.peak')}</span><span class="v">{hourLabel(peakHour)}</span></div>{/if}
     </div>
 
     <div class="two">
       <section class="section">
-        <div class="section-head"><h2>Top artists</h2><span class="faint small">by time listened</span></div>
+        <div class="section-head"><h2>{t('stats.topArtists')}</h2><span class="faint small">{t('stats.byTime')}</span></div>
         <ul class="bars">
           {#each artists as [name, secs]}
             <li title="{name}: {fmtDuration(secs)}">
-              <span class="label ellipsis">{name}</span>
+              <span class="label ellipsis" dir="auto">{name}</span>
               <span class="track"><i style:width="{(secs / artists[0][1]) * 100}%"></i></span>
               <span class="val num">{fmtDuration(secs)}</span>
             </li>
@@ -84,25 +84,25 @@
         </ul>
       </section>
       <section class="section">
-        <div class="section-head"><h2>Top tracks</h2></div>
+        <div class="section-head"><h2>{t('stats.topTracks')}</h2></div>
         <ol class="tops">
           {#each tracks as [key, secs], i}
             {@const [title, artist] = key.split('\u0000')}
-            <li><span class="num faint">{i + 1}</span><span class="grow ellipsis">{title}<span class="faint"> · {artist}</span></span><span class="num faint">{fmtDuration(secs)}</span></li>
+            <li><span class="num faint">{i + 1}</span><span class="grow ellipsis" dir="auto">{title}<span class="faint"> · {artist}</span></span><span class="num faint">{fmtDuration(secs)}</span></li>
           {/each}
         </ol>
       </section>
     </div>
 
     <section class="section">
-      <div class="section-head"><h2>When you listen</h2><span class="faint small">minutes per hour of the week · darker = less</span></div>
-      <div class="heat" role="table" aria-label="Minutes listened by weekday and hour">
+      <div class="section-head"><h2>{t('stats.when')}</h2><span class="faint small">{t('stats.whenHint')}</span></div>
+      <div class="heat" role="table" aria-label={t('stats.heatAria')}>
         <div class="hrow" role="row"><span></span>{#each Array(24) as _, h}<span class="hlabel num" role="columnheader">{h % 3 === 0 ? h : ''}</span>{/each}</div>
         {#each heat as row, d}
           <div class="hrow" role="row">
             <span class="dlabel" role="rowheader">{DAYS[d]}</span>
             {#each row as v, h}
-              <span class="cell" role="cell" title="{DAYS[d]} {hourLabel(h)}: {Math.round(v)} min" aria-label="{DAYS[d]} {hourLabel(h)}: {Math.round(v)} minutes"
+              <span class="cell" role="cell" title={t('stats.cell', { day: DAYS[d], hour: hourLabel(h), min: Math.round(v) })} aria-label={t('stats.cell', { day: DAYS[d], hour: hourLabel(h), min: Math.round(v) })}
                 style:background={v ? `oklch(${30 + 55 * (v / heatMax)}% ${0.04 + 0.12 * (v / heatMax)} var(--h))` : 'var(--bg-raise)'}></span>
             {/each}
           </div>
@@ -111,11 +111,11 @@
     </section>
 
     <section class="section">
-      <div class="section-head"><h2>Where it came from</h2></div>
+      <div class="section-head"><h2>{t('stats.where')}</h2></div>
       <ul class="bars">
         {#each sources as [src, secs]}
-          <li title="{SOURCES[src].name}: {fmtDuration(secs)}">
-            <span class="label">{SOURCES[src].name}</span>
+          <li title="{sourceName(src)}: {fmtDuration(secs)}">
+            <span class="label">{sourceName(src)}</span>
             <span class="track"><i style:width="{(secs / total) * 100}%"></i></span>
             <span class="val num">{Math.round((secs / total) * 100)}%</span>
           </li>
@@ -136,8 +136,8 @@
   .bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
   .bars li { display: grid; grid-template-columns: 140px 1fr 70px; gap: 12px; align-items: center; font-size: 13.5px; }
   .track { height: 10px; }
-  .track i { display: block; height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
-  .val { text-align: right; color: var(--text-2); font-size: 12.5px; }
+  .track i { display: block; height: 100%; background: var(--accent); border-start-end-radius: 4px; border-end-end-radius: 4px; min-width: 2px; }
+  .val { text-align: end; color: var(--text-2); font-size: 12.5px; }
   .tops { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; font-size: 13.5px; }
   .tops li { display: flex; gap: 12px; padding: 7px 4px; border-bottom: 1px solid var(--line-soft); }
   .heat { display: grid; gap: 3px; overflow-x: auto; }

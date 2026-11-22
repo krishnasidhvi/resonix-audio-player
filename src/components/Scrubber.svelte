@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/i18n.svelte';
   import { player } from '../lib/stores/player.svelte';
   import { fmtTime } from '../lib/util';
 
@@ -12,8 +13,8 @@
   let dragT = $state(0);
 
   const dur = $derived(player.duration);
-  const t = $derived(dragging ? dragT : player.time);
-  const frac = $derived(dur ? Math.min(1, t / dur) : 0);
+  const time = $derived(dragging ? dragT : player.time);
+  const frac = $derived(dur ? Math.min(1, time / dur) : 0);
   const a = $derived(player.analysis);
   const live = $derived(player.current?.isLive ?? false);
   const h = $derived(tall ? 56 : 30);
@@ -95,8 +96,8 @@
   }
 </script>
 
-<div class="scrub" class:tall>
-  <span class="time num">{live ? 'LIVE' : fmtTime(t)}</span>
+<div class="scrub" class:tall dir="ltr">
+  <span class="time num">{live ? t('common.live') : fmtTime(time)}</span>
   <div
     class="track"
     bind:this={box}
@@ -104,11 +105,11 @@
     style:height="{h}px"
     role="slider"
     tabindex="0"
-    aria-label="Seek"
+    aria-label={t('scrub.seek')}
     aria-valuemin={0}
     aria-valuemax={Math.round(dur)}
-    aria-valuenow={Math.round(t)}
-    aria-valuetext={fmtTime(t)}
+    aria-valuenow={Math.round(time)}
+    aria-valuetext={fmtTime(time)}
     onpointerdown={down}
     onpointermove={move}
     onpointerup={up}
@@ -123,8 +124,8 @@
       <button
         class="peak"
         style:left="{(a.peakSection / dur) * 100}%"
-        title="Jump to the loudest section ({fmtTime(a.peakSection)})"
-        aria-label="Jump to the loudest section at {fmtTime(a.peakSection)}"
+        title={t('scrub.peak', { time: fmtTime(a.peakSection) })}
+        aria-label={t('scrub.peak', { time: fmtTime(a.peakSection) })}
         onpointerdown={(e) => e.stopPropagation()}
         onclick={() => player.seek(a.peakSection)}
       ></button>

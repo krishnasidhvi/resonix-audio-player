@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t as tr } from '../lib/i18n/i18n.svelte';
+  import { licenceLabel, sourceName } from '../lib/i18n/labels';
   import type { Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
   import { library } from '../lib/stores/library.svelte';
@@ -19,25 +21,25 @@
   {#each tracks as t, i (t.id + ':' + i)}
     {@const cur = isCurrent(t)}
     <li class="row-item" class:current={cur}>
-      <button class="hit" aria-label="Play {t.title} by {t.artist}" ondblclick={() => player.playList(tracks, i)} onclick={() => player.playList(tracks, i)}></button>
+      <button class="hit" aria-label={tr('track.playBy', { title: t.title, artist: t.artist })} ondblclick={() => player.playList(tracks, i)} onclick={() => player.playList(tracks, i)}></button>
       <span class="idx num">
         {#if cur && player.playing}
-          <span class="bars" aria-label="Playing"><i></i><i></i><i></i></span>
+          <span class="bars" aria-label={tr('track.playing')}><i></i><i></i><i></i></span>
         {:else if numbered}{i + 1}{:else}<Icon name="play" size={14} />{/if}
       </span>
       <Artwork src={t.artwork} seed={t.artist + t.title} size="42px" radius="7px" />
       <span class="meta">
-        <span class="title ellipsis">{t.title}</span>
-        <span class="sub ellipsis">
-          {#if t.isLive}<span class="live">LIVE</span>{/if}
+        <span class="title ellipsis" dir="auto">{t.title}</span>
+        <span class="sub ellipsis" dir="auto">
+          {#if t.isLive}<span class="live">{tr('common.live')}</span>{/if}
           {t.artist}{#if t.album && !t.isLive}<span class="faint"> · {t.album}</span>{/if}
         </span>
       </span>
       {#if showSource}
-        <span class="src" style:--c={SOURCES[t.source].color}>{SOURCES[t.source].name}</span>
+        <span class="src" style:--c={SOURCES[t.source].color}>{sourceName(t.source)}</span>
       {/if}
-      {#if t.license}<span class="lic ellipsis faint" title={t.license.name}>{t.license.name}</span>{/if}
-      <button class="icon-btn fav" class:on={library.isFavorite(t.id)} aria-label={library.isFavorite(t.id) ? 'Remove from favourites' : 'Add to favourites'} aria-pressed={library.isFavorite(t.id)} onclick={() => library.toggleFavorite(t)}>
+      {#if t.license}<span class="lic ellipsis faint">{licenceLabel(t.license)}</span>{/if}
+      <button class="icon-btn fav" class:on={library.isFavorite(t.id)} aria-label={library.isFavorite(t.id) ? tr('track.unfav') : tr('track.fav')} aria-pressed={library.isFavorite(t.id)} onclick={() => library.toggleFavorite(t)}>
         <Icon name="heart" size={17} fill={library.isFavorite(t.id)} />
       </button>
       <span class="dur num faint">{t.isLive ? '' : fmtTime(t.duration)}</span>
@@ -52,7 +54,7 @@
   @container (max-width: 300px) { .dur { display: none; } }
   .row-item {
     position: relative; display: flex; align-items: center; gap: 14px; container-type: inline-size;
-    padding: 6px 8px 6px 10px; border-radius: 10px;
+    padding-block: 6px; padding-inline: 10px 8px; border-radius: 10px;
   }
   .idx { width: 26px; flex: none; }
   .meta { flex: 1; min-width: 120px; }
@@ -72,8 +74,8 @@
   .fav { opacity: 0; }
   .row-item:hover .fav, .fav.on { opacity: 1; }
   .fav.on { color: var(--accent); }
-  .dur { text-align: right; font-size: 13px; }
-  .live { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--danger); margin-right: 6px; }
+  .dur { text-align: end; font-size: 13px; }
+  .live { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--danger); margin-inline-end: 6px; }
   .bars { display: inline-flex; gap: 2px; height: 12px; align-items: end; }
   .bars i { width: 3px; background: var(--accent); border-radius: 1px; animation: bar 0.9s ease-in-out infinite alternate; }
   .bars i:nth-child(2) { animation-delay: -0.3s; } .bars i:nth-child(3) { animation-delay: -0.6s; }

@@ -3,29 +3,30 @@
   import { library } from '../lib/stores/library.svelte';
   import { settings } from '../lib/stores/settings.svelte';
   import { ui } from '../lib/stores/ui.svelte';
+  import { t, type Key } from '../lib/i18n/i18n.svelte';
   import Artwork from './Artwork.svelte';
   import Icon from './Icon.svelte';
   import Scrubber from './Scrubber.svelte';
 
-  const t = $derived(player.current);
+  const tr = $derived(player.current);
   let sleepOpen = $state(false);
   let lastVol = 0.8;
 
+  let now = $state(Date.now());
+  $effect(() => { const i = setInterval(() => (now = Date.now()), 15000); return () => clearInterval(i); });
   const sleepLabel = $derived.by(() => {
     const s = player.sleep;
     if (!s) return '';
-    if (s.mode === 'track') return 'End of track';
-    return `${Math.max(1, Math.round((s.endsAt - now) / 60000))} min`;
+    if (s.mode === 'track') return t('sleep.endShort');
+    return t('sleep.minShort', { count: Math.max(1, Math.round((s.endsAt - now) / 60000)) });
   });
-  let now = $state(Date.now());
-  $effect(() => { const i = setInterval(() => (now = Date.now()), 15000); return () => clearInterval(i); });
 
   function setSleep(min: number | 'track' | null) {
     sleepOpen = false;
     if (min === null) player.setSleep(null);
     else if (min === 'track') player.setSleep({ mode: 'track' });
     else player.setSleep({ mode: 'minutes', endsAt: Date.now() + min * 60000 });
-    if (min !== null) ui.toast(min === 'track' ? 'Will stop after this track' : `Will fade out in ${min} minutes`);
+    if (min !== null) ui.toast(min === 'track' ? t('sleep.toastTrack') : t('sleep.toastMinutes', { count: min }));
   }
   function toggleMute() {
     if (settings.volume > 0) { lastVol = settings.volume; player.setVolume(0); } else player.setVolume(lastVol || 0.8);
@@ -38,32 +39,33 @@
 
 <footer class="bar">
   <div class="now">
-    {#if t}
-      <button class="art-btn" aria-label="Open now playing" onclick={() => showPanel('now')}>
-        <Artwork src={t.artwork} seed={t.artist + t.title} size="56px" radius="9px" />
+    {#if tr}
+      <button class="art-btn" aria-label={t('player.openNow')} onclick={() => showPanel('now')}>
+        <Artwork src={tr.artwork} seed={tr.artist + tr.title} size="56px" radius="9px" />
       </button>
       <div class="meta">
-        <div class="title ellipsis">{t.title}</div>
-        <div class="artist ellipsis">{t.artist}</div>
+        <div class="title ellipsis" dir="auto">{tr.title}</div>
+        <div class="artist ellipsis" dir="auto">{tr.artist}</div>
       </div>
-      <button class="icon-btn" class:on={library.isFavorite(t.id)} aria-label="Favourite" aria-pressed={library.isFavorite(t.id)} onclick={() => library.toggleFavorite(t)}>
-        <Icon name="heart" size={18} fill={library.isFavorite(t.id)} />
+      <button class="icon-btn" class:on={library.isFavorite(tr.id)} aria-label={t('player.favourite')} aria-pressed={library.isFavorite(tr.id)} onclick={() => library.toggleFavorite(tr)}>
+        <Icon name="heart" size={18} fill={library.isFavorite(tr.id)} />
       </button>
     {:else}
-      <p class="idle faint">Nothing playing yet. Pick something, or press <kbd>Ctrl</kbd>+<kbd>K</kbd>.</p>
+      <p class="idle faint">{t('player.idle')}</p>
     {/if}
   </div>
 
   <div class="center">
-    <div class="transport">
-      <button class="icon-btn" class:on={player.shuffle} aria-label="Shuffle" aria-pressed={player.shuffle} onclick={() => player.toggleShuffle()}><Icon name="shuffle" size={18} /></button>
-      <button class="icon-btn" aria-label="Previous" onclick={() => player.prev()}><Icon name="prev" size={18} /></button>
-      <button class="play" aria-label={player.playing ? 'Pause' : 'Play'} onclick={() => player.toggle()} disabled={!player.queue.length}>
+    <!-- media controls keep left-to-right order in every language -->
+    <div class="transport" dir="ltr">
+      <button class="icon-btn" class:on={player.shuffle} aria-label={t('player.shuffle')} aria-pressed={player.shuffle} onclick={() => player.toggleShuffle()}><Icon name="shuffle" size={18} /></button>
+      <button class="icon-btn" aria-label={t('player.previous')} onclick={() => player.prev()}><Icon name="prev" size={18} /></button>
+      <button class="play" aria-label={player.playing ? t('player.pause') : t('player.play')} onclick={() => player.toggle()} disabled={!player.queue.length}>
         {#if player.buffering}<span class="spin"></span>{/if}
         <Icon name={player.playing ? 'pause' : 'play'} size={22} />
       </button>
-      <button class="icon-btn" aria-label="Next" onclick={() => player.next()}><Icon name="next" size={18} /></button>
-      <button class="icon-btn rep" class:on={player.repeat !== 'off'} aria-label="Repeat: {player.repeat}" onclick={() => player.cycleRepeat()}>
+      <button class="icon-btn" aria-label={t('player.next')} onclick={() => player.next()}><Icon name="next" size={18} /></button>
+      <button class="icon-btn rep" class:on={player.repeat !== 'off'} aria-label={t('player.repeat', { mode: t(`repeat.${player.repeat}` as Key) })} onclick={() => player.cycleRepeat()}>
         <Icon name="repeat" size={18} />{#if player.repeat === 'one'}<span class="one">1</span>{/if}
       </button>
     </div>
@@ -71,28 +73,28 @@
   </div>
 
   <div class="tools">
-    <button class="icon-btn" class:on={ui.panelOpen && ui.panel === 'lyrics'} aria-label="Lyrics" onclick={() => showPanel('lyrics')}><Icon name="lyrics" size={18} /></button>
-    <button class="icon-btn" class:on={ui.panelOpen && ui.panel === 'queue'} aria-label="Queue" onclick={() => showPanel('queue')}><Icon name="queue" size={18} /></button>
-    <button class="icon-btn" class:on={ui.eqOpen} aria-label="Equaliser and sound" onclick={() => (ui.eqOpen = !ui.eqOpen)}><Icon name="eq" size={18} /></button>
-    <button class="icon-btn" class:on={ui.practiceOpen || player.rate !== 1 || player.loopA !== null} aria-label="Practice mode: tempo and A-B loop" onclick={() => (ui.practiceOpen = !ui.practiceOpen)}><Icon name="metronome" size={18} /></button>
+    <button class="icon-btn" class:on={ui.panelOpen && ui.panel === 'lyrics'} aria-label={t('panel.lyrics')} onclick={() => showPanel('lyrics')}><Icon name="lyrics" size={18} /></button>
+    <button class="icon-btn" class:on={ui.panelOpen && ui.panel === 'queue'} aria-label={t('panel.queue')} onclick={() => showPanel('queue')}><Icon name="queue" size={18} /></button>
+    <button class="icon-btn" class:on={ui.eqOpen} aria-label={t('player.sound')} onclick={() => (ui.eqOpen = !ui.eqOpen)}><Icon name="eq" size={18} /></button>
+    <button class="icon-btn" class:on={ui.practiceOpen || player.rate !== 1 || player.loopA !== null} aria-label={t('player.practice')} onclick={() => (ui.practiceOpen = !ui.practiceOpen)}><Icon name="metronome" size={18} /></button>
     <div class="sleep">
-      <button class="icon-btn" class:on={!!player.sleep} aria-label="Sleep timer" aria-expanded={sleepOpen} onclick={() => (sleepOpen = !sleepOpen)}><Icon name="moon" size={18} /></button>
+      <button class="icon-btn" class:on={!!player.sleep} aria-label={t('sleep.title')} aria-expanded={sleepOpen} onclick={() => (sleepOpen = !sleepOpen)}><Icon name="moon" size={18} /></button>
       {#if sleepLabel}<span class="sleep-label num">{sleepLabel}</span>{/if}
       {#if sleepOpen}
         <div class="pop surface" role="menu">
-          <span class="eyebrow">Sleep timer</span>
-          {#each [15, 30, 45, 60, 90] as m}<button role="menuitem" onclick={() => setSleep(m)}>{m} minutes</button>{/each}
-          <button role="menuitem" onclick={() => setSleep('track')}>End of this track</button>
-          {#if player.sleep}<button role="menuitem" class="faint" onclick={() => setSleep(null)}>Turn off</button>{/if}
+          <span class="eyebrow">{t('sleep.title')}</span>
+          {#each [15, 30, 45, 60, 90] as m}<button role="menuitem" onclick={() => setSleep(m)}>{t('sleep.minutes', { count: m })}</button>{/each}
+          <button role="menuitem" onclick={() => setSleep('track')}>{t('sleep.endOfTrack')}</button>
+          {#if player.sleep}<button role="menuitem" class="faint" onclick={() => setSleep(null)}>{t('sleep.off')}</button>{/if}
         </div>
       {/if}
     </div>
-    <div class="vol">
-      <button class="icon-btn" aria-label={settings.volume ? 'Mute' : 'Unmute'} onclick={toggleMute}><Icon name={settings.volume ? 'volume' : 'mute'} size={18} /></button>
-      <input type="range" min="0" max="1" step="0.01" aria-label="Volume" value={settings.volume} style:--fill="{settings.volume * 100}%" oninput={(e) => player.setVolume(+e.currentTarget.value)} />
+    <div class="vol" dir="ltr">
+      <button class="icon-btn" aria-label={settings.volume ? t('player.mute') : t('player.unmute')} onclick={toggleMute}><Icon name={settings.volume ? 'volume' : 'mute'} size={18} /></button>
+      <input type="range" min="0" max="1" step="0.01" aria-label={t('player.volume')} value={settings.volume} style:--fill="{settings.volume * 100}%" oninput={(e) => player.setVolume(+e.currentTarget.value)} />
     </div>
-    <button class="icon-btn" aria-label="Full-screen ambient mode" onclick={() => (ui.ambient = true)} disabled={!t}><Icon name="expand" size={18} /></button>
-    <button class="icon-btn panel-btn" class:on={ui.panelOpen} aria-label="Toggle side panel" onclick={() => (ui.panelOpen = !ui.panelOpen)}><Icon name="panel" size={18} /></button>
+    <button class="icon-btn" aria-label={t('player.ambient')} onclick={() => (ui.ambient = true)} disabled={!tr}><Icon name="expand" size={18} /></button>
+    <button class="icon-btn panel-btn" class:on={ui.panelOpen} aria-label={t('player.togglePanel')} onclick={() => (ui.panelOpen = !ui.panelOpen)}><Icon name="panel" size={18} /></button>
   </div>
 </footer>
 
@@ -108,7 +110,6 @@
   .title { font-weight: 600; }
   .artist { color: var(--text-2); font-size: 13px; }
   .idle { margin: 0; font-size: 13px; }
-  kbd { font: 11px var(--font-ui); padding: 1px 5px; border: 1px solid var(--line); border-radius: 4px; }
   .center { display: grid; gap: 4px; justify-items: center; }
   .transport { display: flex; align-items: center; gap: 10px; }
   .play {
@@ -126,9 +127,9 @@
   .vol input { flex: 1; }
   .sleep { position: relative; display: flex; align-items: center; }
   .sleep-label { font-size: 11px; color: var(--accent); margin-right: 4px; }
-  .pop { position: absolute; bottom: 48px; right: -40px; padding: 8px; display: grid; min-width: 180px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.5); }
+  .pop { position: absolute; bottom: 48px; inset-inline-end: -40px; padding: 8px; display: grid; min-width: 180px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.5); }
   .pop .eyebrow { padding: 4px 10px 6px; }
-  .pop button { text-align: left; padding: 8px 10px; border-radius: 7px; }
+  .pop button { text-align: start; padding: 8px 10px; border-radius: 7px; }
   .pop button:hover { background: oklch(25% 0.015 var(--h)); }
   @media (max-width: 1100px) {
     .vol { width: 96px; }

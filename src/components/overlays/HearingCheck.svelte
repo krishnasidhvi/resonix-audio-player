@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../lib/i18n/i18n.svelte';
   // A quick hearing check: finds the quietest level you hear at 7 frequencies, then gives
   // a gentle boost where your hearing is weaker relative to your own average. It's a
   // listening preference, not a medical test.
@@ -45,38 +46,38 @@
     step = 'done';
   }
 
-  function apply() { settings.hearingEq = result; player.applyEq(); ui.hearingOpen = false; ui.toast('Hearing profile applied'); }
+  function apply() { settings.hearingEq = result; player.applyEq(); ui.hearingOpen = false; ui.toast(t('hearing.applied')); }
 </script>
 
 <div class="backdrop" role="presentation" onclick={(e) => { if (e.target === e.currentTarget) ui.hearingOpen = false; }}>
-  <div class="dialog surface" role="dialog" aria-modal="true" aria-label="Hearing check">
-    <button class="icon-btn close" aria-label="Close" onclick={() => (ui.hearingOpen = false)}><Icon name="close" size={16} /></button>
+  <div class="dialog surface" role="dialog" aria-modal="true" aria-label={t('eq.hearingCheck')}>
+    <button class="icon-btn close" aria-label={t('common.close')} onclick={() => (ui.hearingOpen = false)}><Icon name="close" size={16} /></button>
     {#if step === 'intro'}
       <Icon name="ear" size={34} />
-      <h2 class="display">Tune the sound to your ears</h2>
-      <p class="muted">Put on the headphones you usually use and find a quiet spot. You'll hear short tones that get quieter. Tell us whether you can still hear each one. It takes about two minutes.</p>
-      <p class="faint small">This sets a listening preference. It is not a medical hearing test.</p>
-      <button class="btn primary" onclick={begin}>Start</button>
+      <h2 class="display">{t('hearing.title')}</h2>
+      <p class="muted">{t('hearing.intro')}</p>
+      <p class="faint small">{t('hearing.disclaimer')}</p>
+      <button class="btn primary" onclick={begin}>{t('hearing.start')}</button>
     {:else if step === 'test'}
-      <p class="eyebrow">Tone {fi + 1} of {TEST.length} · {TEST[fi] >= 1000 ? TEST[fi] / 1000 + ' kHz' : TEST[fi] + ' Hz'}</p>
+      <p class="eyebrow">{t('hearing.toneOf', { n: fi + 1, total: TEST.length, freq: TEST[fi] >= 1000 ? TEST[fi] / 1000 + ' kHz' : TEST[fi] + ' Hz' })}</p>
       <div class="progress"><i style:width="{(fi / TEST.length) * 100}%"></i></div>
-      <h2 class="display">Can you hear the tone?</h2>
+      <h2 class="display">{t('hearing.question')}</h2>
       <div class="row center">
-        <button class="btn" onclick={() => answer(false)}>No</button>
-        <button class="btn primary" onclick={() => answer(true)}>Yes, I hear it</button>
+        <button class="btn" onclick={() => answer(false)}>{t('hearing.no')}</button>
+        <button class="btn primary" onclick={() => answer(true)}>{t('hearing.yes')}</button>
       </div>
-      <button class="btn ghost small" onclick={playTone}>Play again</button>
+      <button class="btn ghost small" onclick={playTone}>{t('hearing.again')}</button>
     {:else}
-      <h2 class="display">Your profile</h2>
-      <div class="bars">
+      <h2 class="display">{t('hearing.profile')}</h2>
+      <div class="bars" dir="ltr">
         {#each result as g, i}
           <div class="b"><span class="num">{g ? '+' + g : '0'}</span><i style:height="{8 + g * 10}px"></i><small class="num">{EQ_FREQS[i] >= 1000 ? EQ_FREQS[i] / 1000 + 'k' : EQ_FREQS[i]}</small></div>
         {/each}
       </div>
-      <p class="muted small">{result.some((g) => g > 0) ? 'Gentle boosts where your hearing was weaker than your own average. Your EQ presets still work on top.' : 'Your hearing was even across the range, so no compensation is needed.'}</p>
+      <p class="muted small">{result.some((g) => g > 0) ? t('hearing.boosted') : t('hearing.even')}</p>
       <div class="row center">
-        <button class="btn" onclick={begin}>Redo</button>
-        <button class="btn primary" onclick={apply} disabled={!result.some((g) => g > 0)}>Apply</button>
+        <button class="btn" onclick={begin}>{t('hearing.redo')}</button>
+        <button class="btn primary" onclick={apply} disabled={!result.some((g) => g > 0)}>{t('hearing.apply')}</button>
       </div>
     {/if}
   </div>
@@ -85,7 +86,7 @@
 <style>
   .backdrop { position: fixed; inset: 0; z-index: 60; background: rgb(0 0 0 / 0.6); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 16px; }
   .dialog { position: relative; width: min(480px, 100%); padding: 30px 28px; display: grid; gap: 14px; justify-items: center; text-align: center; box-shadow: 0 40px 100px rgb(0 0 0 / 0.6); }
-  .close { position: absolute; top: 10px; right: 10px; }
+  .close { position: absolute; top: 10px; inset-inline-end: 10px; }
   h2 { margin: 0; font-size: 26px; }
   p { margin: 0; }
   .small { font-size: 12.5px; }

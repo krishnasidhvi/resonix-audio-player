@@ -24,12 +24,11 @@
   --sidebar: 232px;
   --panel: 372px;
   --bar: 92px;
-  --font-ui: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', sans-serif;
+  --font-ui: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', 'Hiragino Sans', 'Yu Gothic UI', 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans CJK JP', 'Noto Sans Arabic', 'Tahoma', sans-serif;
   --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Noto Serif', serif;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   color-scheme: dark;
-  transition: --h 0s;
 }
 
 @property --h { syntax: '<number>'; inherits: true; initial-value: 285; }
@@ -56,6 +55,11 @@ img { display: block; }
 .muted { color: var(--text-2); }
 .faint { color: var(--text-3); }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Languages: the display serif has no CJK/Arabic glyphs; Arabic letters must not be spaced apart. */
+:lang(ja) .display, :lang(zh) .display, :lang(ar) .display, :lang(ja) .page-title, :lang(zh) .page-title, :lang(ar) .page-title { font-family: var(--font-ui); font-weight: 700; }
+:lang(ar) .eyebrow, :lang(ar) .display, :lang(ar) .page-title { letter-spacing: 0; }
+:lang(ar) body, :lang(ar) { line-height: 1.6; }
+[dir='rtl'] .flip-rtl { display: inline-block; transform: scaleX(-1); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* scrollbars */
@@ -86,7 +90,6 @@ img { display: block; }
 }
 .icon-btn:hover { color: var(--text); background: var(--bg-raise); }
 .icon-btn.on { color: var(--accent); }
-.icon-btn.on::after { content: ''; position: absolute; }
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px;

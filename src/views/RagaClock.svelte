@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { fmtClock, t } from '../lib/i18n/i18n.svelte';
+  import { licenceLabel, moodLabel, praharDesc, praharLabel, seasonLabel, traditionLabel } from '../lib/i18n/labels';
   import { PRAHARS, RAGAS, praharAt, ragaQuery, ragasAt, seasonalAt, type Raga } from '../lib/raga';
   import { archiveSearch } from '../lib/sources/archive';
   import type { Album } from '../lib/sources/album';
@@ -51,18 +53,18 @@
 </script>
 
 <div class="page">
-  <p class="eyebrow">Samay · time theory of raga</p>
-  <h1 class="page-title">Raga clock</h1>
-  <p class="muted lead">In Hindustani music each raga belongs to a watch (prahar) of the day or night. Some Carnatic ragas carry similar associations. The clock shows what's traditionally sung right now, and plays openly licensed recordings from the Internet Archive.</p>
+  <p class="eyebrow">{t('raga.eyebrow')}</p>
+  <h1 class="page-title">{t('nav.raga')}</h1>
+  <p class="muted lead">{t('raga.lead')}</p>
 
   <div class="layout">
-    <svg viewBox="0 0 400 400" class="dial" role="img" aria-label="24-hour raga dial. Now: {prahar.label}">
+    <svg viewBox="0 0 400 400" class="dial" role="img" aria-label={t('raga.dialAria', { prahar: praharLabel(prahar.label) })}>
       <circle cx={C} cy={C} r={R + 26} class="face" />
       {#each PRAHARS as p}
         {@const [lx, ly] = pt((p.hours[0] + p.hours[1]) / 2, R + 38)}
         {@const [tx, ty] = pt(p.hours[0], R + 14)}
         <path d={arc(p.hours[0], p.hours[1], R + 14)} class="prahar" class:now={p === prahar} />
-        <text x={lx} y={ly} class="plabel" class:now={p === prahar} text-anchor="middle" dominant-baseline="middle">{p.label}</text>
+        <text x={lx} y={ly} class="plabel" class:now={p === prahar} text-anchor="middle" dominant-baseline="middle">{praharLabel(p.label)}</text>
         <circle cx={tx} cy={ty} r="2" class="tick" />
       {/each}
       {#each rings as { raga, ring } (raga.name)}
@@ -72,44 +74,44 @@
           class:on={focus?.name === raga.name}
           role="button"
           tabindex="0"
-          aria-label="{raga.name}, {raga.tradition}"
+          aria-label="{raga.name}, {traditionLabel(raga.tradition)}"
           onclick={() => (picked = raga)}
           onkeydown={(e) => { if (e.key === 'Enter') picked = raga; }}
-        ><title>{raga.name} · {raga.mood}</title></path>
+        ><title>{raga.name} · {moodLabel(raga.name, raga.mood)}</title></path>
       {/each}
       <line x1={C} y1={C} x2={hand[0]} y2={hand[1]} class="hand" />
       <circle cx={C} cy={C} r="54" class="hub" />
-      <text x={C} y={C - 6} text-anchor="middle" class="time num">{now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</text>
-      <text x={C} y={C + 16} text-anchor="middle" class="hub-label">{prahar.label}</text>
+      <text x={C} y={C - 6} text-anchor="middle" class="time num">{fmtClock(now)}</text>
+      <text x={C} y={C + 16} text-anchor="middle" class="hub-label">{praharLabel(prahar.label)}</text>
     </svg>
 
     <div class="side">
-      <p class="eyebrow">Now · {prahar.description}</p>
+      <p class="eyebrow">{t('raga.now', { desc: praharDesc(prahar.label, prahar.description) })}</p>
       <ul class="ragas">
         {#each current as r (r.name)}
           <li><button class:on={focus?.name === r.name} onclick={() => (picked = r)}>
             <strong class="display">{r.name}</strong>
-            <span class="faint">{r.tradition}{r.thaat ? ' · ' + r.thaat + ' thaat' : ''}</span>
-            <span class="mood">{r.mood}</span>
+            <span class="faint">{traditionLabel(r.tradition)}{r.thaat ? ' · ' + t('raga.thaat', { name: r.thaat }) : ''}</span>
+            <span class="mood">{moodLabel(r.name, r.mood)}</span>
           </button></li>
-        {:else}<li class="faint">No raga in this list is assigned to this exact hour. Pick one on the dial.</li>{/each}
+        {:else}<li class="faint">{t('raga.noneNow')}</li>{/each}
       </ul>
       {#if season}
-        <p class="season surface"><span class="eyebrow">{season.label} season</span><br />{season.ragas.join(', ')} are traditionally sung now.
+        <p class="season surface"><span class="eyebrow">{t('raga.season', { season: seasonLabel(season.label) })}</span><br />{t('raga.seasonHint', { ragas: season.ragas.join(', ') })}
           {#each season.ragas as s}<button class="chip" onclick={() => (picked = { name: s, tradition: 'Hindustani', hours: [0, 24], mood: season!.label })}>{s}</button>{/each}
         </p>
       {/if}
-      <div class="legend row"><span class="sw Hindustani"></span>Hindustani <span class="sw Carnatic"></span>Carnatic</div>
+      <div class="legend row"><span class="sw Hindustani"></span>{traditionLabel('Hindustani')} <span class="sw Carnatic"></span>{traditionLabel('Carnatic')}</div>
     </div>
   </div>
 
   {#if focus}
     <section class="section">
-      <div class="section-head"><h2>Recordings of {focus.name}</h2><span class="faint small">Internet Archive · open licences only</span></div>
+      <div class="section-head"><h2>{t('raga.recordings', { name: focus.name })}</h2><span class="faint small">{t('raga.recordingsHint')}</span></div>
       {#if loading}<div class="scroll-x">{#each Array(6) as _}<div class="skeleton" style="width:176px;height:220px"></div>{/each}</div>
       {:else if albums.length}
-        <div class="scroll-x">{#each albums as a (a.id)}<Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={a.license?.name} />{/each}</div>
-      {:else}<p class="faint">No openly licensed recordings found for {focus.name}. <a href="#/search?q={encodeURIComponent('raga ' + focus.name)}">Search every source</a></p>{/if}
+        <div class="scroll-x">{#each albums as a (a.id)}<Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={licenceLabel(a.license)} />{/each}</div>
+      {:else}<p class="faint">{t('raga.noRecordings', { name: focus.name })} <a href="#/search?q={encodeURIComponent('raga ' + focus.name)}">{t('raga.searchAll')}</a></p>{/if}
     </section>
   {/if}
 </div>
@@ -117,7 +119,7 @@
 <style>
   .lead { max-width: 680px; margin: 6px 0 0; }
   .layout { display: grid; grid-template-columns: minmax(300px, 460px) 1fr; gap: 40px; align-items: center; margin-top: 24px; }
-  .dial { width: 100%; height: auto; overflow: visible; }
+  .dial { width: 100%; height: auto; overflow: visible; direction: ltr; }
   .face { fill: var(--bg-sunk); stroke: var(--line-soft); }
   .prahar { fill: none; stroke: var(--line); stroke-width: 6; stroke-linecap: butt; }
   .prahar.now { stroke: var(--accent); }
@@ -139,9 +141,9 @@
   .ragas strong { font-size: 22px; }
   .mood { color: var(--text-2); font-size: 13.5px; }
   .season { margin-top: 16px; padding: 14px 16px; font-size: 13.5px; line-height: 1.8; }
-  .season .chip { height: 26px; margin-right: 4px; }
+  .season .chip { height: 26px; margin-inline-end: 4px; }
   .legend { gap: 8px; margin-top: 14px; font-size: 12.5px; color: var(--text-2); }
-  .sw { width: 18px; height: 6px; border-radius: 3px; margin-left: 8px; }
+  .sw { width: 18px; height: 6px; border-radius: 3px; margin-inline-start: 8px; }
   .sw.Hindustani { background: oklch(74% 0.13 var(--h)); }
   .sw.Carnatic { background: oklch(78% 0.12 calc(var(--h) + 150)); }
   .small { font-size: 12.5px; }

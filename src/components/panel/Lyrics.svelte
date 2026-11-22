@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t as tt } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { settings } from '../../lib/stores/settings.svelte';
   import { fetchLyrics, type Lyrics } from '../../lib/lyrics/lrclib';
@@ -52,30 +53,31 @@
 
 <div class="lyrics" class:big>
   {#if !player.current}
-    <p class="faint pad">Lyrics show here while a song plays.</p>
+    <p class="faint pad">{tt('lyrics.idle')}</p>
   {:else if loading}
     <div class="pad">{#each Array(6) as _, i}<div class="skeleton" style:height="22px" style:width="{60 + ((i * 37) % 35)}%" style:margin="14px 0"></div>{/each}</div>
   {:else if !lyrics}
+    {@const parts = tt('lyrics.contribute').split('{link}')}
     <div class="pad">
-      <p class="muted">No lyrics found for this track.</p>
-      <p class="faint small">Lyrics come from <a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a>, an open community database. Anyone can add missing songs there.</p>
+      <p class="muted">{tt('lyrics.none')}</p>
+      <p class="faint small">{parts[0]}<a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a>{parts[1] ?? ''}</p>
     </div>
   {:else if lyrics.instrumental}
-    <p class="pad muted">♪ Instrumental</p>
+    <p class="pad muted">{tt('lyrics.instrumental')}</p>
   {:else}
     <div class="tools row">
       {#if lyrics.synced}
-        <span class="faint small">Timing</span>
-        <button class="chip" onclick={() => (offset -= 0.5)} aria-label="Lyrics earlier">−0.5s</button>
+        <span class="faint small">{tt('lyrics.timing')}</span>
+        <button class="chip" onclick={() => (offset -= 0.5)} aria-label={tt('lyrics.earlier')}>−0.5s</button>
         <span class="small num">{offset > 0 ? '+' : ''}{offset.toFixed(1)}s</span>
-        <button class="chip" onclick={() => (offset += 0.5)} aria-label="Lyrics later">+0.5s</button>
-      {:else}<span class="faint small">Not time-synced</span>{/if}
+        <button class="chip" onclick={() => (offset += 0.5)} aria-label={tt('lyrics.later')}>+0.5s</button>
+      {:else}<span class="faint small">{tt('lyrics.notSynced')}</span>{/if}
       <span class="grow"></span>
       {#if indic}
-        <button class="chip" class:active={settings.transliterate} aria-pressed={settings.transliterate} onclick={() => (settings.transliterate = !settings.transliterate)}>Aa Latin</button>
+        <button class="chip" class:active={settings.transliterate} aria-pressed={settings.transliterate} onclick={() => (settings.transliterate = !settings.transliterate)}>{tt('lyrics.latin')}</button>
       {/if}
     </div>
-    <div class="scroller" role="region" aria-label="Lyrics" bind:this={scroller} onwheel={onWheel} ontouchmove={onWheel}>
+    <div class="scroller" role="region" aria-label={tt('panel.lyrics')} bind:this={scroller} onwheel={onWheel} ontouchmove={onWheel}>
       {#if lyrics.synced}
         {#each lyrics.lines as line, i (i)}
           <button
@@ -83,6 +85,7 @@
             class:active={i === idx}
             class:past={i < idx}
             data-i={i}
+            dir="auto"
             onclick={() => player.seek(line.t - offset + 0.01)}
           >
             {#if line.words && i === idx}
@@ -93,9 +96,9 @@
           </button>
         {/each}
       {:else}
-        <pre class="plain">{show(lyrics.plain ?? '')}</pre>
+        <pre class="plain" dir="auto">{show(lyrics.plain ?? '')}</pre>
       {/if}
-      <p class="credit faint small">Lyrics via LRCLIB</p>
+      <p class="credit faint small">{tt('lyrics.via')}</p>
     </div>
   {/if}
 </div>
@@ -109,10 +112,11 @@
   .tools .chip { height: 26px; padding: 0 9px; font-size: 12px; }
   .scroller { overflow-y: auto; flex: 1; min-height: 0; padding: 20% 0 40%; mask-image: linear-gradient(transparent, #000 12%, #000 80%, transparent); }
   .line {
-    display: block; width: 100%; text-align: left; padding: 6px 0; font-size: 21px; font-weight: 650; line-height: 1.3;
+    display: block; width: 100%; text-align: start; padding: 6px 0; font-size: 21px; font-weight: 650; line-height: 1.3;
     color: var(--text-3); transition: color 0.3s, transform 0.3s var(--ease), opacity 0.3s; transform-origin: left center;
   }
   .line:hover { color: var(--text-2); }
+  :global([dir='rtl']) .line { transform-origin: right center; }
   .line.past { opacity: 0.55; }
   .line.active { color: var(--text); transform: scale(1.03); }
   .w {

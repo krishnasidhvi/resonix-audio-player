@@ -2,7 +2,8 @@
   import { player } from '../../lib/stores/player.svelte';
   import { library } from '../../lib/stores/library.svelte';
   import { ui } from '../../lib/stores/ui.svelte';
-  import { fmtDuration, fmtTime } from '../../lib/util';
+  import { fmtTime } from '../../lib/util';
+  import { fmtDate, fmtDuration, t } from '../../lib/i18n/i18n.svelte';
   import Artwork from '../Artwork.svelte';
   import Icon from '../Icon.svelte';
 
@@ -16,20 +17,20 @@
     dragFrom = dragOver = null;
   }
   function save() {
-    const name = prompt('Save queue as playlist', 'Queue ' + new Date().toLocaleDateString());
-    if (name) { library.createPlaylist(name, player.queue); ui.toast(`Saved "${name}"`); }
+    const name = prompt(t('queue.savePrompt'), t('queue.defaultName', { date: fmtDate(new Date()) }));
+    if (name) { library.createPlaylist(name, player.queue); ui.toast(t('toast.saved', { name })); }
   }
 </script>
 
 {#if !player.queue.length}
-  <div class="empty"><h3>Queue is empty</h3><p>Use “Play next” or “Add to queue” from any track’s ⋯ menu.</p></div>
+  <div class="empty"><h3>{t('queue.empty')}</h3><p>{t('queue.emptyHint')}</p></div>
 {:else}
   <div class="head row">
-    <span class="faint small grow">{player.queue.length - player.index - 1} up next{#if remaining} · {fmtDuration(remaining)}{/if}</span>
-    <button class="btn small ghost" onclick={save}>Save as playlist</button>
+    <span class="faint small grow">{t('queue.upNext', { count: player.queue.length - player.index - 1 })}{#if remaining} · {fmtDuration(remaining)}{/if}</span>
+    <button class="btn small ghost" onclick={save}>{t('queue.save')}</button>
   </div>
   <ol class="q">
-    {#each player.queue as t, i (t.id + i)}
+    {#each player.queue as tr, i (tr.id + i)}
       <li
         class:cur={i === player.index}
         class:past={i < player.index}
@@ -40,16 +41,16 @@
         ondragleave={() => (dragOver = null)}
         ondrop={() => drop(i)}
       >
-        <button class="hit" aria-label="Play {t.title}" onclick={() => player.load(i)}></button>
+        <button class="hit" aria-label={t('common.playItem', { title: tr.title })} onclick={() => player.load(i)}></button>
         <span class="grip" aria-hidden="true">⋮⋮</span>
-        <Artwork src={t.artwork} seed={t.artist + t.title} size="36px" radius="6px" />
+        <Artwork src={tr.artwork} seed={tr.artist + tr.title} size="36px" radius="6px" />
         <span class="meta grow">
-          <span class="ellipsis t">{t.title}</span>
-          <span class="ellipsis a">{t.artist}</span>
+          <span class="ellipsis t" dir="auto">{tr.title}</span>
+          <span class="ellipsis a" dir="auto">{tr.artist}</span>
         </span>
-        <span class="num faint small">{t.isLive ? 'live' : fmtTime(t.duration)}</span>
+        <span class="num faint small">{tr.isLive ? t('queue.live') : fmtTime(tr.duration)}</span>
         {#if i !== player.index}
-          <button class="icon-btn x" aria-label="Remove {t.title} from queue" onclick={() => player.removeAt(i)}><Icon name="close" size={15} /></button>
+          <button class="icon-btn x" aria-label={t('queue.remove', { title: tr.title })} onclick={() => player.removeAt(i)}><Icon name="close" size={15} /></button>
         {/if}
       </li>
     {/each}

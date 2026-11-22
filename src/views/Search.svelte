@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from '../lib/i18n/i18n.svelte';
+  import { licenceLabel, sourceBlurb, sourceName } from '../lib/i18n/labels';
   import { searchAll, SOURCES, type UnifiedResults } from '../lib/sources';
   import { jamendoKey } from '../lib/sources/jamendo';
   import { library } from '../lib/stores/library.svelte';
@@ -37,23 +39,23 @@
 <div class="page">
   <div class="search-box">
     <Icon name="search" size={22} />
-    <input bind:this={input} type="search" bind:value={text} placeholder="Artists, songs, ragas, stations…" aria-label="Search all sources" />
-    {#if loading}<span class="spin" aria-label="Searching"></span>{/if}
+    <input bind:this={input} type="search" bind:value={text} placeholder={t('search.placeholder')} aria-label={t('search.aria')} />
+    {#if loading}<span class="spin" aria-label={t('search.searching')}></span>{/if}
   </div>
 
   {#if !results}
     <section class="section">
-      <p class="eyebrow">Try</p>
+      <p class="eyebrow">{t('search.try')}</p>
       <div class="row wrap" style="gap:8px">{#each SUGGEST as s}<button class="chip" onclick={() => (text = s)}>{s}</button>{/each}</div>
-      <p class="faint note">Searches your library, Audius, Internet Archive (CC and public domain only), Openverse, Radio Browser{jamendoKey() ? ' and Jamendo' : ''} at once. {#if !jamendoKey()}<a href="#/settings">Add a free Jamendo key</a> to include Jamendo directly.{/if}</p>
+      <p class="faint note">{t('search.note')} {#if jamendoKey()}{t('search.jamendoOn')}{:else}<a href="#/settings">{t('search.addKey')}</a>{/if}</p>
     </section>
   {:else}
     <div class="tabs row wrap" role="tablist">
-      {#each TABS as t}
-        {#if t === 'all' || t === 'archive' || (counts[t] !== undefined && (t !== 'local' || counts[t] > 0))}
-          <button role="tab" class="chip" class:active={filter === t} aria-selected={filter === t} onclick={() => (filter = t)}>
-            {t === 'all' ? 'All' : SOURCES[t].name}
-            <span class="faint num">{t === 'all' ? '' : t === 'archive' ? results.albums.length : counts[t]}</span>
+      {#each TABS as tab}
+        {#if tab === 'all' || tab === 'archive' || (counts[tab] !== undefined && (tab !== 'local' || counts[tab] > 0))}
+          <button role="tab" class="chip" class:active={filter === tab} aria-selected={filter === tab} onclick={() => (filter = tab)}>
+            {tab === 'all' ? t('common.all') : sourceName(tab)}
+            <span class="faint num">{tab === 'all' ? '' : tab === 'archive' ? results.albums.length : counts[tab]}</span>
           </button>
         {/if}
       {/each}
@@ -62,32 +64,32 @@
     {#if filter === 'all' || filter === 'archive'}
       {#if results.albums.length}
         <section class="section">
-          <div class="section-head"><h2>Internet Archive</h2><span class="faint small">Albums and recordings · open licences</span></div>
+          <div class="section-head"><h2>Internet Archive</h2><span class="faint small">{t('search.archiveHint')}</span></div>
           <div class={filter === 'archive' ? 'grid-cards' : 'scroll-x'}>
             {#each results.albums as a (a.id)}
-              <Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={a.license?.name} />
+              <Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={licenceLabel(a.license)} />
             {/each}
           </div>
         </section>
-      {:else if filter === 'archive'}<p class="faint">{results.albumError ?? 'No openly licensed Archive items matched.'}</p>{/if}
+      {:else if filter === 'archive'}<p class="faint">{results.albumError ?? t('search.noArchive')}</p>{/if}
     {/if}
 
     {#each groups as g (g.source)}
       {#if filter === 'all' || filter === g.source}
         <section class="section">
           <div class="section-head">
-            <h2><span class="dot" style:background={SOURCES[g.source].color}></span>{SOURCES[g.source].name}</h2>
-            <span class="faint small">{SOURCES[g.source].blurb}</span>
+            <h2><span class="dot" style:background={SOURCES[g.source].color}></span>{sourceName(g.source)}</h2>
+            <span class="faint small">{sourceBlurb(g.source)}</span>
           </div>
           {#if g.error}<p class="faint">{g.error}</p>
           {:else}<TrackList tracks={filter === 'all' ? g.tracks.slice(0, 6) : g.tracks} />
-            {#if filter === 'all' && g.tracks.length > 6}<button class="btn small ghost" onclick={() => (filter = g.source)}>All {g.tracks.length} from {SOURCES[g.source].name}</button>{/if}
+            {#if filter === 'all' && g.tracks.length > 6}<button class="btn small ghost" onclick={() => (filter = g.source)}>{t('search.allFrom', { count: g.tracks.length, source: sourceName(g.source) })}</button>{/if}
           {/if}
         </section>
       {/if}
     {/each}
     {#if !groups.some((g) => g.tracks.length) && !results.albums.length}
-      <div class="empty section"><h3>No results for “{text}”</h3><p>Try a shorter search or another spelling.</p></div>
+      <div class="empty section"><h3>{t('search.noResults', { q: text })}</h3><p>{t('search.noResultsHint')}</p></div>
     {/if}
   {/if}
 </div>

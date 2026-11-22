@@ -7,6 +7,7 @@ import type { Analysis, Track } from '../types';
 import { library } from './library.svelte';
 import { effectiveEq, settings } from './settings.svelte';
 import { ui } from './ui.svelte';
+import { t } from '../i18n/i18n.svelte';
 
 export type Repeat = 'off' | 'all' | 'one';
 export type Sleep = { mode: 'minutes'; endsAt: number } | { mode: 'track' } | null;
@@ -87,12 +88,12 @@ class Player {
 
   playNext(track: Track) {
     this.queue.splice(this.index + 1, 0, $state.snapshot(track) as Track);
-    ui.toast(`Playing next: ${track.title}`);
+    ui.toast(t('toast.playingNext', { title: track.title }));
   }
 
   enqueue(tracks: Track[]) {
     this.queue.push(...tracks.map((t) => $state.snapshot(t) as Track));
-    ui.toast(tracks.length === 1 ? `Added to queue: ${tracks[0].title}` : `Added ${tracks.length} tracks to queue`);
+    ui.toast(tracks.length === 1 ? t('toast.addedQueue', { title: tracks[0].title }) : t('toast.addedQueueMany', { count: tracks.length }));
     if (this.index < 0) void this.load(0);
   }
 
@@ -149,8 +150,8 @@ class Player {
     } catch (e) {
       if (token !== this.loadToken) return;
       const err = e as Error;
-      if (err.name === 'NotAllowedError') { ui.toast('Press play to start audio'); return; }
-      ui.toast(`Couldn't play "${track.title}": ${err.message}`, 'error');
+      if (err.name === 'NotAllowedError') { ui.toast(t('toast.pressPlay')); return; }
+      ui.toast(t('toast.cantPlay', { title: track.title, error: err.message }), 'error');
       const n = this.nextIndex();
       if (n !== null && n !== i) setTimeout(() => { if (token === this.loadToken) void this.load(n); }, 800);
     } finally {
@@ -186,7 +187,7 @@ class Player {
   }
 
   private handleEnded() {
-    if (this.sleep?.mode === 'track') { this.setSleep(null); this.logListen(); ui.toast('Sleep timer: stopped'); return; }
+    if (this.sleep?.mode === 'track') { this.setSleep(null); this.logListen(); ui.toast(t('toast.sleepStopped')); return; }
     if (this.repeat === 'one') { engine.seek(0); void engine.resume(); return; }
     const n = this.nextIndex();
     if (n !== null) void this.load(n);
@@ -244,7 +245,7 @@ class Player {
           this.fading = false;
           this.sleep = null;
           this.logListen();
-          ui.toast('Sleep timer: faded out');
+          ui.toast(t('toast.sleepFaded'));
         }
       }, 1000);
     }

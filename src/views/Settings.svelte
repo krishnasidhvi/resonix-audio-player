@@ -6,16 +6,19 @@
   import { db } from '../lib/db';
   import { jamendoKey, jamendoPopular } from '../lib/sources/jamendo';
   import { SOURCES } from '../lib/sources';
+  import { i18n, LOCALES, t, type Key } from '../lib/i18n/i18n.svelte';
+  import { sourceBlurb, sourceName } from '../lib/i18n/labels';
   import Icon from '../components/Icon.svelte';
 
   let jkey = $state(localStorage.getItem('jamendo_client_id') ?? '');
-  let jstatus = $state('');
+  let jstatus: Key | 'error' | '' = $state('');
+  let jerror = $state('');
 
   async function saveKey() {
     localStorage.setItem('jamendo_client_id', jkey.trim());
-    if (!jkey.trim()) { jstatus = 'Removed'; return; }
-    jstatus = 'Checking…';
-    try { await jamendoPopular(); jstatus = 'Connected ✓'; } catch (e) { jstatus = (e as Error).message; }
+    if (!jkey.trim()) { jstatus = 'settings.removed'; return; }
+    jstatus = 'settings.checking';
+    try { await jamendoPopular(); jstatus = 'settings.connected'; } catch (e) { jstatus = 'error'; jerror = (e as Error).message; }
   }
 
   function backup() {
@@ -30,73 +33,86 @@
     if (!f) return;
     try {
       const data = JSON.parse(await f.text());
-      for (const t of data.favorites ?? []) if (!library.isFavorite(t.id)) library.toggleFavorite(t);
+      for (const tr of data.favorites ?? []) if (!library.isFavorite(tr.id)) library.toggleFavorite(tr);
       for (const p of data.playlists ?? []) library.createPlaylist(p.name, p.tracks);
-      ui.toast('Backup restored');
-    } catch { ui.toast('That file is not a Resonix backup', 'error'); }
+      ui.toast(t('settings.restored'));
+    } catch { ui.toast(t('settings.badBackup'), 'error'); }
   }
-  async function clearAnalysis() { await db.clear('analysis'); ui.toast('Analysis cache cleared'); }
-  async function clearStats() { if (confirm('Delete all listening history?')) { await db.clear('plays'); ui.toast('Listening history deleted'); } }
+  async function clearAnalysis() { await db.clear('analysis'); ui.toast(t('settings.analysisCleared')); }
+  async function clearStats() { if (confirm(t('settings.deleteHistoryConfirm'))) { await db.clear('plays'); ui.toast(t('settings.historyDeleted')); } }
 
-  const SHORTCUTS = [
-    ['Space', 'Play / pause'], ['Shift + → / ←', 'Next / previous track'], ['→ / ←', 'Seek 5 s'], ['↑ / ↓', 'Volume'],
-    ['Ctrl/⌘ + K', 'Command palette'], ['L', 'Lyrics'], ['Q', 'Queue'], ['E', 'Equaliser'], ['F', 'Ambient mode'],
-    ['M', 'Mute'], ['S', 'Shuffle'], ['R', 'Repeat'], ['[ / ]', 'Set loop A / B'], ['/', 'Search'],
+  const SHORTCUTS: [string, Key][] = [
+    ['Space', 'keys.playPause'], ['Shift + → / ←', 'keys.nextPrev'], ['→ / ←', 'keys.seek'], ['↑ / ↓', 'keys.volume'],
+    ['Ctrl/⌘ + K', 'keys.palette'], ['L', 'keys.lyrics'], ['Q', 'keys.queue'], ['E', 'keys.eq'], ['F', 'keys.ambient'],
+    ['M', 'keys.mute'], ['S', 'keys.shuffle'], ['R', 'keys.repeat'], ['[ / ]', 'keys.loop'], ['/', 'keys.search'],
   ];
 </script>
 
 <div class="page narrow">
-  <p class="eyebrow">Settings</p>
-  <h1 class="page-title">Make it yours</h1>
+  <p class="eyebrow">{t('nav.settings')}</p>
+  <h1 class="page-title">{t('settings.title')}</h1>
 
   <section class="section group">
-    <h2>Playback</h2>
-    <label class="field"><span>Crossfade<small>{settings.crossfade ? `${settings.crossfade} seconds` : 'Off: tracks play back to back with no gap'}</small></span>
+    <h2 id="lang-heading" class="row"><Icon name="globe" size={18} /> {t('settings.language')}</h2>
+    <div class="langs" role="radiogroup" aria-labelledby="lang-heading">
+      {#each LOCALES as l}
+        <button role="radio" class="chip" class:active={l.code === i18n.locale} aria-checked={l.code === i18n.locale} lang={l.code} dir={l.rtl ? 'rtl' : 'ltr'}
+          onclick={() => i18n.set(l.code)}>{l.name}</button>
+      {/each}
+    </div>
+    <p class="faint small">{t('settings.languageHint')}</p>
+  </section>
+
+  <section class="section group">
+    <h2>{t('settings.playback')}</h2>
+    <label class="field"><span>{t('settings.crossfade')}<small>{settings.crossfade ? t('settings.crossfadeOn', { count: settings.crossfade }) : t('settings.crossfadeOff')}</small></span>
       <input type="range" min="0" max="12" step="1" bind:value={settings.crossfade} style:--fill="{(settings.crossfade / 12) * 100}%" /></label>
-    <label class="switch"><input type="checkbox" bind:checked={settings.normalize} onchange={() => player.applyNormalization()} /><span>Match loudness<small>Analysed tracks are levelled to {settings.normTarget} LUFS so nothing jumps out.</small></span></label>
-    <label class="switch"><input type="checkbox" bind:checked={settings.autoAnalyse} /><span>Analyse local files automatically<small>Tempo, key, loudness and waveform, computed on this device when a local file plays.</small></span></label>
-    <button class="btn small" onclick={() => (ui.hearingOpen = true)}><Icon name="ear" size={15} /> {settings.hearingEq ? 'Redo hearing check' : 'Run hearing check'}</button>
+    <label class="switch"><input type="checkbox" bind:checked={settings.normalize} onchange={() => player.applyNormalization()} /><span>{t('settings.normalize')}<small>{t('settings.normalizeHint', { target: settings.normTarget })}</small></span></label>
+    <label class="switch"><input type="checkbox" bind:checked={settings.autoAnalyse} /><span>{t('settings.autoAnalyse')}<small>{t('settings.autoAnalyseHint')}</small></span></label>
+    <button class="btn small" onclick={() => (ui.hearingOpen = true)}><Icon name="ear" size={15} /> {settings.hearingEq ? t('settings.hearingRedo') : t('settings.hearingRun')}</button>
   </section>
 
   <section class="section group">
-    <h2>Lyrics & display</h2>
-    <label class="switch"><input type="checkbox" bind:checked={settings.transliterate} /><span>Show Indic lyrics in Latin letters<small>Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali and more, transliterated on the fly.</small></span></label>
-    <label class="switch"><input type="checkbox" onchange={(e) => (settings.accent = e.currentTarget.checked ? 'artwork' : 'fixed')} checked={settings.accent === 'artwork'} /><span>Tint the app from the artwork</span></label>
-    <label class="switch"><input type="checkbox" bind:checked={settings.reduceMotion} /><span>Reduce motion</span></label>
+    <h2>{t('settings.display')}</h2>
+    <label class="switch"><input type="checkbox" bind:checked={settings.transliterate} /><span>{t('settings.translit')}<small>{t('settings.translitHint')}</small></span></label>
+    <label class="switch"><input type="checkbox" onchange={(e) => (settings.accent = e.currentTarget.checked ? 'artwork' : 'fixed')} checked={settings.accent === 'artwork'} /><span>{t('settings.tint')}</span></label>
+    <label class="switch"><input type="checkbox" bind:checked={settings.reduceMotion} /><span>{t('settings.reduceMotion')}</span></label>
   </section>
 
   <section class="section group">
-    <h2>Sources</h2>
+    <h2>{t('settings.sources')}</h2>
     <ul class="sources">
       {#each Object.values(SOURCES) as s}
-        <li><span class="dot" style:background={s.color}></span><strong>{s.name}</strong><span class="faint">{s.blurb}</span>{#if s.url}<a href={s.url} target="_blank" rel="noopener" class="faint"><Icon name="external" size={13} /></a>{/if}</li>
+        <li><span class="dot" style:background={s.color}></span><strong>{sourceName(s.id)}</strong><span class="faint">{sourceBlurb(s.id)}</span>{#if s.url}<a href={s.url} target="_blank" rel="noopener" class="faint" aria-label={s.name}><Icon name="external" size={13} /></a>{/if}</li>
       {/each}
     </ul>
     <div class="field">
-      <span>Jamendo client ID<small>Free from <a href="https://devportal.jamendo.com" target="_blank" rel="noopener">devportal.jamendo.com</a>. Adds Jamendo's full catalogue to search. It's stored only in this browser.</small></span>
-      <div class="row"><input type="text" bind:value={jkey} placeholder="e.g. a1b2c3d4" class="grow" /><button class="btn" onclick={saveKey}>Save</button></div>
-      {#if jstatus}<small class:ok={jstatus.includes('✓')}>{jstatus}</small>{:else if jamendoKey()}<small class="ok">Key set</small>{/if}
+      <span>{t('settings.jamendoKey')}<small>{t('settings.jamendoHint')} <a href="https://devportal.jamendo.com" target="_blank" rel="noopener">devportal.jamendo.com</a></small></span>
+      <div class="row"><input type="text" bind:value={jkey} placeholder="a1b2c3d4" class="grow" dir="ltr" /><button class="btn" onclick={saveKey}>{t('common.save')}</button></div>
+      {#if jstatus === 'error'}<small>{jerror}</small>
+      {:else if jstatus}<small class:ok={jstatus === 'settings.connected'}>{t(jstatus)}</small>
+      {:else if jamendoKey()}<small class="ok">{t('settings.keySet')}</small>{/if}
     </div>
-    <p class="faint small">Resonix only plays music its sources offer openly: artist-uploaded streams on Audius, Creative Commons and public-domain items on the Internet Archive and Openverse, and live radio. Each track shows its licence and links back to the source. When you reuse CC music, credit the artist as its licence asks.</p>
+    <p class="faint small">{t('settings.sourcesNote')}</p>
   </section>
 
   <section class="section group">
-    <h2>Your data</h2>
-    <p class="faint small">Everything (library, playlists, favourites, history, analysis) lives in this browser. There's no account and no server.</p>
+    <h2>{t('settings.data')}</h2>
+    <p class="faint small">{t('settings.dataNote')}</p>
     <div class="row wrap">
-      <button class="btn small" onclick={backup}>Export backup</button>
-      <label class="btn small">Import backup<input type="file" accept="application/json" hidden onchange={(e) => restore(e.currentTarget.files)} /></label>
-      <button class="btn small ghost" onclick={clearAnalysis}>Clear analysis cache</button>
-      <button class="btn small ghost danger" onclick={clearStats}>Delete listening history</button>
+      <button class="btn small" onclick={backup}>{t('settings.export')}</button>
+      <label class="btn small">{t('settings.import')}<input type="file" accept="application/json" hidden onchange={(e) => restore(e.currentTarget.files)} /></label>
+      <button class="btn small ghost" onclick={clearAnalysis}>{t('settings.clearAnalysis')}</button>
+      <button class="btn small ghost danger" onclick={clearStats}>{t('settings.deleteHistory')}</button>
     </div>
   </section>
 
   <section class="section group">
-    <h2>Keyboard</h2>
-    <dl class="keys">{#each SHORTCUTS as [k, v]}<dt><kbd>{k}</kbd></dt><dd>{v}</dd>{/each}</dl>
+    <h2>{t('settings.keyboard')}</h2>
+    <dl class="keys">{#each SHORTCUTS as [k, v]}<dt><kbd>{k}</kbd></dt><dd>{t(v)}</dd>{/each}</dl>
   </section>
 
-  <p class="faint small about">Resonix 2.0 · open source (MIT) · lyrics from LRCLIB · no tracking.</p>
+  <p class="faint small about">{t('settings.about')}</p>
 </div>
 
 <style>
@@ -117,6 +133,8 @@
   .danger { color: var(--danger); }
   .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin: 0; font-size: 13.5px; }
   dd { margin: 0; color: var(--text-2); }
-  kbd { font: 12px var(--font-ui); padding: 2px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg-raise); }
+  kbd { direction: ltr; unicode-bidi: isolate; font: 12px var(--font-ui); padding: 2px 7px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg-raise); }
+  .langs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .langs .chip { height: 36px; padding: 0 16px; font-size: 14px; }
   .about { margin-top: 28px; }
 </style>

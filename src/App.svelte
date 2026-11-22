@@ -4,7 +4,8 @@
   import { settings } from './lib/stores/settings.svelte';
   import { ui } from './lib/stores/ui.svelte';
   import { importFiles } from './lib/sources/local';
-  import { artworkHue, hueOf, plural } from './lib/util';
+  import { artworkHue, hueOf } from './lib/util';
+  import { t } from './lib/i18n/i18n.svelte';
   import Sidebar from './components/Sidebar.svelte';
   import PlayerBar from './components/PlayerBar.svelte';
   import SidePanel from './components/SidePanel.svelte';
@@ -29,14 +30,14 @@
 
   // Accent hue follows the artwork (or a stable hue from the title when the image isn't readable).
   $effect(() => {
-    const t = player.current;
-    if (settings.accent !== 'artwork' || !t) { document.documentElement.style.setProperty('--h', '285'); return; }
-    const fallback = hueOf(t.artist + t.title);
+    const cur = player.current;
+    if (settings.accent !== 'artwork' || !cur) { document.documentElement.style.setProperty('--h', '285'); return; }
+    const fallback = hueOf(cur.artist + cur.title);
     document.documentElement.style.setProperty('--h', String(fallback));
-    if (t.artwork) artworkHue(t.artwork).then((h) => { if (h !== null && player.current?.id === t.id) document.documentElement.style.setProperty('--h', String(h)); });
+    if (cur.artwork) artworkHue(cur.artwork).then((h) => { if (h !== null && player.current?.id === cur.id) document.documentElement.style.setProperty('--h', String(h)); });
   });
   $effect(() => { document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion); });
-  $effect(() => { const t = player.current; document.title = t ? `${t.title} · ${t.artist}` : 'Resonix'; });
+  $effect(() => { const cur = player.current; document.title = cur ? `${cur.title} · ${cur.artist}` : 'Resonix'; });
 
   function typing(e: KeyboardEvent) {
     const el = e.target as HTMLElement;
@@ -72,9 +73,9 @@
     const files = [...(e.dataTransfer?.files ?? [])];
     if (!files.length) return;
     const tracks = await importFiles(files, () => {});
-    if (!tracks.length) return ui.toast('No audio files in that drop', 'error');
+    if (!tracks.length) return ui.toast(t('toast.noAudio'), 'error');
     await library.addLocal(tracks);
-    ui.toast(`Added ${plural(tracks.length, 'track')} to your library`);
+    ui.toast(t('toast.addedToLibrary', { count: tracks.length }));
     player.playList(tracks, 0);
   }
   const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes('Files');
@@ -116,7 +117,7 @@
 {#if ui.ambient}<Ambient />{/if}
 
 {#if dragging}
-  <div class="drop" aria-hidden="true"><div><strong class="display">Drop to add to your library</strong><p class="muted">Files stay on this device</p></div></div>
+  <div class="drop" aria-hidden="true"><div><strong class="display">{t('drop.title')}</strong><p class="muted">{t('drop.hint')}</p></div></div>
 {/if}
 
 <div class="toasts" role="status" aria-live="polite">

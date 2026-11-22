@@ -31,6 +31,7 @@ Every track shows its source and licence and links back to the original page. If
 - **Practice mode:** tempo from 0.5× to 1.5× with pitch kept, A–B looping.
 - **Signal path:** shows every stage the audio passes through, including when a host blocks processing (no CORS) and the stream plays untouched.
 - **Ambient mode:** full-screen artwork, visualizer and large lyrics.
+- **Seven languages:** English, Deutsch, Français, Español, 日本語, 简体中文 and العربية, with full right-to-left layout for Arabic. The first language comes from the browser and can be changed in the sidebar, Settings or the command palette. Each language loads only when chosen.
 - Sleep timer (fade out, or stop after the current track), command palette (`Ctrl/⌘ K`), keyboard shortcuts, listening stats kept on the device, playlists with `.m3u8` export, JSON backup, installable PWA, and the accent colour follows the artwork.
 
 ## Development
@@ -39,7 +40,7 @@ Every track shows its source and licence and links back to the original page. If
 npm install
 npm run dev      # http://localhost:5173
 npm run check    # svelte-check (TypeScript)
-npm test         # unit tests for analysis DSP, LRC parsing, transliteration
+npm test         # unit tests: analysis DSP, LRC parsing, transliteration, translation completeness
 npm run build    # static site in dist/
 ```
 
@@ -67,6 +68,7 @@ src/
     stores/     player, library, settings, ui (Svelte runes)
     raga.ts     raga time theory data
   components/   player bar, scrubber, side panel, overlays
+  i18n/         en.ts (source strings), locales/*.ts, labels.ts
   views/        Home, Search, Library, Album, Playlist, Radio, Raga clock, Journey, Stats, Settings
 tests/          node:test unit tests
 src-tauri/      desktop shell

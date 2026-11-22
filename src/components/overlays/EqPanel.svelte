@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from '../../lib/i18n/i18n.svelte';
+  import { eqPresetLabel } from '../../lib/i18n/labels';
   import { EQ_FREQS } from '../../lib/audio/engine';
   import { player } from '../../lib/stores/player.svelte';
   import { EQ_PRESETS, effectiveEq, settings } from '../../lib/stores/settings.svelte';
@@ -46,55 +48,55 @@
   const label = (f: number) => (f >= 1000 ? `${f / 1000}k` : `${f}`);
 </script>
 
-<div class="sheet surface" role="dialog" aria-label="Equaliser and sound">
+<div class="sheet surface" role="dialog" aria-label={t('player.sound')}>
   <div class="row head">
-    <h2>Sound</h2>
-    <label class="switch"><input type="checkbox" bind:checked={settings.eqEnabled} onchange={() => player.applyEq()} /> EQ on</label>
+    <h2>{t('eq.title')}</h2>
+    <label class="switch"><input type="checkbox" bind:checked={settings.eqEnabled} onchange={() => player.applyEq()} /> {t('eq.on')}</label>
     <span class="grow"></span>
-    <button class="btn small" onclick={() => { ui.hearingOpen = true; ui.eqOpen = false; }}><Icon name="ear" size={15} /> Hearing check</button>
-    <button class="icon-btn" aria-label="Close" onclick={() => (ui.eqOpen = false)}><Icon name="close" size={16} /></button>
+    <button class="btn small" onclick={() => { ui.hearingOpen = true; ui.eqOpen = false; }}><Icon name="ear" size={15} /> {t('eq.hearingCheck')}</button>
+    <button class="icon-btn" aria-label={t('common.close')} onclick={() => (ui.eqOpen = false)}><Icon name="close" size={16} /></button>
   </div>
-  {#if player.bypassed}<p class="warn">The current stream can't be processed (its host has no CORS), so these settings apply from the next processable track.</p>{/if}
+  {#if player.bypassed}<p class="warn">{t('eq.bypassWarn')}</p>{/if}
 
   <div class="presets row wrap">
-    {#each Object.keys(EQ_PRESETS) as p}<button class="chip" class:active={settings.eqPreset === p} onclick={() => preset(p)}>{p}</button>{/each}
-    {#if settings.eqPreset === 'Custom'}<span class="chip active">Custom</span>{/if}
+    {#each Object.keys(EQ_PRESETS) as p}<button class="chip" class:active={settings.eqPreset === p} onclick={() => preset(p)}>{eqPresetLabel(p)}</button>{/each}
+    {#if settings.eqPreset === 'Custom'}<span class="chip active">{eqPresetLabel('Custom')}</span>{/if}
   </div>
 
-  <svg viewBox="0 0 {W} {H}" class="curve" preserveAspectRatio="none" aria-hidden="true">
+  <svg viewBox="0 0 {W} {H}" class="curve" style="direction: ltr" preserveAspectRatio="none" aria-hidden="true">
     <line x1="0" x2={W} y1={y(0)} y2={y(0)} class="zero" />
     {#each [100, 1000, 10000] as f}<line x1={x(f)} x2={x(f)} y1="0" y2={H} class="grid" />{/each}
     <polyline points="0,{H} {curve} {W},{H}" class="fill" />
     <polyline points={curve} class="line" />
   </svg>
 
-  <div class="bands">
+  <div class="bands" dir="ltr">
     {#each EQ_FREQS as f, i}
       <div class="band">
         <span class="db num">{settings.eq[i] > 0 ? '+' : ''}{settings.eq[i].toFixed(1)}</span>
-        <input type="range" min="-12" max="12" step="0.5" value={settings.eq[i]} aria-label="{label(f)} Hz gain" oninput={(e) => set(i, +e.currentTarget.value)} ondblclick={() => set(i, 0)} />
+        <input type="range" min="-12" max="12" step="0.5" value={settings.eq[i]} aria-label={t('eq.bandGain', { freq: label(f) })} oninput={(e) => set(i, +e.currentTarget.value)} ondblclick={() => set(i, 0)} />
         <span class="f num">{label(f)}</span>
       </div>
     {/each}
   </div>
-  {#if settings.hearingEq}<p class="faint small">Your hearing profile adds compensation on top of these sliders (shown in the curve). <button class="link" onclick={() => { settings.hearingEq = null; player.applyEq(); }}>Remove it</button></p>{/if}
+  {#if settings.hearingEq}<p class="faint small">{t('eq.hearingNote')} <button class="link" onclick={() => { settings.hearingEq = null; player.applyEq(); }}>{t('eq.removeIt')}</button></p>{/if}
 
   <div class="extras">
     <label>
-      <span>Crossfeed <small class="faint">for headphones: softens hard-panned stereo</small></span>
+      <span>{t('eq.crossfeed')} <small class="faint">{t('eq.crossfeedHint')}</small></span>
       <input type="range" min="0" max="1" step="0.05" bind:value={settings.crossfeed} style:--fill="{settings.crossfeed * 100}%" oninput={() => player.applyCrossfeed()} />
     </label>
     <label>
-      <span>Crossfade <small class="faint">{settings.crossfade ? settings.crossfade + ' s' : 'off (gapless)'}</small></span>
+      <span>{t('eq.crossfade')} <small class="faint">{settings.crossfade ? t('eq.seconds', { count: settings.crossfade }) : t('eq.crossfadeOff')}</small></span>
       <input type="range" min="0" max="12" step="1" bind:value={settings.crossfade} style:--fill="{(settings.crossfade / 12) * 100}%" />
     </label>
-    <label class="switch"><input type="checkbox" bind:checked={settings.normalize} onchange={() => player.applyNormalization()} /> Match loudness of analysed tracks (−14 LUFS)</label>
+    <label class="switch"><input type="checkbox" bind:checked={settings.normalize} onchange={() => player.applyNormalization()} /> {t('eq.matchLoudness', { target: settings.normTarget })}</label>
   </div>
 </div>
 
 <style>
-  .sheet { position: fixed; right: 16px; bottom: calc(var(--bar) + 12px); z-index: 45; width: min(620px, calc(100vw - 32px)); padding: 18px 20px; box-shadow: 0 30px 80px rgb(0 0 0 / 0.6); display: grid; gap: 14px; max-height: calc(100vh - var(--bar) - 40px); overflow: auto; }
-  .head h2 { margin: 0 12px 0 0; font-size: 18px; }
+  .sheet { position: fixed; inset-inline-end: 16px; bottom: calc(var(--bar) + 12px); z-index: 45; width: min(620px, calc(100vw - 32px)); padding: 18px 20px; box-shadow: 0 30px 80px rgb(0 0 0 / 0.6); display: grid; gap: 14px; max-height: calc(100vh - var(--bar) - 40px); overflow: auto; }
+  .head h2 { margin: 0; margin-inline-end: 12px; font-size: 18px; }
   .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); cursor: pointer; }
   .switch input { accent-color: var(--accent); width: 16px; height: 16px; }
   .warn { margin: 0; font-size: 12.5px; color: var(--danger); }

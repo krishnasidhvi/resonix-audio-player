@@ -2,7 +2,7 @@
   import { allAnalyses } from '../lib/audio/analysis';
   import type { Analysis, Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
-  import { fmtDuration } from '../lib/util';
+  import { fmtDuration, t } from '../lib/i18n/i18n.svelte';
   import Icon from '../components/Icon.svelte';
 
   const W = 800, H = 460, PAD = 36;
@@ -78,26 +78,26 @@
 </script>
 
 <div class="page">
-  <p class="eyebrow">Discover</p>
-  <h1 class="page-title">Journey</h1>
-  <p class="muted lead">Every analysed track sits on this map by tempo and energy. Draw a line across it and Resonix builds a queue that follows your line: start calm and build up, peak and come back down, or anything else.</p>
+  <p class="eyebrow">{t('nav.discover')}</p>
+  <h1 class="page-title">{t('nav.journey')}</h1>
+  <p class="muted lead">{t('journey.lead')}</p>
 
   {#if loaded && items.length < 3}
     <div class="empty section">
       <Icon name="path" size={30} />
-      <h3>The map needs a few analysed tracks</h3>
-      <p>Analyse your local library (Library → <em>Analyse all</em>), or press <em>Analyse</em> in the Now panel while streams play. Analysis runs on this device.</p>
-      <a class="btn primary" href="#/library/files">Go to library</a>
+      <h3>{t('journey.emptyTitle')}</h3>
+      <p>{t('journey.emptyHint')}</p>
+      <a class="btn primary" href="#/library/files">{t('journey.goLibrary')}</a>
     </div>
   {:else if loaded}
     <div class="layout">
       <div class="map surface">
-        <svg bind:this={svg} viewBox="0 0 {W} {H}" role="img" aria-label="Tempo and energy map. Draw a path to build a queue."
+        <svg bind:this={svg} viewBox="0 0 {W} {H}" role="img" aria-label={t('journey.mapAria')}
           onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}>
           {#each [80, 100, 120, 140, 160] as b}<line x1={px(b)} x2={px(b)} y1={PAD} y2={H - PAD} class="grid" /><text x={px(b)} y={H - 12} class="axis" text-anchor="middle">{b}</text>{/each}
           {#each [0.25, 0.5, 0.75] as e}<line x1={PAD} x2={W - PAD} y1={py(e)} y2={py(e)} class="grid" />{/each}
-          <text x={W - PAD} y={H - 12} class="axis strong" text-anchor="end">tempo (BPM) →</text>
-          <text x={14} y={PAD} class="axis strong" transform="rotate(-90 14 {PAD})" text-anchor="end">energy →</text>
+          <text x={W - PAD} y={H - 12} class="axis strong" text-anchor="end">{t('journey.axisTempo')}</text>
+          <text x={14} y={PAD} class="axis strong" transform="rotate(-90 14 {PAD})" text-anchor="end">{t('journey.axisEnergy')}</text>
           {#each items as a (a.track!.id)}
             <circle cx={px(a.bpm!)} cy={py(a.energy)} r={route.includes(a) ? 7 : 4.5} class="dot" class:picked={route.includes(a)} role="img" aria-label="{a.track!.title}, {a.bpm} BPM"
               onpointerenter={() => (hover = a)} onpointerleave={() => (hover = null)} />
@@ -106,27 +106,27 @@
           {#if route.length > 1}<polyline points={route.map((a) => `${px(a.bpm!)},${py(a.energy)}`).join(' ')} class="route" />{/if}
           {#if hover}<text x={Math.min(W - 200, px(hover.bpm!) + 10)} y={py(hover.energy) - 10} class="tip">{hover.track!.title} · {hover.bpm} BPM</text>{/if}
         </svg>
-        {#if path.length < 2}<p class="hint">Draw a line with your mouse or finger</p>{/if}
+        {#if path.length < 2}<p class="hint">{t('journey.draw')}</p>{/if}
       </div>
 
       <div class="side">
         <div class="row wrap presets">
-          <button class="chip" onclick={() => preset('down')}>Wind down</button>
-          <button class="chip" onclick={() => preset('up')}>Warm up</button>
-          <button class="chip" onclick={() => preset('arc')}>Peak &amp; return</button>
-          {#if path.length}<button class="chip" onclick={() => (path = [])}>Clear</button>{/if}
+          <button class="chip" onclick={() => preset('down')}>{t('journey.down')}</button>
+          <button class="chip" onclick={() => preset('up')}>{t('journey.up')}</button>
+          <button class="chip" onclick={() => preset('arc')}>{t('journey.arc')}</button>
+          {#if path.length}<button class="chip" onclick={() => (path = [])}>{t('common.clear')}</button>{/if}
         </div>
-        <label class="count">Tracks <input type="range" min="4" max="40" bind:value={count} style:--fill="{((count - 4) / 36) * 100}%" /> <span class="num">{count}</span></label>
+        <label class="count">{t('journey.tracks')} <input type="range" min="4" max="40" bind:value={count} style:--fill="{((count - 4) / 36) * 100}%" /> <span class="num">{count}</span></label>
         {#if route.length}
-          <div class="row"><span class="faint grow">{route.length} tracks{#if routeTime} · {fmtDuration(routeTime)}{/if}</span>
-            <button class="btn primary small" onclick={() => player.playList(routeTracks, 0)}><Icon name="play" size={14} /> Play journey</button></div>
+          <div class="row"><span class="faint grow">{t('count.tracks', { count: route.length })}{#if routeTime} · {fmtDuration(routeTime)}{/if}</span>
+            <button class="btn primary small" onclick={() => player.playList(routeTracks, 0)}><Icon name="play" size={14} /> {t('journey.play')}</button></div>
           <ol class="route-list">
             {#each route as a, i (a.track!.id)}
-              <li><span class="num faint">{i + 1}</span><span class="ellipsis grow">{a.track!.title}<span class="faint"> · {a.track!.artist}</span></span><span class="tag num">{a.bpm}</span></li>
+              <li><span class="num faint">{i + 1}</span><span class="ellipsis grow" dir="auto">{a.track!.title}<span class="faint"> · {a.track!.artist}</span></span><span class="tag num">{a.bpm}</span></li>
             {/each}
           </ol>
         {:else}
-          <p class="faint">{items.length} tracks on the map.</p>
+          <p class="faint">{t('journey.onMap', { count: items.length })}</p>
         {/if}
       </div>
     </div>
@@ -137,7 +137,7 @@
   .lead { max-width: 680px; margin: 6px 0 0; }
   .layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; margin-top: 24px; align-items: start; }
   .map { position: relative; padding: 8px; }
-  svg { width: 100%; height: auto; touch-action: none; cursor: crosshair; display: block; }
+  svg { width: 100%; height: auto; touch-action: none; cursor: crosshair; display: block; direction: ltr; }
   .grid { stroke: var(--line-soft); }
   .axis { font-size: 11px; fill: var(--text-3); }
   .axis.strong { fill: var(--text-2); }

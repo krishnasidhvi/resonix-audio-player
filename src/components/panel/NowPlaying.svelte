@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t as tt } from '../../lib/i18n/i18n.svelte';
+  import { keyLabel, licenceLabel, sourceName } from '../../lib/i18n/labels';
   import { player } from '../../lib/stores/player.svelte';
   import { allAnalyses } from '../../lib/audio/analysis';
   import { camelotCompatible } from '../../lib/audio/analysis-core';
@@ -25,52 +27,52 @@
 {#if t}
   <div class="now">
     <div class="cover"><Artwork src={t.artwork} seed={t.artist + t.title} radius="var(--radius)" alt="" /></div>
-    <h2 class="display title">{t.title}</h2>
-    <p class="artist">{t.artist}{#if t.album}<span class="faint"> · {t.album}</span>{/if}</p>
+    <h2 class="display title" dir="auto">{t.title}</h2>
+    <p class="artist" dir="auto">{t.artist}{#if t.album}<span class="faint"> · {t.album}</span>{/if}</p>
 
     <div class="credits surface">
       <div class="row">
         <span class="dot" style:background={SOURCES[t.source].color}></span>
-        <span class="grow">From <strong>{SOURCES[t.source].name}</strong></span>
-        {#if t.pageUrl}<a class="btn small ghost" href={t.pageUrl} target="_blank" rel="noopener">Source <Icon name="external" size={14} /></a>{/if}
+        <span class="grow">{tt('now.from', { source: sourceName(t.source) })}</span>
+        {#if t.pageUrl}<a class="btn small ghost" href={t.pageUrl} target="_blank" rel="noopener">{tt('now.source')} <Icon name="external" size={14} /></a>{/if}
       </div>
       {#if t.license}
         <div class="lic">
-          {#if t.license.url}<a href={t.license.url} target="_blank" rel="noopener">{t.license.name}</a>{:else}{t.license.name}{/if}
-          {#if t.license.name.startsWith('CC')}<span class="faint"> · credit: {t.artist}</span>{/if}
+          {#if t.license.url}<a href={t.license.url} target="_blank" rel="noopener">{licenceLabel(t.license)}</a>{:else}{licenceLabel(t.license)}{/if}
+          {#if t.license.name.startsWith('CC')}<span class="faint"> · {tt('now.credit', { artist: t.artist })}</span>{/if}
         </div>
       {/if}
     </div>
 
     <section class="sound">
-      <div class="section-head"><h3 class="eyebrow">Sound profile</h3>
+      <div class="section-head"><h3 class="eyebrow">{tt('now.soundProfile')}</h3>
         {#if !a && !t.isLive}
           <button class="btn small" onclick={() => player.analyse()} disabled={player.analysing}>
-            {#if player.analysing}Analysing…{:else}<Icon name="sparkle" size={15} /> Analyse{/if}
+            {#if player.analysing}{tt('now.analysing')}{:else}<Icon name="sparkle" size={15} /> {tt('now.analyse')}{/if}
           </button>
         {/if}
       </div>
       {#if a}
         <div class="stats">
-          <div><span class="k">Tempo</span><span class="v num">{a.bpm ?? '—'}<small> BPM</small></span></div>
-          <div><span class="k">Key</span><span class="v">{a.key ?? '—'}</span><small class="faint">{a.camelot ?? ''}</small></div>
-          <div><span class="k">Loudness</span><span class="v num">{a.lufs}<small> LUFS</small></span></div>
-          <div><span class="k">Energy</span><span class="v num">{Math.round(a.energy * 100)}<small>%</small></span>
+          <div><span class="k">{tt('now.tempo')}</span><span class="v num">{a.bpm ?? '—'}<small> BPM</small></span></div>
+          <div><span class="k">{tt('now.key')}</span><span class="v">{keyLabel(a.key)}</span><small class="faint">{a.camelot ?? ''}</small></div>
+          <div><span class="k">{tt('now.loudness')}</span><span class="v num">{a.lufs}<small> LUFS</small></span></div>
+          <div><span class="k">{tt('now.energy')}</span><span class="v num">{Math.round(a.energy * 100)}<small>%</small></span>
             <span class="meter"><i style:width="{a.energy * 100}%"></i></span></div>
         </div>
-        {#if player.normDb !== 0}<p class="faint note">Loudness matched: {player.normDb > 0 ? '+' : ''}{player.normDb.toFixed(1)} dB</p>{/if}
+        {#if player.normDb !== 0}<p class="faint note">{tt('now.matched', { db: (player.normDb > 0 ? '+' : '') + player.normDb.toFixed(1) })}</p>{/if}
       {:else if player.analysisError}
         <p class="faint note">{player.analysisError}</p>
       {:else if t.isLive}
-        <p class="faint note">Live stream: tempo and key aren't available.</p>
+        <p class="faint note">{tt('now.liveNoAnalysis')}</p>
       {:else}
-        <p class="faint note">Analysing finds the tempo, musical key and loudness, draws the waveform, and marks the loudest section. It runs on this device; nothing is uploaded.</p>
+        <p class="faint note">{tt('now.analyseHint')}</p>
       {/if}
     </section>
 
     {#if harmonic.length}
       <section>
-        <h3 class="eyebrow">Mixes well next</h3>
+        <h3 class="eyebrow">{tt('now.mixesWell')}</h3>
         <ul class="harm">
           {#each harmonic as h (h.track!.id)}
             <li>
@@ -86,8 +88,8 @@
   </div>
 {:else}
   <div class="empty">
-    <h3>Nothing playing</h3>
-    <p>Start a track and its artwork, credits and sound profile appear here.</p>
+    <h3>{tt('now.nothing')}</h3>
+    <p>{tt('now.nothingHint')}</p>
   </div>
 {/if}
 
@@ -111,6 +113,6 @@
   .meter i { display: block; height: 100%; background: var(--accent); }
   .note { font-size: 12.5px; margin: 8px 0 0; }
   .harm { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-  .harm button { width: 100%; display: flex; align-items: center; gap: 6px; text-align: left; padding: 8px 10px; border-radius: 8px; font-size: 13px; }
+  .harm button { width: 100%; display: flex; align-items: center; gap: 6px; text-align: start; padding: 8px 10px; border-radius: 8px; font-size: 13px; }
   .harm button:hover { background: var(--bg-raise); }
 </style>

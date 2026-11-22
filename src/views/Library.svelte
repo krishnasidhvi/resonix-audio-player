@@ -4,7 +4,7 @@
   import { library } from '../lib/stores/library.svelte';
   import { player } from '../lib/stores/player.svelte';
   import { ui } from '../lib/stores/ui.svelte';
-  import { plural } from '../lib/util';
+  import { t, type Key } from '../lib/i18n/i18n.svelte';
   import TrackList from '../components/TrackList.svelte';
   import Card from '../components/Card.svelte';
   import Icon from '../components/Icon.svelte';
@@ -28,7 +28,7 @@
       progress = { done: 0, total: 0 };
       const tracks = await importFolder((done, total) => (progress = { done, total }));
       await library.addLocal(tracks);
-      ui.toast(`Added ${plural(tracks.length, 'track')}`);
+      ui.toast(t('toast.addedTracks', { count: tracks.length }));
     } catch (e) {
       if ((e as Error).name !== 'AbortError') ui.toast((e as Error).message, 'error');
     } finally { progress = null; }
@@ -40,82 +40,82 @@
     const tracks = await importFiles([...files], (done, total) => (progress = { done, total }));
     await library.addLocal(tracks);
     progress = null;
-    ui.toast(`Added ${plural(tracks.length, 'track')}`);
+    ui.toast(t('toast.addedTracks', { count: tracks.length }));
   }
 
   async function analyseAll() {
     const todo = [];
     for (const t of library.local) if (!(await cachedAnalysis(t.id))) todo.push(t);
-    if (!todo.length) return ui.toast('Every local track is already analysed');
+    if (!todo.length) return ui.toast(t('toast.allAnalysed'));
     batch = { done: 0, total: todo.length };
     for (const t of todo) {
       try { await analyseTrack(t); } catch { /* skip unreadable */ }
       batch = { done: batch.done + 1, total: todo.length };
     }
     batch = null;
-    ui.toast('Analysis finished. Try the Journey map.');
+    ui.toast(t('toast.analysisDone'));
   }
 
-  const tabs = [
-    { id: 'files', label: 'On this device' },
-    { id: 'favorites', label: 'Favourites' },
-    { id: 'playlists', label: 'Playlists' },
-    { id: 'recent', label: 'Recently played' },
+  const tabs: { id: string; label: Key }[] = [
+    { id: 'files', label: 'library.tab.files' },
+    { id: 'favorites', label: 'nav.favourites' },
+    { id: 'playlists', label: 'nav.playlists' },
+    { id: 'recent', label: 'library.tab.recent' },
   ];
 </script>
 
 <div class="page">
-  <p class="eyebrow">Library</p>
-  <h1 class="page-title">Your music</h1>
+  <p class="eyebrow">{t('nav.library')}</p>
+  <h1 class="page-title">{t('library.title')}</h1>
   <div class="row wrap tabs" role="tablist">
-    {#each tabs as t}<a role="tab" class="chip" class:active={tab === t.id} aria-selected={tab === t.id} href="#/library/{t.id}">{t.label}</a>{/each}
+    {#each tabs as tb}<a role="tab" class="chip" class:active={tab === tb.id} aria-selected={tab === tb.id} href="#/library/{tb.id}">{t(tb.label)}</a>{/each}
   </div>
 
   {#if tab === 'files'}
     <div class="row wrap actions">
-      {#if canPickFolder}<button class="btn primary" onclick={pickFolder}><Icon name="folder" size={16} /> Add a music folder</button>{/if}
-      <button class="btn" onclick={() => fileInput?.click()}><Icon name="upload" size={16} /> Add files</button>
+      {#if canPickFolder}<button class="btn primary" onclick={pickFolder}><Icon name="folder" size={16} /> {t('library.addFolder')}</button>{/if}
+      <button class="btn" onclick={() => fileInput?.click()}><Icon name="upload" size={16} /> {t('library.addFiles')}</button>
       <input bind:this={fileInput} type="file" accept="audio/*,.flac,.m4a,.opus" multiple hidden onchange={(e) => addFiles(e.currentTarget.files)} />
       {#if library.local.length}
-        <button class="btn" onclick={analyseAll} disabled={!!batch}><Icon name="sparkle" size={16} /> {batch ? `Analysing ${batch.done}/${batch.total}…` : 'Analyse all'}</button>
-        <input type="search" placeholder="Filter" bind:value={filter} aria-label="Filter library" class="filter" />
-        <button class="btn ghost" onclick={() => player.playList(shown, 0)}><Icon name="play" size={14} /> Play {shown.length}</button>
+        <button class="btn" onclick={analyseAll} disabled={!!batch}><Icon name="sparkle" size={16} /> {batch ? t('library.analysing', { done: batch.done, total: batch.total }) : t('library.analyseAll')}</button>
+        <input type="search" placeholder={t('library.filter')} bind:value={filter} aria-label={t('library.filterAria')} class="filter" />
+        <button class="btn ghost" onclick={() => player.playList(shown, 0)}><Icon name="play" size={14} /> {t('library.playN', { count: shown.length })}</button>
       {/if}
     </div>
-    {#if progress}<p class="muted">Reading tags… {progress.done}{progress.total ? ' / ' + progress.total : ''}</p>{/if}
+    {#if progress}<p class="muted">{t('library.reading', { progress: progress.done + (progress.total ? ' / ' + progress.total : '') })}</p>{/if}
     {#if needsPermission}
       <div class="notice surface row">
-        <span class="grow">Your browser needs permission again to read your music folder.</span>
-        <button class="btn small primary" onclick={async () => (needsPermission = !(await requestPermission()))}>Allow access</button>
+        <span class="grow">{t('library.permission')}</span>
+        <button class="btn small primary" onclick={async () => (needsPermission = !(await requestPermission()))}>{t('library.allow')}</button>
       </div>
     {/if}
     {#if !library.local.length && !progress}
       <div class="empty section">
         <Icon name="folder" size={30} />
-        <h3>Bring your own music</h3>
-        <p>Add a folder or drop audio files anywhere on this page. MP3, FLAC, M4A/AAC, Ogg, Opus and WAV all work.<br />Files stay on this device: nothing is uploaded.</p>
+        <h3>{t('library.emptyTitle')}</h3>
+        <p>{t('library.emptyHint1')}<br />{t('library.emptyHint2')}</p>
       </div>
     {:else}
-      <section class="section"><TrackList tracks={shown} onRemove={(t) => library.removeLocal(t)} /></section>
-      <button class="btn small ghost danger" onclick={() => { if (confirm('Remove all local tracks from Resonix? Your files are not deleted.')) library.clearLocal(); }}>Clear local library</button>
+      <section class="section"><TrackList tracks={shown} onRemove={(tr) => library.removeLocal(tr)} /></section>
+      <button class="btn small ghost danger" onclick={() => { if (confirm(t('library.clearConfirm'))) library.clearLocal(); }}>{t('library.clear')}</button>
     {/if}
   {:else if tab === 'favorites'}
     {#if library.favorites.length}
-      <div class="row actions"><button class="btn primary" onclick={() => player.playList(library.favorites, 0)}><Icon name="play" size={14} /> Play</button></div>
+      <div class="row actions"><button class="btn primary" onclick={() => player.playList(library.favorites, 0)}><Icon name="play" size={14} /> {t('common.play')}</button></div>
       <section class="section"><TrackList tracks={library.favorites} showSource /></section>
-    {:else}<div class="empty section"><Icon name="heart" size={28} /><h3>No favourites yet</h3><p>Tap the heart on any track.</p></div>{/if}
+    {:else}<div class="empty section"><Icon name="heart" size={28} /><h3>{t('library.noFav')}</h3><p>{t('library.noFavHint')}</p></div>{/if}
   {:else if tab === 'playlists'}
-    <div class="row actions"><button class="btn" onclick={() => { const n = prompt('Playlist name', 'New playlist'); if (n) { const p = library.createPlaylist(n); ui.go(`#/playlist/${p.id}`); } }}><Icon name="plus" size={15} /> New playlist</button></div>
+    <div class="row actions"><button class="btn" onclick={() => { const n = prompt(t('playlist.namePrompt'), t('playlist.defaultName')); if (n) { const p = library.createPlaylist(n); ui.go(`#/playlist/${p.id}`); } }}><Icon name="plus" size={15} /> {t('nav.newPlaylist')}</button></div>
     {#if library.playlists.length}
       <div class="grid-cards section">
         {#each library.playlists as p (p.id)}
-          <Card title={p.name} subtitle={plural(p.tracks.length, 'track')} artwork={p.tracks[0]?.artwork} seed={p.id} href="#/playlist/{p.id}" onplay={p.tracks.length ? () => player.playList(p.tracks, 0) : undefined} />
+          <Card title={p.name} subtitle={t('count.tracks', { count: p.tracks.length })} artwork={p.tracks[0]?.artwork} seed={p.id} href="#/playlist/{p.id}" onplay={p.tracks.length ? () => player.playList(p.tracks, 0) : undefined} />
         {/each}
       </div>
-    {:else}<div class="empty section"><h3>No playlists</h3><p>Create one, or save your queue from the Queue panel.</p></div>{/if}
+    {:else}<div class="empty section"><h3>{t('library.noPlaylists')}</h3><p>{t('library.noPlaylistsHint')}</p></div>{/if}
   {:else}
     {#if library.recent.length}<section class="section"><TrackList tracks={library.recent} showSource /></section>
-    {:else}<div class="empty section"><h3>Nothing played yet</h3></div>{/if}
+    {:else}<div class="empty section"><h3>{t('library.nothingPlayed')}</h3></div>{/if}
   {/if}
 </div>
 
