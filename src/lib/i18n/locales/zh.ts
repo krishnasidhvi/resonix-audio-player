@@ -716,6 +716,15 @@ const zh: Messages = {
   'offline.skipped': '“{title}”未保存在此设备上，已跳过。',
   'offline.nothing': '你已离线，且此队列中没有保存在此设备上的曲目。',
   'offline.includes': '已保存的曲目会同时保存封面和歌词，因此无需联网也能完整使用。',
+
+  // added: cinematic styles
+  'settings.cineStyle': '样式',
+  'cinematic.auto': '跟随音乐',
+  'cinematic.liquid': '流体',
+  'cinematic.waves': '波浪',
+  'cinematic.aurora': '极光',
+  'settings.cineMoveAnyway': '保持背景动态',
+  'settings.cineSystemMotion': '你的系统要求应用减少动态效果，因此除非开启此项，背景会保持静止。',
 };
 
 export default zh;

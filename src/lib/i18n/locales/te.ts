@@ -716,6 +716,15 @@ const te: Messages = {
   'offline.skipped': '“{title}” ఈ పరికరంలో సేవ్ కాలేదు, కాబట్టి దాటవేయబడింది.',
   'offline.nothing': 'మీరు ఆఫ్‌లైన్‌లో ఉన్నారు, ఈ క్యూలో ఏదీ ఈ పరికరంలో సేవ్ కాలేదు.',
   'offline.includes': 'సేవ్ చేసిన ట్రాక్‌లు కవర్ ఆర్ట్, సాహిత్యాన్ని కూడా ఉంచుకుంటాయి, కాబట్టి కనెక్షన్ లేకుండా పూర్తిగా పనిచేస్తాయి.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'శైలి',
+  'cinematic.auto': 'సంగీతానికి తగినట్లు',
+  'cinematic.liquid': 'లిక్విడ్',
+  'cinematic.waves': 'అలలు',
+  'cinematic.aurora': 'అరోరా',
+  'settings.cineMoveAnyway': 'బ్యాక్‌గ్రౌండ్ కదులుతూనే ఉండనివ్వండి',
+  'settings.cineSystemMotion': 'మీ సిస్టమ్ యాప్‌లను కదలికలు తగ్గించమని కోరుతోంది, కాబట్టి మీరు దీన్ని ఆన్ చేయకపోతే బ్యాక్‌గ్రౌండ్ స్థిరంగా ఉంటుంది.',
 };
 
 export default te;

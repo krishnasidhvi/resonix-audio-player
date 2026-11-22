@@ -7,6 +7,9 @@
   import { AudioFollower, chooseScene, timeRate, warmth } from '../lib/cinematic/director';
   import { FRAG, VERT } from '../lib/cinematic/shader';
 
+  /** One full loop of the motion at normal tempo, in seconds (see shader.ts). */
+  const LOOP_SECONDS = 48;
+
   /** 'background' sits behind the app; 'ambient' is full strength for Ambient mode. */
   let { variant = 'background' }: { variant?: 'background' | 'ambient' } = $props();
 
@@ -18,11 +21,11 @@
 
   $effect(() => {
     const tr = player.current, a = player.analysis;
-    if (!tr) return;
+    if (!tr) { target = { ...target, scene: chooseScene(null, null, settings.cinematicStyle) }; return; }
     const seedHue = hueOf(tr.artist + tr.title);
     const base = { h1: seedHue / 360, h2: ((seedHue + 50) % 360) / 360 };
     const energy = a?.energy ?? 0.45;
-    target = { ...target, ...base, scene: chooseScene(tr, a), warm: warmth(a), energy, rate: timeRate(a, energy), bpm: a?.bpm ?? null };
+    target = { ...target, ...base, scene: chooseScene(tr, a, settings.cinematicStyle), warm: warmth(a), energy, rate: timeRate(a, energy), bpm: a?.bpm ?? null };
     if (tr.artwork) {
       artworkPalette(offline.artFor(tr.artwork)!).then((p) => {
         if (p && player.current?.id === tr.id) target = { ...target, h1: p[0] / 360, h2: p[1] / 360 };
@@ -61,7 +64,7 @@
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const U = (n: string) => gl.getUniformLocation(prog, n);
     const u = {
-      res: U('uRes'), time: U('uTime'), h1: U('uHue1'), h2: U('uHue2'), warm: U('uWarm'), bass: U('uBass'), kick: U('uKick'),
+      res: U('uRes'), phase: U('uPhase'), seed: U('uSeed'), h1: U('uHue1'), h2: U('uHue2'), warm: U('uWarm'), bass: U('uBass'), kick: U('uKick'),
       energy: U('uEnergy'), intensity: U('uIntensity'), a: U('uSceneA'), b: U('uSceneB'), mix: U('uMix'),
     };
 
@@ -72,7 +75,7 @@
     const minFrame = 1000 / (lowPower ? 30 : 45);
     let cur = { h1: target.h1, h2: target.h2, warm: 0, energy: 0.4, intensity: 0, rate: 1 };
     let sceneA = target.scene, sceneB = target.scene, mix = 0;
-    let clock = 0, last = performance.now(), lastDraw = 0, raf = 0;
+    let loop = 0, last = performance.now(), lastDraw = 0, raf = 0;
 
     const lerpHue = (a: number, b: number, k: number) => {
       let d = b - a;
@@ -82,8 +85,9 @@
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      // paused: slow redraws; reduced motion (setting or OS): a still frame every few seconds
-      const reduce = settings.reduceMotion || reducedMotionQuery.matches;
+      // paused: slow redraws; reduced motion: a still frame every few seconds. The app's own
+      // "Reduce motion" always wins; the system's request can be overridden for this background.
+      const reduce = settings.reduceMotion || (reducedMotionQuery.matches && !settings.cinematicMotion);
       const interval = reduce ? 3000 : player.playing ? minFrame : 1000 / 12;
       if (document.hidden || now - lastDraw < interval) return;
       const dt = Math.min(0.1, (now - last) / 1000);
@@ -99,7 +103,7 @@
       cur.warm += (target.warm - cur.warm) * k;
       cur.energy += (target.energy - cur.energy) * k;
       cur.rate += (target.rate - cur.rate) * k;
-      const want = variant === 'ambient' ? 1 : settings.cinematic === 'vivid' ? 0.95 : 0.42;
+      const want = variant === 'ambient' ? 1 : settings.cinematic === 'vivid' ? 1 : 0.75;
       const dim = player.playing ? 1 : 0.55;
       cur.intensity += (want * dim - cur.intensity) * Math.min(1, dt * 1.5);
 
@@ -110,10 +114,12 @@
       }
 
       follower.update(player.bypassed ? null : engine.analyser, engine.ctx?.sampleRate ?? 48000, dt, now / 1000, target.bpm, player.playing);
-      if (!still) clock += dt * cur.rate * (player.playing ? 1 : 0.35);
+      // the loop runs faster for faster songs, and slowly while paused
+      if (!still) loop = (loop + (dt * cur.rate * (player.playing ? 1 : 0.35)) / LOOP_SECONDS) % 1;
 
       gl.uniform2f(u.res, w, h);
-      gl.uniform1f(u.time, clock);
+      gl.uniform1f(u.phase, loop * Math.PI * 2);
+      gl.uniform1f(u.seed, Math.random());
       gl.uniform1f(u.h1, cur.h1);
       gl.uniform1f(u.h2, cur.h2);
       gl.uniform1f(u.warm, cur.warm);

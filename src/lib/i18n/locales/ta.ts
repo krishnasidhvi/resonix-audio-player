@@ -715,6 +715,15 @@ const ta: Messages = {
   'offline.skipped': '“{title}” இந்தச் சாதனத்தில் சேமிக்கப்படவில்லை, அதனால் தவிர்க்கப்பட்டது.',
   'offline.nothing': 'நீங்கள் ஆஃப்லைனில் உள்ளீர்கள், இந்த வரிசையில் எதுவும் இந்தச் சாதனத்தில் சேமிக்கப்படவில்லை.',
   'offline.includes': 'சேமித்த பாடல்கள் அட்டைப் படத்தையும் பாடல் வரிகளையும் வைத்திருக்கும், அதனால் இணைப்பின்றி முழுமையாகச் செயல்படும்.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'பாணி',
+  'cinematic.auto': 'இசைக்கு ஏற்ப',
+  'cinematic.liquid': 'திரவம்',
+  'cinematic.waves': 'அலைகள்',
+  'cinematic.aurora': 'அரோரா',
+  'settings.cineMoveAnyway': 'பின்னணியை அசைய விடு',
+  'settings.cineSystemMotion': 'உங்கள் கணினி செயலிகளை அசைவுகளைக் குறைக்கச் சொல்கிறது, எனவே இதை இயக்காவிட்டால் பின்னணி அசையாமல் இருக்கும்.',
 };
 
 export default ta;

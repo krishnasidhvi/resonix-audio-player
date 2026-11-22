@@ -718,6 +718,15 @@ const en = {
   'offline.skipped': '“{title}” isn’t saved on this device, so it was skipped.',
   'offline.nothing': 'You’re offline, and nothing in this queue is saved on this device.',
   'offline.includes': 'Saved tracks keep their cover art and lyrics, so they work fully without a connection.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'Style',
+  'cinematic.auto': 'Match the music',
+  'cinematic.liquid': 'Liquid',
+  'cinematic.waves': 'Waves',
+  'cinematic.aurora': 'Aurora',
+  'settings.cineMoveAnyway': 'Keep the background moving',
+  'settings.cineSystemMotion': 'Your system asks apps to reduce motion, so the background stays still unless you turn this on.',
 } as const;
 
 export default en;

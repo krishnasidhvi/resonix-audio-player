@@ -171,7 +171,7 @@
   .main.dock-open { padding-bottom: 240px; }
   .cine-layer { grid-area: main; position: relative; overflow: hidden; background: var(--bg); }
   /* scrim keeps text readable over the moving scene */
-  .main.over-cine { background: linear-gradient(180deg, oklch(12% 0.02 var(--h) / 0.5), oklch(12% 0.02 var(--h) / 0.72) 40%, oklch(12% 0.02 var(--h) / 0.8)); }
+  .main.over-cine { background: linear-gradient(180deg, oklch(12% 0.02 var(--h) / 0.38), oklch(12% 0.02 var(--h) / 0.58) 40%, oklch(12% 0.02 var(--h) / 0.7)); }
   .offline-bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 20px; font-size: 13px; font-weight: 550; background: color-mix(in oklch, var(--bg-raise) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
   .offline-bar a { color: var(--accent); margin-inline-start: auto; }
   .drop { position: fixed; inset: 10px; z-index: 90; border: 2px dashed var(--accent); border-radius: 20px; background: oklch(12% 0.03 var(--h) / 0.85); display: grid; place-items: center; text-align: center; pointer-events: none; }

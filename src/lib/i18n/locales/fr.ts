@@ -730,6 +730,15 @@ const fr: Messages = {
   'offline.skipped': '« {title} » n’est pas enregistré sur cet appareil et a été ignoré.',
   'offline.nothing': 'Vous êtes hors ligne et rien dans cette file d’attente n’est enregistré sur cet appareil.',
   'offline.includes': 'Les titres enregistrés gardent leur pochette et leurs paroles, et fonctionnent entièrement sans connexion.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'Style',
+  'cinematic.auto': 'Selon la musique',
+  'cinematic.liquid': 'Liquide',
+  'cinematic.waves': 'Vagues',
+  'cinematic.aurora': 'Aurore',
+  'settings.cineMoveAnyway': 'Garder le fond en mouvement',
+  'settings.cineSystemMotion': 'Votre système demande aux applications de réduire les animations : le fond reste donc immobile, sauf si vous activez cette option.',
 };
 
 export default fr;

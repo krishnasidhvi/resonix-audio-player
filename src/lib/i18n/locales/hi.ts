@@ -715,6 +715,15 @@ const hi: Messages = {
   'offline.skipped': '“{title}” इस डिवाइस पर सहेजा नहीं गया है, इसलिए छोड़ दिया गया।',
   'offline.nothing': 'आप ऑफ़लाइन हैं, और इस कतार में कुछ भी इस डिवाइस पर सहेजा नहीं गया है।',
   'offline.includes': 'सहेजे गए ट्रैक अपना कवर और बोल भी रखते हैं, इसलिए बिना कनेक्शन के पूरी तरह काम करते हैं।',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'शैली',
+  'cinematic.auto': 'संगीत के अनुसार',
+  'cinematic.liquid': 'लिक्विड',
+  'cinematic.waves': 'लहरें',
+  'cinematic.aurora': 'ऑरोरा',
+  'settings.cineMoveAnyway': 'बैकग्राउंड को चलते रहने दें',
+  'settings.cineSystemMotion': 'आपका सिस्टम ऐप्स से मोशन कम करने को कहता है, इसलिए जब तक आप इसे चालू नहीं करते, बैकग्राउंड स्थिर रहता है।',
 };
 
 export default hi;

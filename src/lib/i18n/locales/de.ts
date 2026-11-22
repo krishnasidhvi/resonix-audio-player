@@ -715,6 +715,15 @@ const de: Messages = {
   'offline.skipped': '„{title}“ ist nicht auf diesem Gerät gespeichert und wurde übersprungen.',
   'offline.nothing': 'Du bist offline, und nichts in dieser Warteschlange ist auf diesem Gerät gespeichert.',
   'offline.includes': 'Gespeicherte Titel behalten Cover und Songtext und funktionieren so ganz ohne Verbindung.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'Stil',
+  'cinematic.auto': 'Passend zur Musik',
+  'cinematic.liquid': 'Fließend',
+  'cinematic.waves': 'Wellen',
+  'cinematic.aurora': 'Polarlicht',
+  'settings.cineMoveAnyway': 'Hintergrund trotzdem bewegen',
+  'settings.cineSystemMotion': 'Dein System bittet Apps, Bewegung zu reduzieren. Daher bleibt der Hintergrund still, außer du schaltest dies ein.',
 };
 
 export default de;

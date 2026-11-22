@@ -17,6 +17,10 @@ export interface Settings {
   /** Keep playing similar music when the queue ends. */
   autoplay: boolean;
   cinematic: 'off' | 'subtle' | 'vivid';
+  /** Which scene the cinematic background shows; 'auto' picks one from the music. */
+  cinematicStyle: 'auto' | 'liquid' | 'waves' | 'aurora';
+  /** Keep the cinematic background moving even when the system asks apps to reduce motion. */
+  cinematicMotion: boolean;
   /** Single-letter keyboard shortcuts (L, Q, E, F, M, S, R, [, ]). */
   shortcuts: boolean;
   /** AutoEq headphone correction: model name and its 10 band gains. */
@@ -49,6 +53,8 @@ const DEFAULTS: Settings = {
   accent: 'artwork',
   autoplay: true,
   cinematic: 'subtle',
+  cinematicStyle: 'auto',
+  cinematicMotion: false,
   shortcuts: true,
   headphone: null,
 };

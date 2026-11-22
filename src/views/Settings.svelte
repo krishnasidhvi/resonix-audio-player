@@ -10,6 +10,15 @@
   import { SOURCES } from '../lib/sources';
   import { i18n, LOCALES, t, type Key } from '../lib/i18n/i18n.svelte';
   import { sourceBlurb, sourceName } from '../lib/i18n/labels';
+
+  // the system (e.g. Windows "Show animations" off) asks apps to reduce motion
+  const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  let systemReducesMotion = $state(motionQuery.matches);
+  $effect(() => {
+    const on = () => (systemReducesMotion = motionQuery.matches);
+    motionQuery.addEventListener('change', on);
+    return () => motionQuery.removeEventListener('change', on);
+  });
   import Icon from '../components/Icon.svelte';
 
   let jkey = $state(localStorage.getItem('jamendo_client_id') ?? '');
@@ -96,6 +105,19 @@
         {/each}
       </div>
     </div>
+    {#if settings.cinematic !== 'off'}
+      <div class="field">
+        <span id="cine-style-label">{t('settings.cineStyle')}</span>
+        <div class="langs" role="radiogroup" aria-labelledby="cine-style-label">
+          {#each ['auto', 'liquid', 'waves', 'aurora'] as const as s}
+            <button role="radio" class="chip" class:active={settings.cinematicStyle === s} aria-checked={settings.cinematicStyle === s} onclick={() => (settings.cinematicStyle = s)}>{t(`cinematic.${s}`)}</button>
+          {/each}
+        </div>
+      </div>
+      {#if systemReducesMotion && !settings.reduceMotion}
+        <label class="switch"><input type="checkbox" bind:checked={settings.cinematicMotion} /><span>{t('settings.cineMoveAnyway')}<small>{t('settings.cineSystemMotion')}</small></span></label>
+      {/if}
+    {/if}
     <label class="switch"><input type="checkbox" bind:checked={settings.reduceMotion} /><span>{t('settings.reduceMotion')}</span></label>
   </section>
 

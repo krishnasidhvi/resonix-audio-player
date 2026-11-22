@@ -715,6 +715,15 @@ const ja: Messages = {
   'offline.skipped': '「{title}」はこのデバイスに保存されていないため、スキップしました。',
   'offline.nothing': 'オフラインで、このキューにはこのデバイスに保存された曲がありません。',
   'offline.includes': '保存した曲はジャケット画像と歌詞も保存されるので、接続がなくてもすべて使えます。',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'スタイル',
+  'cinematic.auto': '音楽に合わせる',
+  'cinematic.liquid': 'リキッド',
+  'cinematic.waves': 'ウェーブ',
+  'cinematic.aurora': 'オーロラ',
+  'settings.cineMoveAnyway': '背景を動かし続ける',
+  'settings.cineSystemMotion': 'システムがアプリに動きを減らすよう求めているため、これをオンにしない限り背景は静止します。',
 };
 
 export default ja;

@@ -734,6 +734,15 @@ const es: Messages = {
   'offline.skipped': '«{title}» no está guardada en este dispositivo, así que se omitió.',
   'offline.nothing': 'Estás sin conexión y nada de esta cola está guardado en este dispositivo.',
   'offline.includes': 'Las canciones guardadas conservan su portada y su letra, así que funcionan por completo sin conexión.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'Estilo',
+  'cinematic.auto': 'Según la música',
+  'cinematic.liquid': 'Líquido',
+  'cinematic.waves': 'Olas',
+  'cinematic.aurora': 'Aurora',
+  'settings.cineMoveAnyway': 'Mantener el fondo en movimiento',
+  'settings.cineSystemMotion': 'Tu sistema pide a las apps que reduzcan el movimiento, así que el fondo queda quieto salvo que actives esta opción.',
 };
 
 export default es;

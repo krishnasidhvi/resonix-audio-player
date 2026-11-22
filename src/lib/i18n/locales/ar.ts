@@ -778,6 +778,15 @@ const ar: Messages = {
   'offline.skipped': '«{title}» غير محفوظ على هذا الجهاز، لذا تم تخطيه.',
   'offline.nothing': 'أنت غير متصل، ولا يوجد في قائمة الانتظار هذه شيء محفوظ على هذا الجهاز.',
   'offline.includes': 'تحتفظ المقاطع المحفوظة بصورة الغلاف وكلماتها، لذا تعمل بالكامل دون اتصال.',
+
+  // added: cinematic styles
+  'settings.cineStyle': 'النمط',
+  'cinematic.auto': 'حسب الموسيقى',
+  'cinematic.liquid': 'سائل',
+  'cinematic.waves': 'أمواج',
+  'cinematic.aurora': 'شفق',
+  'settings.cineMoveAnyway': 'إبقاء الخلفية متحركة',
+  'settings.cineSystemMotion': 'يطلب نظامك من التطبيقات تقليل الحركة، لذا تبقى الخلفية ثابتة ما لم تفعّل هذا الخيار.',
 };
 
 export default ar;
