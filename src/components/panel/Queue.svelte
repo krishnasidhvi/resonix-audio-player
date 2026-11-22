@@ -37,6 +37,7 @@
 {:else}
   <div class="head row">
     <span class="faint small grow">{t('queue.upNext', { count: player.queue.length - player.index - 1 })}{#if remaining} · {fmtDuration(remaining)}{/if}</span>
+    <button class="btn small ghost" onclick={() => player.harmonicShuffle()} disabled={player.queue.length - player.index < 3}>{t('harm.button')}</button>
     <button class="btn small ghost" onclick={save}>{t('queue.save')}</button>
   </div>
   <p id="q-reorder" class="sr-only">{t('queue.reorderHint')}</p>

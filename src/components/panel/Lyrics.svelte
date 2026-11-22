@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { ui } from '../../lib/stores/ui.svelte';
+  import Icon from '../Icon.svelte';
   import { i18n, t as tt } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { settings } from '../../lib/stores/settings.svelte';
@@ -17,6 +19,7 @@
 
   $effect(() => {
     const t = player.current;
+    void ui.lyricsEditor; // refetch after the editor closes (it may have saved new lyrics)
     lyrics = null;
     offset = 0;
     if (!t) return;
@@ -64,6 +67,7 @@
     <div class="pad">
       <p class="muted">{tt('lyrics.none')}</p>
       <p class="faint small">{parts[0]}<a href="https://lrclib.net" target="_blank" rel="noopener">LRCLIB</a>{parts[1] ?? ''}</p>
+      <button class="btn small edit-btn" onclick={() => (ui.lyricsEditor = true)}><Icon name="lyrics" size={14} /> {tt('lyr.add')}</button>
     </div>
   {:else if lyrics.instrumental}
     <p class="pad muted">{tt('lyrics.instrumental')}</p>
@@ -75,7 +79,9 @@
         <span class="small num">{offset > 0 ? '+' : ''}{offset.toFixed(1)}s</span>
         <button class="chip" onclick={() => (offset += 0.5)} aria-label={tt('lyrics.later')}>+0.5s</button>
       {:else}<span class="faint small">{tt('lyrics.notSynced')}</span>{/if}
+      {#if lyrics.local}<span class="tag accent">{tt('lyr.yours')}</span>{/if}
       <span class="grow"></span>
+      <button class="chip" onclick={() => (ui.lyricsEditor = true)} aria-label={tt('lyr.edit')} title={tt('lyr.edit')}><Icon name="lyrics" size={13} /></button>
       {#if indic}
         <button class="chip" class:active={settings.transliterate} aria-pressed={settings.transliterate} onclick={() => (settings.transliterate = !settings.transliterate)}>{tt('lyrics.latin')}</button>
       {/if}
@@ -101,13 +107,14 @@
       {:else}
         <pre class="plain" dir="auto">{show(lyrics.plain ?? '')}</pre>
       {/if}
-      <p class="credit faint small">{tt('lyrics.via')}</p>
+      <p class="credit faint small">{lyrics.local ? tt('lyr.yours') : tt('lyrics.via')}</p>
     </div>
   {/if}
 </div>
 
 <style>
   .lyrics { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+  .edit-btn { margin-top: 10px; }
   .pad { padding: 8px 2px; }
   .small { font-size: 12.5px; }
   .small a { color: var(--accent); }

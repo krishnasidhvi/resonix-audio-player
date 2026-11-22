@@ -3,11 +3,12 @@ import { t, td, type Key } from './i18n.svelte';
 import { SOURCES } from '../sources';
 import type { License, SourceId } from '../types';
 
-export const sourceName = (id: SourceId) => (id === 'local' ? t('source.local') : SOURCES[id].name);
+export const sourceName = (id: SourceId) => (id === 'local' ? t('source.local') : id === 'server' ? t('source.server') : SOURCES[id].name);
 export const sourceBlurb = (id: SourceId) => t(`source.${id}.blurb` as Key);
 
 const LICENCE_KEYS: Record<string, Key> = {
   'Your file': 'licence.yourFile',
+  'Your server': 'licence.server',
   'Artist upload (Audius)': 'licence.audius',
   'Audius · streamed with artist permission': 'licence.audius',
   'Live broadcast · rights held by the station': 'licence.radio',

@@ -1,5 +1,6 @@
 // LRCLIB: free, open, community-built synced lyrics database. https://lrclib.net
 import { getJson, qs } from '../http';
+import { db } from '../db';
 import type { Track } from '../types';
 import { parseLrc, type LyricLine } from './lrc';
 
@@ -18,6 +19,8 @@ export interface Lyrics {
   lines: LyricLine[];
   /** Plain text when not synced. */
   plain?: string;
+  /** true when these are the user's own edited lyrics (stored on this device). */
+  local?: boolean;
 }
 
 const cache = new Map<string, Lyrics | null>();
@@ -35,9 +38,26 @@ function toLyrics(r: LrcRecord): Lyrics {
   return { synced: false, instrumental: r.instrumental, lines: [], plain: r.plainLyrics ?? '' };
 }
 
+/** Lyrics the user edited or synced in Resonix (stored on this device) take priority over LRCLIB. */
+export interface LocalLyrics { lrc?: string; plain?: string; updated: number }
+export async function localLyrics(id: string): Promise<LocalLyrics | undefined> {
+  return db.get<LocalLyrics>('lyrics', id).catch(() => undefined);
+}
+export async function saveLocalLyrics(id: string, data: Omit<LocalLyrics, 'updated'>): Promise<void> {
+  await db.set('lyrics', id, { ...data, updated: Date.now() });
+  cache.delete(id);
+}
+export async function removeLocalLyrics(id: string): Promise<void> {
+  await db.del('lyrics', id);
+  cache.delete(id);
+}
+
 export async function fetchLyrics(track: Track): Promise<Lyrics | null> {
   if (track.isLive) return null;
   if (cache.has(track.id)) return cache.get(track.id)!;
+  const mine = await localLyrics(track.id);
+  if (mine?.lrc) { const l: Lyrics = { synced: true, instrumental: false, lines: parseLrc(mine.lrc), local: true }; cache.set(track.id, l); return l; }
+  if (mine?.plain) { const l: Lyrics = { synced: false, instrumental: false, lines: [], plain: mine.plain, local: true }; cache.set(track.id, l); return l; }
   const title = cleanTitle(track.title);
   let artist = track.artist;
   // Many uploads are named "Artist - Title"

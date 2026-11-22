@@ -10,6 +10,8 @@ import { effectiveEq, settings } from './settings.svelte';
 import { ui } from './ui.svelte';
 import { t } from '../i18n/i18n.svelte';
 import { similarTo } from '../recommend';
+import { harmonicOrder } from '../harmonic';
+import { offline } from './offline.svelte';
 
 export type Repeat = 'off' | 'all' | 'one';
 export type Sleep = { mode: 'minutes'; endsAt: number } | { mode: 'track' } | null;
@@ -175,7 +177,8 @@ class Player {
       if (token !== this.loadToken) { this.releaseUrl(url); return; }
       this.analysis = cached ?? null;
       this.normDb = settings.normalize ? normalisationDb(cached, settings.normTarget) : 0;
-      await engine.play(url, { cors: track.cors, crossfade: opts.crossfade, startAt: opts.startAt, normDb: this.normDb });
+      // a saved (blob:) copy is same-origin, so it can always be processed
+      await engine.play(url, { cors: url.startsWith('blob:') ? true : track.cors, crossfade: opts.crossfade, startAt: opts.startAt, normDb: this.normDb });
       if (token !== this.loadToken) return;
       this.readyToken = token;
       this.failures = 0;
@@ -215,6 +218,9 @@ class Player {
   }
 
   private async resolveUrl(track: Track): Promise<string> {
+    // a copy saved for offline plays from this device, with or without a connection
+    const saved = await offline.blob(track.id).catch(() => undefined);
+    if (saved) return URL.createObjectURL(saved);
     if (track.source === 'local') return URL.createObjectURL(await localFile(track));
     if (!track.streamUrl) throw new Error('no stream available');
     return track.streamUrl;
@@ -266,6 +272,20 @@ class Player {
   }
 
   /** Replace everything after the current track with similar music. */
+  /** Reorder what's after the current track so it flows by key and tempo (analysed tracks only). */
+  async harmonicShuffle() {
+    const rest = this.queue.slice(this.index + 1);
+    const found = await Promise.all(rest.map((tr) => cachedAnalysis(tr.id).catch(() => undefined)));
+    const items = rest.flatMap((tr, i) => (found[i] ? [{ id: String(i), camelot: found[i]!.camelot, bpm: found[i]!.bpm, energy: found[i]!.energy }] : []));
+    if (items.length < 2) { ui.toast(t('harm.need'), 'error'); return; }
+    const cur = this.current ? await cachedAnalysis(this.current.id).catch(() => undefined) : undefined;
+    const order = harmonicOrder(cur ? { id: 'cur', camelot: cur.camelot, bpm: cur.bpm, energy: cur.energy } : null, items);
+    const ordered = order.map((i) => rest[+i]);
+    const unanalysed = rest.filter((_, i) => !found[i]);
+    this.queue.splice(this.index + 1, Infinity, ...ordered, ...unanalysed);
+    ui.toast(unanalysed.length ? t('harm.doneRest', { count: ordered.length, rest: unanalysed.length }) : t('harm.done', { count: ordered.length }));
+  }
+
   async startRadio(from = this.current) {
     if (!from) return;
     const recs = await similarTo(from, library.local, new Set([from.id]), 20);

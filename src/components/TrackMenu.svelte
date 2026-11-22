@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { canSaveOffline, offline } from '../lib/stores/offline.svelte';
   import { focusScope } from '../lib/a11y';
   import { canLinkOut, spotifyUrl, youtubeMusicUrl } from '../lib/external';
   import { t } from '../lib/i18n/i18n.svelte';
@@ -20,6 +21,10 @@
   });
 
   const act = (fn: () => void) => () => { fn(); open = false; };
+  async function saveOffline() {
+    try { await offline.save(track); ui.toast(t('offline.saved', { title: track.title })); }
+    catch (e) { ui.toast((e as Error).message, 'error'); }
+  }
   function newPlaylist() {
     const name = prompt(t('playlist.namePrompt'), t('playlist.defaultName'));
     if (name) { library.createPlaylist(name, [track]); ui.toast(t('toast.created', { name })); }
@@ -42,6 +47,13 @@
       {/each}
       <button role="menuitem" onclick={act(newPlaylist)}><Icon name="plus" size={15} /> {t('track.newPlaylist')}</button>
       <button role="menuitem" onclick={act(() => player.startRadio(track))}>{t('cmd.startRadio')}</button>
+      {#if offline.has(track.id)}
+        <button role="menuitem" onclick={act(async () => { await offline.remove(track.id); ui.toast(t('offline.removed')); })}>{t('offline.remove')}</button>
+      {:else if canSaveOffline(track)}
+        <button role="menuitem" disabled={track.id in offline.progress} onclick={act(saveOffline)}>
+          {track.id in offline.progress ? t('offline.saving', { pct: Math.round(offline.progress[track.id] * 100) }) : t('offline.save')}
+        </button>
+      {/if}
       {#if canLinkOut(track)}
         <div class="sep"></div>
         <a role="menuitem" href={youtubeMusicUrl(track)} target="_blank" rel="noopener">{t('track.openYouTubeMusic')} <Icon name="external" size={14} /></a>

@@ -1,4 +1,4 @@
-export type SourceId = 'local' | 'audius' | 'archive' | 'openverse' | 'jamendo' | 'radio' | 'youtube';
+export type SourceId = 'local' | 'audius' | 'archive' | 'openverse' | 'jamendo' | 'radio' | 'youtube' | 'server';
 
 export interface License {
   /** Short label such as "CC BY 4.0", "Public domain", "Audius (artist-uploaded)". */

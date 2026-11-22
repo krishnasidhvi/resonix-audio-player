@@ -7,6 +7,7 @@ export type Route =
   | { name: 'album'; id: string }
   | { name: 'radio' }
   | { name: 'youtube'; url: string }
+  | { name: 'server'; sub: string; id: string }
   | { name: 'raga' }
   | { name: 'journey' }
   | { name: 'stats' }
@@ -25,6 +26,7 @@ function parseUnsafe(hash: string): Route {
     case 'library': return { name: 'library', tab: rest[0] };
     case 'playlist': return { name: 'playlist', id: decodeURIComponent(rest.join('/')) };
     case 'album': return { name: 'album', id: decodeURIComponent(rest.join('/')) };
+    case 'server': return { name: 'server', sub: rest[0] ?? '', id: decodeURIComponent(rest.slice(1).join('/')) };
     case 'youtube': return { name: 'youtube', url: params.get('url') ?? '' };
     case 'radio': case 'raga': case 'journey': case 'stats': case 'settings': return { name };
     default: return { name: 'home' };
@@ -45,6 +47,7 @@ class UI {
   hearingOpen = $state(false);
   /** Full-screen player sheet on phones. */
   nowSheet = $state(false);
+  lyricsEditor = $state(false);
   private n = 0;
 
   constructor() {

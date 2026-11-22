@@ -16,6 +16,7 @@ No account, no server, no tracking. Everything you do stays in your browser.
 | Source | What it offers | Licence handling |
 |---|---|---|
 | Your files | MP3, FLAC, M4A/AAC, Ogg, Opus, WAV from a folder or drag-and-drop | Files never leave the device |
+| Your server | Navidrome / Subsonic-compatible servers and Jellyfin | Streams straight from your server to your browser |
 | [Audius](https://audius.co) | Full tracks uploaded by independent artists | Streamed through Audius's public API, which is how artists choose to share them |
 | [Internet Archive](https://archive.org/details/audio) | Concerts, 78s, classical, Hindustani & Carnatic recordings, netlabels | **Only** items declaring a Creative Commons or public-domain licence are searched or played |
 | [Openverse](https://openverse.org) | CC music indexed from Jamendo, Wikimedia Commons, ccMixter and more | Licence shown per track, linked to its terms |
@@ -36,6 +37,10 @@ Every track shows its source and licence and links back to the original page. If
 - **Similar to this:** recommendations for the playing track from the same artist, related artists (Audius), the same genre and tags, matching radio stations and, where both tracks are analysed, similar measured sound. Each one says why it was picked. **Start radio** queues them, and Resonix can keep playing similar music when the queue ends.
 - **Cinematic background:** a WebGL scene behind the app that follows the music. Beats and bass drive the light, energy picks the scene (nebula, pulse or aurora), major/minor key shifts the colour temperature, and the palette comes from the artwork. Off / subtle / vivid, and it respects reduced motion.
 - **Open in YouTube Music / Spotify:** plain search links from any track to those services.
+- **Your music server:** connect Navidrome (or any Subsonic-compatible server) or Jellyfin and stream your own collection with every Resonix feature. Only a salted token (Subsonic) or session token (Jellyfin) is kept, in this browser. The server must be reachable over HTTPS from the web app.
+- **Save for offline:** keep openly licensed Internet Archive and Openverse tracks on the device and play them without a connection.
+- **Harmonic order:** reorder the queue so each track flows into the next by key (Camelot wheel) and tempo, using the on-device analysis.
+- **Lyrics editor:** tap along to sync lyrics line by line, keep them on this device, and download the `.lrc` file. (LRCLIB doesn't yet accept submissions from web pages; publish with its LRCGET app.)
 - **Headphone correction:** pick your headphone model and Resonix applies its correction curve from the open-source [AutoEq](https://github.com/jaakkopasanen/AutoEq) measurements (MIT). The EQ uses the same 10 peaking bands as AutoEq, so profiles map one to one.
 - **Pop-out mini player:** a small always-on-top window with artwork and controls (Chrome and Edge, via Document Picture-in-Picture).
 - **Your daily mix and "Because you played…":** personal Home rows built from your own favourites, recent plays and the recommender, refreshed daily.

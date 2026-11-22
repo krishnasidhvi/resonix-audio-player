@@ -5,6 +5,7 @@ import { archiveSearch } from './archive';
 import { openverseSearch } from './openverse';
 import { jamendoKey, jamendoSearch } from './jamendo';
 import { radioSearch } from './radio';
+import { searchServer, serverConfig } from './server';
 
 export interface SourceInfo { id: SourceId; name: string; blurb: string; url: string; color: string }
 
@@ -15,6 +16,7 @@ export const SOURCES: Record<SourceId, SourceInfo> = {
   openverse: { id: 'openverse', name: 'Openverse', blurb: 'Jamendo, Wikimedia, ccMixter & more', url: 'https://openverse.org', color: 'oklch(76% 0.15 30)' },
   jamendo: { id: 'jamendo', name: 'Jamendo', blurb: 'Creative Commons catalogue', url: 'https://www.jamendo.com', color: 'oklch(74% 0.15 0)' },
   radio: { id: 'radio', name: 'Radio Browser', blurb: 'Live internet radio', url: 'https://www.radio-browser.info', color: 'oklch(78% 0.14 220)' },
+  server: { id: 'server', name: 'Your server', blurb: 'Your own Navidrome or Jellyfin', url: '', color: 'oklch(80% 0.12 120)' },
   youtube: { id: 'youtube', name: 'YouTube', blurb: 'Official uploads, in YouTube’s player', url: 'https://www.youtube.com', color: 'oklch(64% 0.22 27)' },
 };
 
@@ -35,6 +37,8 @@ export async function searchAll(query: string, local: Track[]): Promise<UnifiedR
     wrap('radio', radioSearch({ name: query, limit: 12 })),
   ];
   if (jamendoKey()) jobs.push(wrap('jamendo', jamendoSearch(query)));
+  const srv = serverConfig();
+  if (srv) jobs.push(wrap('server', searchServer(srv, query)));
   const [tracks, albums] = await Promise.all([
     Promise.all(jobs),
     archiveSearch(query).then((a) => ({ a })).catch((e: Error) => ({ a: [] as Album[], e: e.message })),

@@ -11,6 +11,7 @@
     { hash: '#/library', route: 'library', label: 'nav.library', icon: 'library' },
     { hash: '#/radio', route: 'radio', label: 'nav.radio', icon: 'radio' },
     { hash: '#/youtube', route: 'youtube', label: 'nav.youtube', icon: 'video' },
+    { hash: '#/server', route: 'server', label: 'srv.nav', icon: 'server' },
   ];
   const discover: { hash: string; route: string; label: Key; icon: IconName }[] = [
     { hash: '#/raga', route: 'raga', label: 'nav.raga', icon: 'sun' },
@@ -117,6 +118,7 @@
     .brand, .search-trigger, .lang { display: none; }
     .foot { margin: 0; }
     ul { display: flex; gap: 0; }
-    ul:nth-of-type(2) li:nth-child(3) { display: none; }
+    /* phones: keep the bottom bar to the essentials */
+    ul:nth-of-type(2) li:nth-child(2), ul:nth-of-type(2) li:nth-child(3) { display: none; }
   }
 </style>

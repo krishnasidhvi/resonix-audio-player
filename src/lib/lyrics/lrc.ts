@@ -34,3 +34,21 @@ export function activeLine(lines: LyricLine[], t: number): number {
   }
   return ans;
 }
+
+const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+/** 83.456 → "01:23.46" (LRC timestamp, hundredths). */
+export function lrcTime(t: number): string {
+  const cs = Math.max(0, Math.round(t * 100));
+  return `${pad(Math.floor(cs / 6000))}:${pad(Math.floor(cs / 100) % 60)}.${pad(cs % 100)}`;
+}
+
+/** Synced lines → LRC text, optionally with [ti:]/[ar:]/[al:]/[length:] tags. */
+export function toLrc(lines: LyricLine[], meta: { title?: string; artist?: string; album?: string; duration?: number } = {}): string {
+  const head = [
+    meta.title && `[ti:${meta.title}]`,
+    meta.artist && `[ar:${meta.artist}]`,
+    meta.album && `[al:${meta.album}]`,
+    meta.duration && `[length:${lrcTime(meta.duration).slice(0, 5)}]`,
+  ].filter(Boolean);
+  return [...head, ...lines.map((l) => `[${lrcTime(l.t)}]${l.text}`)].join('\n');
+}

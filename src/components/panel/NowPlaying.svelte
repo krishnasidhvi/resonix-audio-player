@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { canSaveOffline, offline } from '../../lib/stores/offline.svelte';
+  import { ui } from '../../lib/stores/ui.svelte';
   import Similar from './Similar.svelte';
   import { canLinkOut, spotifyUrl, youtubeMusicUrl } from '../../lib/external';
   import { t as tt } from '../../lib/i18n/i18n.svelte';
@@ -46,6 +48,13 @@
       {/if}
       {#if canLinkOut(t)}
         <div class="out row wrap">
+          {#if offline.has(t.id)}
+            <span class="saved"><Icon name="download" size={12} /> {tt('offline.badge')}</span>
+          {:else if canSaveOffline(t)}
+            <button class="dl" disabled={t.id in offline.progress} onclick={async () => { try { await offline.save(t); ui.toast(tt('offline.saved', { title: t.title })); } catch (e) { ui.toast((e as Error).message, 'error'); } }}>
+              <Icon name="download" size={12} /> {t.id in offline.progress ? tt('offline.saving', { pct: Math.round(offline.progress[t.id] * 100) }) : tt('offline.save')}
+            </button>
+          {/if}
           <a href={youtubeMusicUrl(t)} target="_blank" rel="noopener">{tt('track.openYouTubeMusic')} <Icon name="external" size={12} /></a>
           <a href={spotifyUrl(t)} target="_blank" rel="noopener">{tt('track.openSpotify')} <Icon name="external" size={12} /></a>
         </div>
@@ -112,6 +121,9 @@
   .lic { color: var(--text-2); }
   .lic a { color: var(--accent); }
   .out { gap: 14px; padding-top: 4px; border-top: 1px solid var(--line-soft); margin-top: 2px; }
+  .out .dl, .out .saved { color: var(--text-2); font-size: 12.5px; display: inline-flex; gap: 4px; align-items: center; }
+  .out .saved { color: var(--ok); }
+  .out .dl:hover { color: var(--text); }
   .out a { color: var(--text-2); text-decoration: none; font-size: 12.5px; display: inline-flex; gap: 4px; align-items: center; }
   .out a:hover { color: var(--text); }
   .section-head { margin-bottom: 8px; }

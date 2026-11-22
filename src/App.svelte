@@ -1,4 +1,7 @@
 <script lang="ts">
+  import Server from './views/Server.svelte';
+  import LyricsEditor from './components/overlays/LyricsEditor.svelte';
+  import { offline } from './lib/stores/offline.svelte';
   import NowSheet from './components/NowSheet.svelte';
   import YouTube from './views/YouTube.svelte';
   import YouTubeDock from './components/YouTubeDock.svelte';
@@ -31,6 +34,7 @@
   import Settings from './views/Settings.svelte';
 
   void library.load();
+  void offline.load();
   let dragging = $state(false);
 
   // Accent hue follows the artwork (or a stable hue from the title when the image isn't readable).
@@ -113,6 +117,7 @@
       {:else if ui.route.name === 'album'}<Album id={ui.route.id} />
       {:else if ui.route.name === 'radio'}<Radio />
       {:else if ui.route.name === 'youtube'}<YouTube url={ui.route.url} />
+      {:else if ui.route.name === 'server'}<Server sub={ui.route.sub} id={ui.route.id} />
       {:else if ui.route.name === 'raga'}<RagaClock />
       {:else if ui.route.name === 'journey'}<Journey />
       {:else if ui.route.name === 'stats'}<Stats />
@@ -131,6 +136,7 @@
 {#if ui.palette}<CommandPalette />{/if}
 {#if ui.ambient}<Ambient />{/if}
 {#if ui.nowSheet && player.current}<NowSheet />{/if}
+{#if ui.lyricsEditor && player.current}<LyricsEditor />{/if}
 
 {#if dragging}
   <div class="drop" aria-hidden="true"><div><strong class="display">{t('drop.title')}</strong><p class="muted">{t('drop.hint')}</p></div></div>
