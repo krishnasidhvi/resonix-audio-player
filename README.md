@@ -1,5 +1,7 @@
 # Resonix
 
+[![Latest release](https://img.shields.io/github/v/release/krishnasidhvi/resonix-audio-player)](https://github.com/krishnasidhvi/resonix-audio-player/releases/latest)
+
 An open music player for the web and desktop. It plays **your own music files** plus **openly licensed music** from public sources, with on-device analysis, synced lyrics and a raga clock.
 
 No account, no server, no tracking. Everything you do stays in your browser.
