@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { t as tt } from '../../lib/i18n/i18n.svelte';
+  import { i18n, t as tt } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { settings } from '../../lib/stores/settings.svelte';
   import { fetchLyrics, type Lyrics } from '../../lib/lyrics/lrclib';
   import { activeLine } from '../../lib/lyrics/lrc';
-  import { hasIndicScript, transliterate } from '../../lib/lyrics/translit';
+  import { dominantScript, hasIndicScript, transliterate } from '../../lib/lyrics/translit';
 
   let { big = false }: { big?: boolean } = $props();
 
@@ -26,7 +26,10 @@
     return () => { cancelled = true; };
   });
 
-  const indic = $derived(!!lyrics && hasIndicScript(lyrics.synced ? lyrics.lines.map((l) => l.text).join(' ') : lyrics.plain ?? ''));
+  const lyricText = $derived(lyrics ? (lyrics.synced ? lyrics.lines.map((l) => l.text).join(' ') : lyrics.plain ?? '') : '');
+  // Offer Latin letters for Indic lyrics, except when they're already in the reader's interface script.
+  const UI_SCRIPT: Record<string, string> = { hi: 'devanagari', te: 'telugu', ta: 'tamil' };
+  const indic = $derived(!!lyrics && hasIndicScript(lyricText) && dominantScript(lyricText) !== UI_SCRIPT[i18n.locale]);
   const show = (s: string) => (indic && settings.transliterate ? transliterate(s) : s);
   const now = $derived(player.time + offset);
   const idx = $derived(lyrics?.synced ? activeLine(lyrics.lines, now) : -1);

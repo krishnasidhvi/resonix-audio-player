@@ -7,9 +7,12 @@ import es from '../src/lib/i18n/locales/es.ts';
 import ja from '../src/lib/i18n/locales/ja.ts';
 import zh from '../src/lib/i18n/locales/zh.ts';
 import ar from '../src/lib/i18n/locales/ar.ts';
+import hi from '../src/lib/i18n/locales/hi.ts';
+import te from '../src/lib/i18n/locales/te.ts';
+import ta from '../src/lib/i18n/locales/ta.ts';
 
 type Msg = string | Record<string, string>;
-const LOCALES: Record<string, Record<string, Msg>> = { de, fr, es, ja, zh, ar } as never;
+const LOCALES: Record<string, Record<string, Msg>> = { de, fr, es, ja, zh, ar, hi, te, ta } as never;
 const enMsgs = en as unknown as Record<string, Msg>;
 
 const placeholders = (m: Msg) => {

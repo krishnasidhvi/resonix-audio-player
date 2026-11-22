@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseLrc, activeLine } from '../src/lib/lyrics/lrc.ts';
-import { transliterate, hasIndicScript } from '../src/lib/lyrics/translit.ts';
+import { transliterate, hasIndicScript, dominantScript } from '../src/lib/lyrics/translit.ts';
 
 test('parses plain and multi-timestamp LRC lines, sorted', () => {
   const l = parseLrc('[ti:x]\n[00:10.50]second\n[00:01.00][00:20.00]chorus\n');
@@ -44,4 +44,10 @@ test('Latin text passes through; detection works', () => {
   assert.equal(transliterate('hello'), 'Hello');
   assert.ok(hasIndicScript('abc తె'));
   assert.ok(!hasIndicScript('abc'));
+});
+
+test('dominantScript picks the main Brahmic script', () => {
+  assert.equal(dominantScript('ఎందరో మహానుభావులు (Endaro)'), 'telugu');
+  assert.equal(dominantScript('तुम ही हो'), 'devanagari');
+  assert.equal(dominantScript('hello'), null);
 });

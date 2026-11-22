@@ -24,7 +24,7 @@
   --sidebar: 232px;
   --panel: 372px;
   --bar: 92px;
-  --font-ui: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', 'Hiragino Sans', 'Yu Gothic UI', 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans CJK JP', 'Noto Sans Arabic', 'Tahoma', sans-serif;
+  --font-ui: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Noto Sans', 'Nirmala UI', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', 'Hiragino Sans', 'Yu Gothic UI', 'PingFang SC', 'Microsoft YaHei UI', 'Noto Sans CJK JP', 'Noto Sans Arabic', 'Tahoma', sans-serif;
   --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Noto Serif', serif;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
@@ -56,8 +56,12 @@ img { display: block; }
 .faint { color: var(--text-3); }
 .ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Languages: the display serif has no CJK/Arabic glyphs; Arabic letters must not be spaced apart. */
-:lang(ja) .display, :lang(zh) .display, :lang(ar) .display, :lang(ja) .page-title, :lang(zh) .page-title, :lang(ar) .page-title { font-family: var(--font-ui); font-weight: 700; }
+:lang(ja) .display, :lang(zh) .display, :lang(ar) .display, :lang(hi) .display, :lang(te) .display, :lang(ta) .display,
+:lang(ja) .page-title, :lang(zh) .page-title, :lang(ar) .page-title, :lang(hi) .page-title, :lang(te) .page-title, :lang(ta) .page-title { font-family: var(--font-ui); font-weight: 700; }
 :lang(ar) .eyebrow, :lang(ar) .display, :lang(ar) .page-title { letter-spacing: 0; }
+/* Indic scripts: no letter-spacing (breaks conjuncts) and extra line height for vowel signs */
+:lang(hi) .eyebrow, :lang(te) .eyebrow, :lang(ta) .eyebrow, :lang(hi) .page-title, :lang(te) .page-title, :lang(ta) .page-title { letter-spacing: 0; text-transform: none; }
+:lang(hi) body, :lang(te) body, :lang(ta) body { line-height: 1.6; }
 :lang(ar) body, :lang(ar) { line-height: 1.6; }
 [dir='rtl'] .flip-rtl { display: inline-block; transform: scaleX(-1); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

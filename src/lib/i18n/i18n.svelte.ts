@@ -15,6 +15,9 @@ export const LOCALES = [
   { code: 'ja', name: '日本語', rtl: false },
   { code: 'zh', name: '简体中文', rtl: false },
   { code: 'ar', name: 'العربية', rtl: true },
+  { code: 'hi', name: 'हिन्दी', rtl: false },
+  { code: 'te', name: 'తెలుగు', rtl: false },
+  { code: 'ta', name: 'தமிழ்', rtl: false },
 ] as const;
 export type Locale = (typeof LOCALES)[number]['code'];
 
@@ -25,6 +28,9 @@ const loaders: Record<Exclude<Locale, 'en'>, () => Promise<{ default: Messages }
   ja: () => import('./locales/ja'),
   zh: () => import('./locales/zh'),
   ar: () => import('./locales/ar'),
+  hi: () => import('./locales/hi'),
+  te: () => import('./locales/te'),
+  ta: () => import('./locales/ta'),
 };
 
 const STORAGE = 'resonix.locale';

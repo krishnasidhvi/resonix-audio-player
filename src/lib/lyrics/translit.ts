@@ -30,6 +30,15 @@ function scriptOf(cp: number): [string, number] | null {
   return null;
 }
 
+/** The Brahmic script most characters of `s` are written in, or null. */
+export function dominantScript(s: string): string | null {
+  const counts = new Map<string, number>();
+  for (const ch of s) { const sc = scriptOf(ch.codePointAt(0)!); if (sc) counts.set(sc[0], (counts.get(sc[0]) ?? 0) + 1); }
+  let best: string | null = null, n = 0;
+  for (const [k, v] of counts) if (v > n) { best = k; n = v; }
+  return best;
+}
+
 export function hasIndicScript(s: string): boolean {
   for (const ch of s) if (scriptOf(ch.codePointAt(0)!)) return true;
   return false;
