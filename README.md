@@ -60,7 +60,17 @@ npm run tauri dev
 npm run tauri build
 ```
 
-The desktop app is a thin shell around the same web app. Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds the Windows installer.
+The desktop app is a thin shell around the same web app. Building it locally needs the [Rust toolchain](https://www.rust-lang.org/tools/install) and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform.
+
+#### Publishing a release
+
+`.github/workflows/release.yml` builds the Windows installers (`.exe` and `.msi`) and publishes them as a GitHub release named `v<version>`.
+
+1. Bump the version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `package.json`. The release tag comes from `tauri.conf.json`, so an unchanged version reuses the existing release.
+2. Commit and push to `master`.
+3. Start the workflow from **Actions → Release Standalone Windows App → Run workflow**, or run `gh workflow run release.yml --ref master`. Pushing a `v*` tag also starts it.
+
+The build takes about 10 minutes. The installers are not code-signed, so Windows SmartScreen warns on first run.
 
 ## Layout
 
