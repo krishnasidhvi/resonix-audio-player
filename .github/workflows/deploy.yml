@@ -33,6 +33,13 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # The site only deploys when the browser tests pass against this build (see e2e/).
+      - name: Install Chromium for browser tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: npm run e2e
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:

@@ -44,6 +44,7 @@ Every track shows its source and licence and links back to the original page. If
 - **Headphone correction:** pick your headphone model and Resonix applies its correction curve from the open-source [AutoEq](https://github.com/jaakkopasanen/AutoEq) measurements (MIT). The EQ uses the same 10 peaking bands as AutoEq, so profiles map one to one.
 - **Pop-out mini player:** a small always-on-top window with artwork and controls (Chrome and Edge, via Document Picture-in-Picture).
 - **Your daily mix and "Because you played…":** personal Home rows built from your own favourites, recent plays and the recommender, refreshed daily.
+- **Picks up where you left off:** the queue, track, position, shuffle and repeat are kept on the device, so after a reload or restart the player is ready, paused, at the same place.
 - **Phone layout:** a slim mini player that opens a full-screen player with lyrics and queue.
 - **Live hits radio:** Telugu, Bollywood, Hindi, Tamil, English Top 40 and English pop shelves, ranked by listener votes, showing only stations that were last seen online.
 - **Raga clock:** a 24-hour dial of Hindustani prahars and Carnatic associations that plays openly licensed recordings of the ragas for the current hour.
@@ -63,7 +64,10 @@ npm run dev      # http://localhost:5173
 npm run check    # svelte-check (TypeScript)
 npm test         # unit tests: analysis DSP, lyrics, translations, YouTube links, AutoEq, recommendations, harmonic order
 npm run build    # static site in dist/
+npm run e2e      # browser tests against the build (Playwright; uses your installed Chrome)
 ```
+
+The browser tests in `e2e/` cover every page opening, playing a local file, resuming after a restart, saving an album and playing it offline, the desktop app's cover download (through a stand-in for the native bridge) and right-to-left layout. All outside requests are blocked or answered by fixtures, so they don't depend on any music source being up. The site only deploys when they pass.
 
 Stack: Svelte 5 + TypeScript + Vite. The only runtime dependencies are Tauri's JavaScript bindings, which load only inside the desktop app. All sources are called directly from the browser (each sends CORS headers), so `dist/` can be hosted on any static host.
 
