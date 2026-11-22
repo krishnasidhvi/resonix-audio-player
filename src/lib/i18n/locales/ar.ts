@@ -575,7 +575,7 @@ const ar: Messages = {
   'settings.analysisCleared': 'تم مسح ذاكرة التحليل المؤقتة',
   'settings.historyDeleted': 'تم حذف سجل الاستماع',
   'settings.keyboard': 'لوحة المفاتيح',
-  'settings.about': 'Resonix 2.0 · مفتوح المصدر (MIT) · الكلمات من LRCLIB · بلا تتبع.',
+  'settings.about': 'Resonix {version} · مفتوح المصدر (MIT) · الكلمات من LRCLIB · بلا تتبع.',
   'keys.playPause': 'تشغيل / إيقاف مؤقت',
   'keys.nextPrev': 'المقطع التالي / السابق',
   'keys.seek': 'تقديم أو ترجيع 5 ث',

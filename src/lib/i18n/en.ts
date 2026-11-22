@@ -519,7 +519,7 @@ const en = {
   'settings.analysisCleared': 'Analysis cache cleared',
   'settings.historyDeleted': 'Listening history deleted',
   'settings.keyboard': 'Keyboard',
-  'settings.about': 'Resonix 2.0 · open source (MIT) · lyrics from LRCLIB · no tracking.',
+  'settings.about': 'Resonix {version} · open source (MIT) · lyrics from LRCLIB · no tracking.',
   'keys.playPause': 'Play / pause',
   'keys.nextPrev': 'Next / previous track',
   'keys.seek': 'Seek 5 s',

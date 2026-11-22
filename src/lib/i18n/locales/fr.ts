@@ -535,7 +535,7 @@ const fr: Messages = {
   'settings.analysisCleared': 'Cache d’analyse vidé',
   'settings.historyDeleted': 'Historique d’écoute supprimé',
   'settings.keyboard': 'Clavier',
-  'settings.about': 'Resonix 2.0 · open source (MIT) · paroles de LRCLIB · aucun pistage.',
+  'settings.about': 'Resonix {version} · open source (MIT) · paroles de LRCLIB · aucun pistage.',
   'keys.playPause': 'Lecture / pause',
   'keys.nextPrev': 'Titre suivant / précédent',
   'keys.seek': 'Avancer/reculer de 5 s',

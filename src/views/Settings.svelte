@@ -139,7 +139,7 @@
     <dl class="keys">{#each SHORTCUTS as [k, v]}<dt><kbd>{k}</kbd></dt><dd>{t(v)}</dd>{/each}</dl>
   </section>
 
-  <p class="faint small about">{t('settings.about')}</p>
+  <p class="faint small about">{t('settings.about', { version: __APP_VERSION__ })}</p>
 </div>
 
 <style>

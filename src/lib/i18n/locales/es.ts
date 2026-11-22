@@ -539,7 +539,7 @@ const es: Messages = {
   'settings.analysisCleared': 'Caché de análisis borrada',
   'settings.historyDeleted': 'Historial de escucha eliminado',
   'settings.keyboard': 'Teclado',
-  'settings.about': 'Resonix 2.0 · código abierto (MIT) · letras de LRCLIB · sin rastreo.',
+  'settings.about': 'Resonix {version} · código abierto (MIT) · letras de LRCLIB · sin rastreo.',
   'keys.playPause': 'Reproducir / pausar',
   'keys.nextPrev': 'Pista siguiente / anterior',
   'keys.seek': 'Avanzar o retroceder 5 s',

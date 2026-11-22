@@ -519,7 +519,7 @@ const hi: Messages = {
   'settings.analysisCleared': 'विश्लेषण कैश साफ़ हो गया',
   'settings.historyDeleted': 'सुनने की हिस्ट्री डिलीट हो गई',
   'settings.keyboard': 'कीबोर्ड',
-  'settings.about': 'Resonix 2.0 · ओपन सोर्स (MIT) · बोल LRCLIB से · कोई ट्रैकिंग नहीं।',
+  'settings.about': 'Resonix {version} · ओपन सोर्स (MIT) · बोल LRCLIB से · कोई ट्रैकिंग नहीं।',
   'keys.playPause': 'चलाएँ / रोकें',
   'keys.nextPrev': 'अगला / पिछला ट्रैक',
   'keys.seek': '5 से. आगे-पीछे',

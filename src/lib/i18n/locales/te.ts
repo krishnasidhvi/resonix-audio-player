@@ -520,7 +520,7 @@ const te: Messages = {
   'settings.analysisCleared': 'విశ్లేషణ క్యాష్ క్లియర్ అయింది',
   'settings.historyDeleted': 'లిజనింగ్ హిస్టరీ డిలీట్ అయింది',
   'settings.keyboard': 'కీబోర్డ్',
-  'settings.about': 'Resonix 2.0 · ఓపెన్ సోర్స్ (MIT) · లిరిక్స్ LRCLIB నుండి · ట్రాకింగ్ లేదు.',
+  'settings.about': 'Resonix {version} · ఓపెన్ సోర్స్ (MIT) · లిరిక్స్ LRCLIB నుండి · ట్రాకింగ్ లేదు.',
   'keys.playPause': 'ప్లే / పాజ్',
   'keys.nextPrev': 'తర్వాతి / మునుపటి ట్రాక్',
   'keys.seek': '5 సె. సీక్',

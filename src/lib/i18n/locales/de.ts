@@ -520,7 +520,7 @@ const de: Messages = {
   'settings.analysisCleared': 'Analyse-Cache geleert',
   'settings.historyDeleted': 'Hörverlauf gelöscht',
   'settings.keyboard': 'Tastatur',
-  'settings.about': 'Resonix 2.0 · Open Source (MIT) · Songtexte von LRCLIB · kein Tracking.',
+  'settings.about': 'Resonix {version} · Open Source (MIT) · Songtexte von LRCLIB · kein Tracking.',
   'keys.playPause': 'Abspielen / Pause',
   'keys.nextPrev': 'Nächster / vorheriger Titel',
   'keys.seek': '5 s spulen',

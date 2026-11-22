@@ -520,7 +520,7 @@ const zh: Messages = {
   'settings.analysisCleared': '分析缓存已清除',
   'settings.historyDeleted': '收听记录已删除',
   'settings.keyboard': '键盘快捷键',
-  'settings.about': 'Resonix 2.0 · 开源（MIT）· 歌词来自 LRCLIB · 无跟踪。',
+  'settings.about': 'Resonix {version} · 开源（MIT）· 歌词来自 LRCLIB · 无跟踪。',
   'keys.playPause': '播放 / 暂停',
   'keys.nextPrev': '下一首 / 上一首',
   'keys.seek': '快进/快退 5 秒',

@@ -519,7 +519,7 @@ const ta: Messages = {
   'settings.analysisCleared': 'பகுப்பாய்வு கேஷ் அழிக்கப்பட்டது',
   'settings.historyDeleted': 'கேட்டல் வரலாறு நீக்கப்பட்டது',
   'settings.keyboard': 'கீபோர்டு',
-  'settings.about': 'Resonix 2.0 · ஓப்பன் சோர்ஸ் (MIT) · வரிகள் LRCLIB இலிருந்து · கண்காணிப்பு இல்லை.',
+  'settings.about': 'Resonix {version} · ஓப்பன் சோர்ஸ் (MIT) · வரிகள் LRCLIB இலிருந்து · கண்காணிப்பு இல்லை.',
   'keys.playPause': 'இயக்கு / இடைநிறுத்து',
   'keys.nextPrev': 'அடுத்த / முந்தைய பாடல்',
   'keys.seek': '5 வி நகர்த்து',

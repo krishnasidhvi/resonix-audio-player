@@ -519,7 +519,7 @@ const ja: Messages = {
   'settings.analysisCleared': '解析キャッシュをクリアしました',
   'settings.historyDeleted': 'リスニング履歴を削除しました',
   'settings.keyboard': 'キーボード',
-  'settings.about': 'Resonix 2.0 · オープンソース（MIT）· 歌詞提供：LRCLIB · トラッキングなし。',
+  'settings.about': 'Resonix {version} · オープンソース（MIT）· 歌詞提供：LRCLIB · トラッキングなし。',
   'keys.playPause': '再生／一時停止',
   'keys.nextPrev': '次の曲／前の曲',
   'keys.seek': '5秒シーク',

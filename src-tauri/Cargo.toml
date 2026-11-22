@@ -1,6 +1,6 @@
 [package]
 name = "resonix"
-version = "2.2.0"
+version = "2.3.0"
 description = "Resonix: open music player"
 license = "MIT"
 edition = "2021"
