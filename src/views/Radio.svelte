@@ -1,6 +1,7 @@
 <script lang="ts">
   import { regionName, t, td } from '../lib/i18n/i18n.svelte';
-  import { radioSearch, RADIO_MOODS, type RadioQuery } from '../lib/sources/radio';
+  import { radioSearch, RADIO_MOODS, RADIO_SHELVES, type RadioQuery } from '../lib/sources/radio';
+  import type { Key } from '../lib/i18n/i18n.svelte';
   import type { Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
   import { debounce } from '../lib/util';
@@ -11,6 +12,7 @@
   const presets: { label: () => string; q: RadioQuery }[] = [
     { label: () => t('radio.mostPlayed'), q: {} },
     ...(region ? [{ label: () => t('radio.nearYou', { region: regionName(region) }), q: { countrycode: region } }] : []),
+    ...RADIO_SHELVES.map((sh) => ({ label: () => t(('radio.shelf.' + sh.id) as Key), q: sh.q as RadioQuery })),
     ...RADIO_MOODS.map((m) => ({ label: () => td(`radio.mood.${m.label}`, m.label), q: m.q })),
   ];
   let active = $state(0);

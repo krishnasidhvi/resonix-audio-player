@@ -6,6 +6,7 @@ export type Route =
   | { name: 'playlist'; id: string }
   | { name: 'album'; id: string }
   | { name: 'radio' }
+  | { name: 'youtube'; url: string }
   | { name: 'raga' }
   | { name: 'journey' }
   | { name: 'stats' }
@@ -20,6 +21,7 @@ function parse(hash: string): Route {
     case 'library': return { name: 'library', tab: rest[0] };
     case 'playlist': return { name: 'playlist', id: decodeURIComponent(rest.join('/')) };
     case 'album': return { name: 'album', id: decodeURIComponent(rest.join('/')) };
+    case 'youtube': return { name: 'youtube', url: params.get('url') ?? '' };
     case 'radio': case 'raga': case 'journey': case 'stats': case 'settings': return { name };
     default: return { name: 'home' };
   }

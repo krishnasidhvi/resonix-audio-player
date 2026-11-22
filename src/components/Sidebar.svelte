@@ -9,6 +9,7 @@
     { hash: '#/search', route: 'search', label: 'nav.search', icon: 'search' },
     { hash: '#/library', route: 'library', label: 'nav.library', icon: 'library' },
     { hash: '#/radio', route: 'radio', label: 'nav.radio', icon: 'radio' },
+    { hash: '#/youtube', route: 'youtube', label: 'nav.youtube', icon: 'video' },
   ];
   const discover: { hash: string; route: string; label: Key; icon: IconName }[] = [
     { hash: '#/raga', route: 'raga', label: 'nav.raga', icon: 'sun' },

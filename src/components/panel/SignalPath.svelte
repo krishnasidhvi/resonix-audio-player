@@ -19,7 +19,9 @@
       { name: tt('signal.source'), detail: `${sourceName(t.source)}${t.format ? ' · ' + t.format : ''}${t.bitrate ? ' · ' + Math.round(t.bitrate > 5000 ? t.bitrate / 1000 : t.bitrate) + ' kbps' : ''}`, state: 'on' },
       { name: tt('signal.decode'), detail: tt('signal.decoder'), state: 'on' },
     ];
-    if (bypass) {
+    if (t.source === 'youtube') {
+      s.splice(1, 1, { name: tt('signal.youtube'), detail: tt('signal.youtubeDetail'), state: 'warn' });
+    } else if (bypass) {
       s.push({ name: tt('signal.bypassed'), detail: tt('signal.bypassedDetail'), state: 'warn' });
     } else {
       s.push(

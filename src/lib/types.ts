@@ -1,4 +1,4 @@
-export type SourceId = 'local' | 'audius' | 'archive' | 'openverse' | 'jamendo' | 'radio';
+export type SourceId = 'local' | 'audius' | 'archive' | 'openverse' | 'jamendo' | 'radio' | 'youtube';
 
 export interface License {
   /** Short label such as "CC BY 4.0", "Public domain", "Audius (artist-uploaded)". */
@@ -30,6 +30,8 @@ export interface Track {
   cors?: boolean;
   /** Local library only: key into the IndexedDB file-handle store. */
   localKey?: string;
+  /** YouTube video id: played only in YouTube's visible embedded player. */
+  youtubeId?: string;
   /** Source-side artist/user id (Audius user id, Archive item id…) for "more like this". */
   artistId?: string;
   /** Free-form descriptors from the source (tags, mood) used by recommendations. */

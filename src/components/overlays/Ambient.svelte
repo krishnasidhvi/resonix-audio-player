@@ -16,7 +16,8 @@
   function wake() { idle = false; clearTimeout(timer); timer = window.setTimeout(() => (idle = true), 3000); }
   $effect(() => {
     wake();
-    root?.requestFullscreen?.().catch(() => {});
+    // whole page, not just this overlay, so the YouTube player (if any) stays visible
+    document.documentElement.requestFullscreen?.().catch(() => {});
     const onFs = () => { if (!document.fullscreenElement) ui.ambient = false; };
     document.addEventListener('fullscreenchange', onFs);
     return () => { document.removeEventListener('fullscreenchange', onFs); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); };
@@ -28,7 +29,7 @@
     <div class="bg"><Cinematic variant="ambient" /></div>
     <div class="grid">
       <div class="left">
-        <div class="art"><Artwork src={t.artwork} seed={t.artist + t.title} radius="18px" /></div>
+        {#if t.source === 'youtube'}<div class="video-slot"></div>{:else}<div class="art"><Artwork src={t.artwork} seed={t.artist + t.title} radius="18px" /></div>{/if}
         <h1 class="display" dir="auto">{t.title}</h1>
         <p dir="auto">{t.artist}</p>
         <div class="viz"><Visualizer bands={56} height={64} mirror /></div>
@@ -55,6 +56,7 @@
   .bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.55)); }
   .grid { position: relative; flex: 1; display: grid; grid-template-columns: minmax(260px, 0.8fr) 1.2fr; gap: 6vw; min-height: 0; align-items: center; }
   .left { display: grid; gap: 10px; align-content: center; }
+  .video-slot { width: min(40vw, 720px); aspect-ratio: 16 / 9; min-height: 200px; }
   .art { width: min(38vh, 100%); box-shadow: 0 40px 90px rgb(0 0 0 / 0.6); border-radius: 18px; }
   h1 { font-size: clamp(28px, 3.4vw, 52px); margin: 16px 0 0; line-height: 1.05; }
   p { margin: 0; font-size: 18px; color: rgb(255 255 255 / 0.75); }

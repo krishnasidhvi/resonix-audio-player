@@ -15,6 +15,7 @@ export const SOURCES: Record<SourceId, SourceInfo> = {
   openverse: { id: 'openverse', name: 'Openverse', blurb: 'Jamendo, Wikimedia, ccMixter & more', url: 'https://openverse.org', color: 'oklch(76% 0.15 30)' },
   jamendo: { id: 'jamendo', name: 'Jamendo', blurb: 'Creative Commons catalogue', url: 'https://www.jamendo.com', color: 'oklch(74% 0.15 0)' },
   radio: { id: 'radio', name: 'Radio Browser', blurb: 'Live internet radio', url: 'https://www.radio-browser.info', color: 'oklch(78% 0.14 220)' },
+  youtube: { id: 'youtube', name: 'YouTube', blurb: 'Official uploads, in YouTube’s player', url: 'https://www.youtube.com', color: 'oklch(64% 0.22 27)' },
 };
 
 export interface UnifiedResults { tracks: SearchResult[]; albums: Album[]; albumError?: string }

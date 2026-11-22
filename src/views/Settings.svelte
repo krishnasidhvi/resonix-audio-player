@@ -11,6 +11,9 @@
   import Icon from '../components/Icon.svelte';
 
   let jkey = $state(localStorage.getItem('jamendo_client_id') ?? '');
+  let ykey = $state(localStorage.getItem('youtube_api_key') ?? '');
+  let ysaved = $state(false);
+  function saveYouTubeKey() { localStorage.setItem('youtube_api_key', ykey.trim()); ysaved = true; setTimeout(() => (ysaved = false), 2500); }
   let jstatus: Key | 'error' | '' = $state('');
   let jerror = $state('');
 
@@ -101,6 +104,11 @@
       {#if jstatus === 'error'}<small>{jerror}</small>
       {:else if jstatus}<small class:ok={jstatus === 'settings.connected'}>{t(jstatus)}</small>
       {:else if jamendoKey()}<small class="ok">{t('settings.keySet')}</small>{/if}
+    </div>
+    <div class="field">
+      <span>{t('settings.ytKey')}<small>{t('settings.ytKeyHint')} <a href="https://developers.google.com/youtube/v3/getting-started" target="_blank" rel="noopener">developers.google.com</a></small></span>
+      <div class="row"><input type="password" bind:value={ykey} placeholder="AIza…" class="grow" dir="ltr" autocomplete="off" /><button class="btn" onclick={saveYouTubeKey}>{t('common.save')}</button></div>
+      {#if ysaved}<small class="ok">{t('settings.keySet')}</small>{/if}
     </div>
     <p class="faint small">{t('settings.sourcesNote')}</p>
   </section>

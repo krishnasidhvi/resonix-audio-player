@@ -6,6 +6,7 @@ import { soundSimilarity } from './recommend-core';
 import { AUDIUS_GENRES, audiusArtistTracks, audiusRelatedArtists, audiusSearch, audiusTrending } from './sources/audius';
 import { openverseSearch } from './sources/openverse';
 import { radioSearch } from './sources/radio';
+import { youtubeKey, youtubeSearch } from './sources/youtube';
 import type { Track } from './types';
 
 export { soundSimilarity };
@@ -56,6 +57,9 @@ export async function similarTo(track: Track, local: Track[], exclude: Set<strin
         const lists = await Promise.all(artists.map((a) => safe(audiusArtistTracks(a.id, 3), [])));
         add(lists.flatMap((l) => l.slice(0, 2)), 'related', 6);
       }));
+    } else if (track.source === 'youtube') {
+      // costs one of the key's 100 daily searches, so only when a key is set
+      if (youtubeKey()) jobs.push(safe(youtubeSearch(track.artist), []).then((r) => add(r, 'artist', 6)));
     } else if (track.source === 'openverse' && !/unknown/i.test(track.artist)) {
       jobs.push(safe(openverseSearch(track.artist, 1, 'creator'), []).then((r) => add(r, 'artist', 4)));
     } else if (!/unknown/i.test(track.artist) && track.source !== 'archive') {

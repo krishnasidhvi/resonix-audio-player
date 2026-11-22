@@ -1,4 +1,5 @@
 import { engine } from '../audio/engine';
+import { youtube } from '../audio/youtube-player';
 import { analyseTrack, cachedAnalysis, normalisationDb } from '../audio/analysis';
 import { db } from '../db';
 import { localFile } from '../sources/local';
@@ -12,6 +13,13 @@ import { similarTo } from '../recommend';
 
 export type Repeat = 'off' | 'all' | 'one';
 export type Sleep = { mode: 'minutes'; endsAt: number } | { mode: 'track' } | null;
+
+/** What the transport controls talk to: our Web Audio engine, or YouTube's embedded player. */
+interface Transport {
+  toggle(): void; pause(): void; resume(): Promise<void>; seek(t: number): void;
+  readonly currentTime: number; readonly duration: number; readonly paused: boolean; readonly buffering: boolean;
+  setLoop(a: number | null, b: number | null): void; fadeOutAndPause(seconds: number): Promise<void>;
+}
 
 export interface PlayEvent { id: string; title: string; artist: string; source: string; genre?: string; at: number; seconds: number }
 
@@ -43,25 +51,34 @@ class Player {
   private sleepTimer = 0;
   private loadToken = 0;
 
+  private get out(): Transport {
+    return this.current?.source === 'youtube' ? youtube : engine;
+  }
+
   constructor() {
     engine.on(() => this.sync());
-    engine.onEnded = () => this.handleEnded();
+    engine.onEnded = () => { if (this.current?.source !== 'youtube') this.handleEnded(); };
+    youtube.on(() => this.sync());
+    youtube.onEnded = () => { if (this.current?.source === 'youtube') this.handleEnded(); };
+    youtube.onError = (msg) => this.skipAfterError(this.current, msg);
     engine.setVolume(settings.volume);
+    youtube.setVolume(settings.volume);
     this.setupMediaSession();
   }
 
   private sync() {
-    const t = engine.currentTime;
-    if (!engine.paused && this.lastTick && t > this.lastTick && t - this.lastTick < 2) this.listened += t - this.lastTick;
+    const out = this.out;
+    const t = out.currentTime;
+    if (!out.paused && this.lastTick && t > this.lastTick && t - this.lastTick < 2) this.listened += t - this.lastTick;
     this.lastTick = t;
     this.time = t;
-    this.duration = engine.duration || this.current?.duration || 0;
-    this.playing = !engine.paused;
-    this.buffering = engine.buffering;
-    this.bypassed = engine.bypassed;
+    this.duration = out.duration || this.current?.duration || 0;
+    this.playing = !out.paused;
+    this.buffering = out.buffering;
+    this.bypassed = out === youtube || engine.bypassed;
     const cur = this.current;
-    if (cur && !cur.isLive && !cur.duration && engine.duration > 0) {
-      cur.duration = Math.round(engine.duration);
+    if (cur && !cur.isLive && !cur.duration && out.duration > 0) {
+      cur.duration = Math.round(out.duration);
       if (cur.source === 'local') library.setDuration(cur.id, cur.duration);
     }
     // crossfade into the next track
@@ -69,7 +86,8 @@ class Player {
     if (cf > 0 && !this.fading && this.playing && this.duration > cf * 3 && !this.current?.isLive && this.repeat !== 'one'
       && this.duration - t <= cf && this.loopB === null && this.sleep?.mode !== 'track') {
       const n = this.nextIndex();
-      if (n !== null) { this.fading = true; void this.load(n, { crossfade: cf }); }
+      // crossfades only work between tracks our own engine plays
+      if (n !== null && out === engine && this.queue[n].source !== 'youtube') { this.fading = true; void this.load(n, { crossfade: cf }); }
     }
     if ('mediaSession' in navigator && this.duration && Number.isFinite(this.duration)) {
       try { navigator.mediaSession.setPositionState({ duration: this.duration, position: Math.min(t, this.duration), playbackRate: this.rate }); } catch { /* ignore */ }
@@ -128,7 +146,18 @@ class Player {
     this.analysisError = '';
     this.loopA = this.loopB = null;
     engine.setLoop(null, null);
+    youtube.setLoop(null, null);
     try {
+      if (track.source === 'youtube') {
+        engine.stop();
+        await youtube.play(track.youtubeId!, opts.startAt);
+        if (token !== this.loadToken) return;
+        youtube.setRate(this.rate);
+        library.pushRecent(track);
+        this.updateMediaSession(track);
+        return;
+      }
+      if (youtube.active) youtube.stop();
       const url = await this.resolveUrl(track);
       if (token !== this.loadToken) return;
       const cached = await cachedAnalysis(track.id);
@@ -152,12 +181,19 @@ class Player {
       if (token !== this.loadToken) return;
       const err = e as Error;
       if (err.name === 'NotAllowedError') { ui.toast(t('toast.pressPlay')); return; }
-      ui.toast(t('toast.cantPlay', { title: track.title, error: err.message }), 'error');
-      const n = this.nextIndex();
-      if (n !== null && n !== i) setTimeout(() => { if (token === this.loadToken) void this.load(n); }, 800);
+      this.skipAfterError(track, err.message);
     } finally {
       this.fading = false;
     }
+  }
+
+  /** Report a track that can't play and move on to the next one. */
+  private skipAfterError(track: Track | null, message: string) {
+    if (!track) return;
+    ui.toast(t('toast.cantPlay', { title: track.title, error: message }), 'error');
+    const token = this.loadToken;
+    const n = this.nextIndex();
+    if (n !== null && n !== this.index) setTimeout(() => { if (token === this.loadToken) void this.load(n); }, 800);
   }
 
   private async resolveUrl(track: Track): Promise<string> {
@@ -172,7 +208,7 @@ class Player {
 
   async analyse() {
     const track = this.current;
-    if (!track || this.analysing) return;
+    if (!track || this.analysing || track.source === 'youtube') return;
     this.analysing = true;
     this.analysisError = '';
     try {
@@ -189,7 +225,7 @@ class Player {
 
   private handleEnded() {
     if (this.sleep?.mode === 'track') { this.setSleep(null); this.logListen(); ui.toast(t('toast.sleepStopped')); return; }
-    if (this.repeat === 'one') { engine.seek(0); void engine.resume(); return; }
+    if (this.repeat === 'one') { this.out.seek(0); void this.out.resume(); return; }
     const n = this.nextIndex();
     if (n !== null) void this.load(n);
     else if (settings.autoplay && this.current && !this.current.isLive) void this.continueWithSimilar();
@@ -222,16 +258,16 @@ class Player {
 
   toggle() {
     if (this.index < 0 && this.queue.length) return void this.load(0);
-    engine.toggle();
+    this.out.toggle();
   }
   next() { const n = this.nextIndex(); if (n !== null) void this.load(n); }
   prev() {
-    if (engine.currentTime > 3 || this.index === 0) engine.seek(0);
+    if (this.out.currentTime > 3 || this.index === 0) this.out.seek(0);
     else if (this.index > 0) void this.load(this.index - 1);
   }
-  seek(t: number) { engine.seek(t); this.lastTick = t; }
+  seek(t: number) { this.out.seek(t); this.lastTick = t; }
 
-  setVolume(v: number) { settings.volume = v; engine.setVolume(v); }
+  setVolume(v: number) { settings.volume = v; engine.setVolume(v); youtube.setVolume(v); }
   toggleShuffle() {
     this.shuffle = !this.shuffle;
     if (this.shuffle && this.queue.length > 1) {
@@ -250,13 +286,13 @@ class Player {
     engine.setNormalization(this.normDb);
   }
 
-  setRate(r: number) { this.rate = r; engine.setRate(r); }
+  setRate(r: number) { this.rate = r; engine.setRate(r); youtube.setRate(r); }
   setLoopPoint(which: 'a' | 'b') {
-    if (which === 'a') { this.loopA = engine.currentTime; if (this.loopB !== null && this.loopB <= this.loopA) this.loopB = null; }
-    else this.loopB = engine.currentTime;
-    engine.setLoop(this.loopA, this.loopB);
+    if (which === 'a') { this.loopA = this.out.currentTime; if (this.loopB !== null && this.loopB <= this.loopA) this.loopB = null; }
+    else this.loopB = this.out.currentTime;
+    this.out.setLoop(this.loopA, this.loopB);
   }
-  clearLoop() { this.loopA = this.loopB = null; engine.setLoop(null, null); }
+  clearLoop() { this.loopA = this.loopB = null; this.out.setLoop(null, null); }
 
   setSleep(s: Sleep) {
     clearInterval(this.sleepTimer);
@@ -267,7 +303,7 @@ class Player {
         if (left <= 20 && left > 0 && this.playing && !this.fading) {
           this.fading = true;
           clearInterval(this.sleepTimer);
-          await engine.fadeOutAndPause(Math.max(1, left));
+          await this.out.fadeOutAndPause(Math.max(1, left));
           this.fading = false;
           this.sleep = null;
           this.logListen();
@@ -290,8 +326,8 @@ class Player {
   private setupMediaSession() {
     if (!('mediaSession' in navigator)) return;
     const ms = navigator.mediaSession;
-    ms.setActionHandler('play', () => engine.resume());
-    ms.setActionHandler('pause', () => engine.pause());
+    ms.setActionHandler('play', () => this.out.resume());
+    ms.setActionHandler('pause', () => this.out.pause());
     ms.setActionHandler('nexttrack', () => this.next());
     ms.setActionHandler('previoustrack', () => this.prev());
     ms.setActionHandler('seekto', (d) => { if (d.seekTime !== undefined) this.seek(d.seekTime); });

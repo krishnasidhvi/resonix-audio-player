@@ -1,4 +1,6 @@
 <script lang="ts">
+  import YouTube from './views/YouTube.svelte';
+  import YouTubeDock from './components/YouTubeDock.svelte';
   import Cinematic from './components/Cinematic.svelte';
   import { player } from './lib/stores/player.svelte';
   import { library } from './lib/stores/library.svelte';
@@ -94,7 +96,7 @@
 >
   <Sidebar />
   {#if settings.cinematic !== 'off' && !ui.ambient}<div class="cine-layer"><Cinematic /></div>{/if}
-  <main id="main" class="main" class:over-cine={settings.cinematic !== 'off'}>
+  <main id="main" class="main" class:over-cine={settings.cinematic !== 'off'} class:dock-open={player.current?.source === 'youtube'}>
     {#key ui.route.name === 'search' ? 'search' : JSON.stringify(ui.route)}
       {#if ui.route.name === 'home'}<Home />
       {:else if ui.route.name === 'search'}<Search q={ui.route.q} />
@@ -102,6 +104,7 @@
       {:else if ui.route.name === 'playlist'}<Playlist id={ui.route.id} />
       {:else if ui.route.name === 'album'}<Album id={ui.route.id} />
       {:else if ui.route.name === 'radio'}<Radio />
+      {:else if ui.route.name === 'youtube'}<YouTube url={ui.route.url} />
       {:else if ui.route.name === 'raga'}<RagaClock />
       {:else if ui.route.name === 'journey'}<Journey />
       {:else if ui.route.name === 'stats'}<Stats />
@@ -111,6 +114,8 @@
   {#if ui.panelOpen}<SidePanel />{/if}
   <PlayerBar />
 </div>
+
+<YouTubeDock />
 
 {#if ui.eqOpen}<EqPanel />{/if}
 {#if ui.practiceOpen}<PracticePanel />{/if}
@@ -135,6 +140,7 @@
   }
   .app.panel-open { grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--panel); grid-template-areas: 'side main panel' 'bar bar bar'; }
   .main { grid-area: main; overflow-y: auto; min-height: 0; position: relative; z-index: 1; background: radial-gradient(1200px 500px at 30% -10%, oklch(30% 0.06 var(--h) / 0.55), transparent 70%), var(--bg); transition: background 1s; }
+  .main.dock-open { padding-bottom: 240px; }
   .cine-layer { grid-area: main; position: relative; overflow: hidden; background: var(--bg); }
   /* scrim keeps text readable over the moving scene */
   .main.over-cine { background: linear-gradient(180deg, oklch(12% 0.02 var(--h) / 0.5), oklch(12% 0.02 var(--h) / 0.72) 40%, oklch(12% 0.02 var(--h) / 0.8)); }

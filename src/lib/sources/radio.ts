@@ -27,6 +27,7 @@ interface Station {
   language?: string;
   codec?: string;
   bitrate?: number;
+  lastcheckok?: number;
 }
 
 function map(s: Station): Track {
@@ -51,13 +52,14 @@ function map(s: Station): Track {
 /** HTTPS only: an https page cannot play http streams (mixed content). */
 const usable = (s: Station) => s.url_resolved?.startsWith('https://');
 
-export interface RadioQuery { name?: string; tag?: string; countrycode?: string; language?: string; limit?: number }
+export interface RadioQuery { name?: string; tag?: string; countrycode?: string; language?: string; limit?: number; order?: 'clickcount' | 'votes' }
 
 export async function radioSearch(q: RadioQuery): Promise<Track[]> {
   const b = await base();
-  const params = qs({ ...q, limit: (q.limit ?? 40) * 2, order: 'clickcount', reverse: true, hidebroken: true });
+  const params = qs({ ...q, limit: (q.limit ?? 40) * 3, order: q.order ?? 'clickcount', reverse: true, hidebroken: true });
   const list = await getJson<Station[]>(`${b}/json/stations/search?${params}`);
-  return list.filter(usable).slice(0, q.limit ?? 40).map(map);
+  // HTTPS only, and only stations Radio Browser's checker last saw online
+  return list.filter((st) => usable(st) && st.lastcheckok !== 0).slice(0, q.limit ?? 40).map(map);
 }
 
 /** Tell Radio Browser a station was played (their API etiquette; feeds the popularity ranking). */
@@ -68,10 +70,17 @@ export async function radioClick(track: Track): Promise<void> {
   } catch { /* best effort */ }
 }
 
+/** Language "hits" shelves: vote-ranked so well-known, reliable stations come first. */
+export const RADIO_SHELVES = [
+  { id: 'te', q: { language: 'telugu', order: 'votes' } },
+  { id: 'bolly', q: { tag: 'bollywood', order: 'votes' } },
+  { id: 'hi', q: { language: 'hindi', order: 'votes' } },
+  { id: 'ta', q: { language: 'tamil', order: 'votes' } },
+  { id: 'enhits', q: { tag: 'top 40', countrycode: 'US', order: 'votes' } },
+  { id: 'enpop', q: { language: 'english', tag: 'pop', order: 'votes' } },
+] satisfies { id: string; q: RadioQuery }[];
+
 export const RADIO_MOODS = [
-  { label: 'Bollywood', q: { tag: 'bollywood' } },
-  { label: 'Telugu', q: { language: 'telugu' } },
-  { label: 'Tamil', q: { language: 'tamil' } },
   { label: 'Carnatic', q: { tag: 'carnatic' } },
   { label: 'Lo-fi', q: { tag: 'lofi' } },
   { label: 'Jazz', q: { tag: 'jazz' } },

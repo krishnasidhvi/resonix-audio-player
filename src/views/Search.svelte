@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { parseYouTubeUrl, youtubeKey } from '../lib/sources/youtube';
   import { t } from '../lib/i18n/i18n.svelte';
   import { licenceLabel, sourceBlurb, sourceName } from '../lib/i18n/labels';
   import { searchAll, SOURCES, type UnifiedResults } from '../lib/sources';
@@ -21,7 +22,7 @@
 
   const updateHash = debounce((v: string) => history.replaceState(null, '', `#/search?q=${encodeURIComponent(v)}`), 400);
   const run = debounce(async (v: string) => {
-    if (v.trim().length < 2) { results = null; return; }
+    if (v.trim().length < 2 || parseYouTubeUrl(v)) { results = null; return; }
     loading = true;
     const r = await searchAll(v.trim(), library.local);
     if (v === text) { results = r; loading = false; }
@@ -30,6 +31,7 @@
   $effect(() => { input?.focus(); });
   $effect(() => { const v = text; updateHash(v); run(v); });
 
+  const ytRef = $derived(parseYouTubeUrl(text));
   const groups = $derived(results?.tracks.filter((g) => g.tracks.length || g.error) ?? []);
   const counts = $derived(Object.fromEntries((results?.tracks ?? []).map((g) => [g.source, g.tracks.length])) as Record<string, number>);
   const TABS: (SourceId | 'all')[] = ['all', 'local', 'audius', 'archive', 'openverse', 'jamendo', 'radio'];
@@ -43,7 +45,9 @@
     {#if loading}<span class="spin" aria-label={t('search.searching')}></span>{/if}
   </div>
 
-  {#if !results}
+  {#if ytRef}
+    <a class="yt-callout surface row" href="#/youtube?url={encodeURIComponent(text.trim())}"><Icon name="video" size={20} /><span class="grow"><strong>{t('search.ytLink')}</strong><br /><span class="faint">{t('search.ytPlay')}</span></span><Icon name="next" size={14} /></a>
+  {:else if !results}
     <section class="section">
       <p class="eyebrow">{t('search.try')}</p>
       <div class="row wrap" style="gap:8px">{#each SUGGEST as s}<button class="chip" onclick={() => (text = s)}>{s}</button>{/each}</div>
@@ -88,6 +92,9 @@
         </section>
       {/if}
     {/each}
+    {#if youtubeKey()}
+      <a class="btn small yt-more" href="#/youtube" onclick={() => sessionStorage.setItem('yt.q', text)}><Icon name="video" size={15} /> {t('search.ytSearch', { q: text })}</a>
+    {/if}
     {#if !groups.some((g) => g.tracks.length) && !results.albums.length}
       <div class="empty section"><h3>{t('search.noResults', { q: text })}</h3><p>{t('search.noResultsHint')}</p></div>
     {/if}
@@ -101,6 +108,9 @@
   .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .tabs { gap: 6px; margin-top: 18px; }
+  .yt-callout { margin-top: 18px; padding: 16px 18px; gap: 14px; text-decoration: none; }
+  .yt-callout:hover { border-color: var(--accent); }
+  .yt-more { margin-top: 28px; }
   .note { margin-top: 18px; font-size: 13px; max-width: 640px; }
   .note a { color: var(--accent); }
   .small { font-size: 12.5px; }

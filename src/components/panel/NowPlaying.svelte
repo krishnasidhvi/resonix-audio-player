@@ -54,7 +54,7 @@
 
     <section class="sound">
       <div class="section-head"><h3 class="eyebrow">{tt('now.soundProfile')}</h3>
-        {#if !a && !t.isLive}
+        {#if !a && !t.isLive && t.source !== 'youtube'}
           <button class="btn small" onclick={() => player.analyse()} disabled={player.analysing}>
             {#if player.analysing}{tt('now.analysing')}{:else}<Icon name="sparkle" size={15} /> {tt('now.analyse')}{/if}
           </button>

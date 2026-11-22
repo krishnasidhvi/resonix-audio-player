@@ -4,7 +4,8 @@
   import { audiusTrending, AUDIUS_GENRES } from '../lib/sources/audius';
   import { archiveSearch, ARCHIVE_SHELVES } from '../lib/sources/archive';
   import { openverseSearch } from '../lib/sources/openverse';
-  import { radioSearch } from '../lib/sources/radio';
+  import { radioSearch, RADIO_SHELVES } from '../lib/sources/radio';
+  import { i18n } from '../lib/i18n/i18n.svelte';
   import type { Album } from '../lib/sources/album';
   import type { Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
@@ -45,6 +46,17 @@
 
   let stations: Track[] = $state([]);
   radioSearch({ limit: 14 }).then((s) => (stations = s)).catch(() => {});
+
+  // Live hits: start on the shelf that matches the interface language
+  const firstShelf = ({ te: 'te', hi: 'bolly', ta: 'ta' } as Record<string, string>)[i18n.locale] ?? 'enhits';
+  let shelfId = $state(firstShelf);
+  let hits: Track[] = $state([]);
+  let hitsLoading = $state(true);
+  $effect(() => {
+    const sh = RADIO_SHELVES.find((x) => x.id === shelfId)!;
+    hitsLoading = true;
+    radioSearch({ ...sh.q, limit: 16 }).then((s) => { if (shelfId === sh.id) hits = s; }).catch(() => (hits = [])).finally(() => (hitsLoading = false));
+  });
 </script>
 
 <div class="page">
@@ -60,6 +72,22 @@
       <span class="faint">{t('home.ragaHint')} <span class="flip-rtl"><Icon name="next" size={12} /></span></span>
     </a>
   </header>
+
+  <section class="section">
+    <div class="section-head"><h2>{t('home.liveHits')}</h2><span class="faint small">{t('home.liveHitsHint')}</span></div>
+    <div class="row wrap chips">
+      {#each RADIO_SHELVES as sh}<button class="chip" class:active={shelfId === sh.id} onclick={() => (shelfId = sh.id)}>{t(('radio.shelf.' + sh.id) as Key)}</button>{/each}
+    </div>
+    {#if hitsLoading}
+      <div class="scroll-x">{#each Array(6) as _}<div class="skeleton" style="width:176px;height:220px"></div>{/each}</div>
+    {:else}
+      <div class="scroll-x">
+        {#each hits as s, i (s.id)}
+          <Card title={s.title} subtitle={s.artist} artwork={s.artwork} seed={s.title} onplay={() => player.playList(hits, i)} badge={t('common.live')} round />
+        {/each}
+      </div>
+    {/if}
+  </section>
 
   {#if library.recent.length}
     <section class="section">
