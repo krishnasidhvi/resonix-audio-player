@@ -38,3 +38,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          # Publish each build as a single fresh commit so gh-pages never accumulates history.
+          force_orphan: true
