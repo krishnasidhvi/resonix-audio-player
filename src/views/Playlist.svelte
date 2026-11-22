@@ -19,7 +19,7 @@
     a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'audio/x-mpegurl' }));
     a.download = `${p!.name}.m3u8`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000); // revoking at once can cancel the download
   }
 </script>
 

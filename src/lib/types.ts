@@ -16,6 +16,8 @@ export interface Track {
   /** Seconds; 0 when unknown or a live stream. */
   duration: number;
   artwork?: string;
+  /** Same artwork on other hosts, tried in order if the first fails (Audius mirrors). */
+  artworkAlts?: string[];
   /** Playable URL. For local files this is filled in lazily from the file handle. */
   streamUrl?: string;
   /** Page on the original site, for attribution. */

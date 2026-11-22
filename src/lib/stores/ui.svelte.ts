@@ -13,6 +13,10 @@ export type Route =
   | { name: 'settings' };
 
 function parse(hash: string): Route {
+  try { return parseUnsafe(hash); } catch { return { name: 'home' }; } // e.g. a bad %-escape in a shared link
+}
+
+function parseUnsafe(hash: string): Route {
   const [path, query = ''] = hash.replace(/^#\/?/, '').split('?');
   const [name, ...rest] = path.split('/');
   const params = new URLSearchParams(query);
@@ -39,6 +43,8 @@ class UI {
   eqOpen = $state(false);
   practiceOpen = $state(false);
   hearingOpen = $state(false);
+  /** Full-screen player sheet on phones. */
+  nowSheet = $state(false);
   private n = 0;
 
   constructor() {

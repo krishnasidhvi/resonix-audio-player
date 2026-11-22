@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusScope } from '../lib/a11y';
   import { ui } from '../lib/stores/ui.svelte';
   import { library } from '../lib/stores/library.svelte';
   import { i18n, LOCALES, t, type Key } from '../lib/i18n/i18n.svelte';
@@ -69,7 +70,7 @@
         <Icon name="globe" size={18} /><span class="ellipsis">{current.name}</span>
       </button>
       {#if langOpen}
-        <div class="lang-menu surface" role="menu" aria-label={t('lang.label')}>
+        <div class="lang-menu surface" role="menu" aria-label={t('lang.label')} use:focusScope={{ menu: true, onClose: () => (langOpen = false) }}>
           {#each LOCALES as l}
             <button role="menuitemradio" aria-checked={l.code === i18n.locale} lang={l.code} dir={l.rtl ? 'rtl' : 'ltr'} class:on={l.code === i18n.locale}
               onclick={() => { langOpen = false; void i18n.set(l.code); }}>{l.name}</button>

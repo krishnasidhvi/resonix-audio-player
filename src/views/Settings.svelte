@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { safeUrl } from '../lib/a11y';
+  import type { Track } from '../lib/types';
   import { settings } from '../lib/stores/settings.svelte';
   import { library } from '../lib/stores/library.svelte';
   import { player } from '../lib/stores/player.svelte';
@@ -36,10 +38,16 @@
     if (!f) return;
     try {
       const data = JSON.parse(await f.text());
-      for (const tr of data.favorites ?? []) if (!library.isFavorite(tr.id)) library.toggleFavorite(tr);
-      for (const p of data.playlists ?? []) library.createPlaylist(p.name, p.tracks);
+      for (const tr of (data.favorites ?? []).map(cleanTrack)) if (tr && !library.isFavorite(tr.id)) library.toggleFavorite(tr);
+      for (const p of data.playlists ?? []) library.createPlaylist(String(p.name ?? 'Playlist'), (p.tracks ?? []).map(cleanTrack).filter(Boolean));
       ui.toast(t('settings.restored'));
     } catch { ui.toast(t('settings.badBackup'), 'error'); }
+  }
+  let importInput: HTMLInputElement | undefined = $state();
+  /** A backup file is untrusted input: keep only plausible tracks and only http(s) links. */
+  function cleanTrack(x: Track): Track {
+    if (!x || typeof x.id !== 'string' || typeof x.title !== 'string') return null as unknown as Track;
+    return { ...x, pageUrl: safeUrl(x.pageUrl), streamUrl: safeUrl(x.streamUrl), artwork: safeUrl(x.artwork), artworkAlts: undefined };
   }
   async function clearAnalysis() { await db.clear('analysis'); ui.toast(t('settings.analysisCleared')); }
   async function clearStats() { if (confirm(t('settings.deleteHistoryConfirm'))) { await db.clear('plays'); ui.toast(t('settings.historyDeleted')); } }
@@ -118,7 +126,8 @@
     <p class="faint small">{t('settings.dataNote')}</p>
     <div class="row wrap">
       <button class="btn small" onclick={backup}>{t('settings.export')}</button>
-      <label class="btn small">{t('settings.import')}<input type="file" accept="application/json" hidden onchange={(e) => restore(e.currentTarget.files)} /></label>
+      <button class="btn small" onclick={() => importInput?.click()}>{t('settings.import')}</button>
+      <input bind:this={importInput} type="file" accept="application/json" hidden onchange={(e) => restore(e.currentTarget.files)} />
       <button class="btn small ghost" onclick={clearAnalysis}>{t('settings.clearAnalysis')}</button>
       <button class="btn small ghost danger" onclick={clearStats}>{t('settings.deleteHistory')}</button>
     </div>
@@ -126,6 +135,7 @@
 
   <section class="section group">
     <h2>{t('settings.keyboard')}</h2>
+    <label class="switch"><input type="checkbox" bind:checked={settings.shortcuts} /><span>{t('settings.shortcuts')}<small>{t('settings.shortcutsHint')}</small></span></label>
     <dl class="keys">{#each SHORTCUTS as [k, v]}<dt><kbd>{k}</kbd></dt><dd>{t(v)}</dd>{/each}</dl>
   </section>
 

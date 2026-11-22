@@ -54,6 +54,8 @@ class YouTubeBackend {
   private loop: { a: number; b: number } | null = null;
   private state = -1;
   private pendingPlay: { resolve: () => void; reject: (e: Error) => void } | null = null;
+  /** Incremented per play()/stop(); a play() that resumes after a newer one is dropped. */
+  private req = 0;
   /** true while a YouTube video is the active track (the dock shows only then). */
   active = false;
   onEnded: Listener = () => {};
@@ -100,14 +102,20 @@ class YouTubeBackend {
   }
 
   async play(videoId: string, startAt = 0): Promise<void> {
+    const req = ++this.req;
     this.active = true;
     this.emit();
     const p = await this.ensure();
+    // superseded while the YouTube API was loading (another track or stop())
+    if (req !== this.req || !this.active) return;
+    // settle any earlier waiting play() before starting a new one
+    this.pendingPlay?.resolve();
     await new Promise<void>((resolve, reject) => {
-      this.pendingPlay = { resolve, reject };
+      const pending = { resolve, reject };
+      this.pendingPlay = pending;
       p.loadVideoById({ videoId, startSeconds: startAt });
       // autoplay may be blocked; treat a cued/paused video as loaded after a while
-      setTimeout(() => { if (this.pendingPlay) { this.pendingPlay.resolve(); this.pendingPlay = null; } }, 8000);
+      setTimeout(() => { if (this.pendingPlay === pending) { pending.resolve(); this.pendingPlay = null; } }, 8000);
     });
   }
 
@@ -143,6 +151,9 @@ class YouTubeBackend {
   }
 
   stop() {
+    this.req++;
+    this.pendingPlay?.resolve();
+    this.pendingPlay = null;
     this.active = false;
     clearInterval(this.poll);
     this.player?.stopVideo();
@@ -167,16 +178,16 @@ class YouTubeBackend {
   }
   setLoop(a: number | null, b: number | null) { this.loop = a !== null && b !== null && b > a ? { a, b } : null; }
 
-  fadeOutAndPause(seconds: number): Promise<void> {
+  /** Fade out then pause; a timer (not requestAnimationFrame) so it also runs in background tabs. */
+  fadeOutAndPause(seconds: number, cancelled: () => boolean = () => false): Promise<void> {
     return new Promise((resolve) => {
       const start = this.volume, t0 = performance.now();
-      const step = () => {
+      const timer = window.setInterval(() => {
         const k = Math.min(1, (performance.now() - t0) / (seconds * 1000));
+        if (cancelled()) { clearInterval(timer); this.setVolume(start); return resolve(); }
         this.player?.setVolume(Math.round((start * (1 - k)) ** 2 * 100));
-        if (k < 1) requestAnimationFrame(step);
-        else { this.pause(); this.setVolume(start); resolve(); }
-      };
-      step();
+        if (k >= 1) { clearInterval(timer); this.pause(); this.setVolume(start); resolve(); }
+      }, 100);
     });
   }
 }

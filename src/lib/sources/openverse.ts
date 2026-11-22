@@ -4,6 +4,7 @@
 import { getJson, qs } from '../http';
 import { licenseFromCode } from '../license';
 import type { Track } from '../types';
+import { safeUrl } from '../a11y';
 
 interface OvAudio {
   id: string;
@@ -45,7 +46,7 @@ export async function openverseSearch(query: string, page = 1, by: 'q' | 'creato
     // Openverse proxies thumbnails with CORS; the raw provider URL may not allow it.
     artwork: a.thumbnail ? `https://api.openverse.org/v1/audio/${a.id}/thumb/` : undefined,
     streamUrl: a.url,
-    pageUrl: a.foreign_landing_url,
+    pageUrl: safeUrl(a.foreign_landing_url),
     license: licenseFromCode(a.license, a.license_version, a.license_url),
     genre: a.genres?.[0],
     tags: (a.tags ?? []).map((x) => x.name).filter((n) => n && n.length < 24).slice(0, 6),

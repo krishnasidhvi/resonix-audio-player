@@ -167,6 +167,9 @@ input[type='range']::-moz-range-thumb { width: 13px; height: 13px; border-radius
 .reduce-motion *, .reduce-motion *::before { animation: none !important; transition: none !important; }
 
 @media (max-width: 720px) {
+  /* filter chips: one sideways-scrolling row on phones instead of many wrapped rows */
+  .chips { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; padding-bottom: 4px; }
+  .chips > * { flex: none; }
   .page { padding: 18px 16px 40px; }
   .grid-cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px 12px; }
 }

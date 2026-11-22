@@ -10,6 +10,13 @@ const pending = new Map<number, { resolve: (a: Analysis) => void; reject: (e: Er
 function getWorker(): Worker {
   if (!worker) {
     worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
+    // if the worker dies (load failure, out of memory) fail everything pending and start fresh next time
+    worker.onerror = worker.onmessageerror = () => {
+      for (const p of pending.values()) p.reject(new Error('Analysis stopped unexpectedly'));
+      pending.clear();
+      worker?.terminate();
+      worker = null;
+    };
     worker.onmessage = (e: MessageEvent<{ id: number; result?: Analysis; error?: string }>) => {
       const p = pending.get(e.data.id);
       pending.delete(e.data.id);
@@ -21,6 +28,7 @@ function getWorker(): Worker {
 }
 
 export const MAX_ANALYSIS_BYTES = 60 << 20;
+export const MAX_LOCAL_ANALYSIS_BYTES = 120 << 20;
 
 export async function allAnalyses(): Promise<Analysis[]> {
   return (await db.all<Analysis>('analysis')).filter((a) => a.track);
@@ -39,7 +47,12 @@ export function analyseTrack(track: Track): Promise<Analysis> {
     if (cached) return cached;
     if (track.isLive) throw new Error('Live streams cannot be analysed');
     let buf: ArrayBuffer;
-    if (track.source === 'local') buf = await (await localFile(track)).arrayBuffer();
+    if (track.source === 'local') {
+      const file = await localFile(track);
+      // decoding expands audio ~10-40x in memory; very long files would exhaust the tab
+      if (file.size > MAX_LOCAL_ANALYSIS_BYTES) throw new Error('File too large to analyse in the browser');
+      buf = await file.arrayBuffer();
+    }
     else {
       if (!track.streamUrl) throw new Error('No stream URL');
       const res = await fetch(track.streamUrl);

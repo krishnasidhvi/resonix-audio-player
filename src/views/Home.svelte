@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
+  import { becauseYouPlayed, dailyMix } from '../lib/personal';
+  import { artistLabel } from '../lib/i18n/labels';
+  import Artwork from '../components/Artwork.svelte';
   import { t, td, type Key } from '../lib/i18n/i18n.svelte';
   import { licenceLabel, praharDesc, praharLabel } from '../lib/i18n/labels';
   import { audiusTrending, AUDIUS_GENRES } from '../lib/sources/audius';
@@ -36,13 +40,29 @@
   $effect(() => {
     const s = ARCHIVE_SHELVES[shelf];
     albumsLoading = true;
-    archiveSearch(s.query, 1, s.extra).then((a) => (albums = a)).catch(() => (albums = [])).finally(() => (albumsLoading = false));
+    const want = shelf;
+    archiveSearch(s.query, 1, s.extra)
+      .then((a) => { if (shelf === want) albums = a; })
+      .catch(() => { if (shelf === want) albums = []; })
+      .finally(() => { if (shelf === want) albumsLoading = false; });
   });
 
   const CC_TOPICS = ['acoustic', 'piano', 'lofi', 'cinematic', 'jazz', 'indian', 'ambient', 'folk'];
   const topic = CC_TOPICS[new Date().getDate() % CC_TOPICS.length];
   let cc: Track[] = $state([]);
   openverseSearch(topic).then((t) => (cc = t.slice(0, 12))).catch(() => {});
+
+  // personal rows (built from this browser's own history, cached)
+  let mix: Track[] = $state([]);
+  let because: { seed: Track; tracks: Track[] } | null = $state(null);
+  $effect(() => {
+    if (!library.ready) return;
+    const fav = $state.snapshot(library.favorites) as Track[], rec = $state.snapshot(library.recent) as Track[], loc = $state.snapshot(library.local) as Track[];
+    untrack(() => {
+      dailyMix(fav, rec, loc).then((m) => (mix = m)).catch(() => {});
+      becauseYouPlayed(rec, loc).then((b) => (because = b)).catch(() => {});
+    });
+  });
 
   let stations: Track[] = $state([]);
   radioSearch({ limit: 14 }).then((s) => (stations = s)).catch(() => {});
@@ -73,6 +93,43 @@
     </a>
   </header>
 
+  {#if library.recent.length}
+    <section class="section">
+      <div class="section-head"><h2>{t('home.jumpBack')}</h2></div>
+      <div class="scroll-x">
+        {#each library.recent.slice(0, 12) as tr, i (tr.id)}
+          <Card title={tr.title} subtitle={artistLabel(tr.artist)} artwork={tr.artwork} alts={tr.artworkAlts} seed={tr.artist + tr.title} onplay={() => player.playList(library.recent, i)} />
+        {/each}
+      </div>
+    </section>
+  {/if}
+
+  {#if mix.length}
+    <section class="section">
+      <div class="mix surface row">
+        <div class="mix-art">
+          {#each mix.slice(0, 4) as m (m.id)}<Artwork src={m.artwork} alts={m.artworkAlts} seed={m.artist + m.title} radius="0" />{/each}
+        </div>
+        <div class="grow">
+          <p class="eyebrow">{t('home.dailyMix')}</p>
+          <p class="muted mix-hint">{t('home.dailyMixHint', { count: mix.length })}</p>
+          <button class="btn primary" onclick={() => player.playList(mix, 0)}><Icon name="play" size={15} /> {t('home.playMix')}</button>
+        </div>
+      </div>
+    </section>
+  {/if}
+
+  {#if because}
+    <section class="section">
+      <div class="section-head"><h2 class="ellipsis">{t('home.because', { title: because.seed.title })}</h2></div>
+      <div class="scroll-x">
+        {#each because.tracks as tr, i (tr.id)}
+          <Card title={tr.title} subtitle={artistLabel(tr.artist)} artwork={tr.artwork} alts={tr.artworkAlts} seed={tr.artist + tr.title} onplay={() => player.playList(because!.tracks, i)} />
+        {/each}
+      </div>
+    </section>
+  {/if}
+
   <section class="section">
     <div class="section-head"><h2>{t('home.liveHits')}</h2><span class="faint small">{t('home.liveHitsHint')}</span></div>
     <div class="row wrap chips">
@@ -88,17 +145,6 @@
       </div>
     {/if}
   </section>
-
-  {#if library.recent.length}
-    <section class="section">
-      <div class="section-head"><h2>{t('home.jumpBack')}</h2></div>
-      <div class="scroll-x">
-        {#each library.recent.slice(0, 12) as tr, i (tr.id)}
-          <Card title={tr.title} subtitle={tr.artist} artwork={tr.artwork} seed={tr.artist + tr.title} onplay={() => player.playList(library.recent, i)} />
-        {/each}
-      </div>
-    </section>
-  {/if}
 
   <section class="section">
     <div class="section-head">
@@ -164,6 +210,10 @@
 
 <style>
   .hero { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: end; padding: 18px 0 6px; }
+  .mix { gap: 22px; padding: 18px; background: linear-gradient(120deg, var(--accent-wash), transparent 60%), var(--bg-raise); }
+  .mix-art { width: 132px; aspect-ratio: 1; display: grid; grid-template-columns: 1fr 1fr; border-radius: 12px; overflow: hidden; flex: none; }
+  .mix .eyebrow { margin: 0; }
+  .mix-hint { margin: 6px 0 14px; font-size: 13.5px; }
   .lead { max-width: 560px; margin: 8px 0 0; font-size: 15px; }
   .raga { display: grid; gap: 4px; padding: 16px 20px; text-decoration: none; min-width: 260px; max-width: 340px; background: linear-gradient(135deg, var(--accent-wash), transparent 70%), var(--bg-raise); transition: border-color 0.2s; }
   .raga:hover { border-color: var(--accent); }

@@ -18,7 +18,7 @@ export type Sleep = { mode: 'minutes'; endsAt: number } | { mode: 'track' } | nu
 interface Transport {
   toggle(): void; pause(): void; resume(): Promise<void>; seek(t: number): void;
   readonly currentTime: number; readonly duration: number; readonly paused: boolean; readonly buffering: boolean;
-  setLoop(a: number | null, b: number | null): void; fadeOutAndPause(seconds: number): Promise<void>;
+  setLoop(a: number | null, b: number | null): void; fadeOutAndPause(seconds: number, cancelled?: () => boolean): Promise<void>;
 }
 
 export interface PlayEvent { id: string; title: string; artist: string; source: string; genre?: string; at: number; seconds: number }
@@ -34,7 +34,9 @@ class Player {
   shuffle = $state(false);
   repeat: Repeat = $state('off');
   analysis: Analysis | null = $state(null);
-  analysing = $state(false);
+  /** id of the track being analysed (analysis is per track, so skipping doesn't block the next one) */
+  analysingId: string | null = $state(null);
+  get analysing() { return !!this.current && this.analysingId === this.current.id; }
   analysisError = $state('');
   sleep: Sleep = $state(null);
   rate = $state(1);
@@ -50,6 +52,10 @@ class Player {
   private lastTick = 0;
   private sleepTimer = 0;
   private loadToken = 0;
+  /** loadToken of the load whose media is actually playing (durations are only learned from it). */
+  private readyToken = -1;
+  private failures = 0;
+  private sleepFading = false;
 
   private get out(): Transport {
     return this.current?.source === 'youtube' ? youtube : engine;
@@ -57,7 +63,9 @@ class Player {
 
   constructor() {
     engine.on(() => this.sync());
-    engine.onEnded = () => { if (this.current?.source !== 'youtube') this.handleEnded(); };
+    // while a crossfade is loading, the outgoing track's "ended" must not advance the queue again
+    engine.onEnded = () => { if (this.current?.source !== 'youtube' && !this.fading) this.handleEnded(); };
+    engine.onError = (msg) => { if (this.current?.source !== 'youtube' && this.readyToken === this.loadToken) this.skipAfterError(this.current, msg); };
     youtube.on(() => this.sync());
     youtube.onEnded = () => { if (this.current?.source === 'youtube') this.handleEnded(); };
     youtube.onError = (msg) => this.skipAfterError(this.current, msg);
@@ -77,7 +85,7 @@ class Player {
     this.buffering = out.buffering;
     this.bypassed = out === youtube || engine.bypassed;
     const cur = this.current;
-    if (cur && !cur.isLive && !cur.duration && out.duration > 0) {
+    if (cur && !cur.isLive && !cur.duration && out.duration > 0 && this.readyToken === this.loadToken) {
       cur.duration = Math.round(out.duration);
       if (cur.source === 'local') library.setDuration(cur.id, cur.duration);
     }
@@ -96,6 +104,7 @@ class Player {
 
   /** Replace the queue and start playing at `start`. */
   playList(tracks: Track[], start = 0) {
+    engine.unlock(); // synchronous, inside the click: Safari only starts audio from a user gesture
     this.queue = tracks.map((t) => $state.snapshot(t) as Track);
     if (this.shuffle) {
       const first = this.queue.splice(start, 1)[0];
@@ -152,6 +161,8 @@ class Player {
         engine.stop();
         await youtube.play(track.youtubeId!, opts.startAt);
         if (token !== this.loadToken) return;
+        this.readyToken = token;
+        this.failures = 0;
         youtube.setRate(this.rate);
         library.pushRecent(track);
         this.updateMediaSession(track);
@@ -159,22 +170,27 @@ class Player {
       }
       if (youtube.active) youtube.stop();
       const url = await this.resolveUrl(track);
-      if (token !== this.loadToken) return;
+      if (token !== this.loadToken) { this.releaseUrl(url); return; }
       const cached = await cachedAnalysis(track.id);
+      if (token !== this.loadToken) { this.releaseUrl(url); return; }
       this.analysis = cached ?? null;
       this.normDb = settings.normalize ? normalisationDb(cached, settings.normTarget) : 0;
       await engine.play(url, { cors: track.cors, crossfade: opts.crossfade, startAt: opts.startAt, normDb: this.normDb });
       if (token !== this.loadToken) return;
+      this.readyToken = token;
+      this.failures = 0;
+      this.adoptUrl(url);
       engine.setEq(effectiveEq(), settings.eqEnabled);
       engine.setCrossfeed(settings.crossfeed);
       engine.setRate(this.rate);
       library.pushRecent(track);
       void radioClick(track);
       this.updateMediaSession(track);
+      // the idle deck is only used for crossfades, so only preload then (and never a live stream)
       const n = this.nextIndex();
-      if (n !== null && !opts.crossfade) {
+      if (n !== null && settings.crossfade > 0 && !opts.crossfade) {
         const next = this.queue[n];
-        if (next.streamUrl && next.source !== 'local') engine.preload(next.streamUrl, next.cors);
+        if (next.streamUrl && next.source !== 'local' && !next.isLive) engine.preload(next.streamUrl, next.cors);
       }
       if (!cached && settings.autoAnalyse && track.source === 'local') void this.analyse();
     } catch (e) {
@@ -187,29 +203,35 @@ class Player {
     }
   }
 
-  /** Report a track that can't play and move on to the next one. */
+  /** Report a track that can't play and move on, but stop after a whole queue of failures (e.g. offline). */
   private skipAfterError(track: Track | null, message: string) {
     if (!track) return;
     ui.toast(t('toast.cantPlay', { title: track.title, error: message }), 'error');
+    this.failures++;
+    if (this.failures >= this.queue.length) { this.failures = 0; engine.stop(); this.playing = false; return; }
     const token = this.loadToken;
     const n = this.nextIndex();
     if (n !== null && n !== this.index) setTimeout(() => { if (token === this.loadToken) void this.load(n); }, 800);
   }
 
   private async resolveUrl(track: Track): Promise<string> {
-    if (track.source === 'local') {
-      if (this.objectUrl) setTimeout((u: string) => URL.revokeObjectURL(u), 15000, this.objectUrl);
-      this.objectUrl = URL.createObjectURL(await localFile(track));
-      return this.objectUrl;
-    }
+    if (track.source === 'local') return URL.createObjectURL(await localFile(track));
     if (!track.streamUrl) throw new Error('no stream available');
     return track.streamUrl;
   }
+  /** The playing local file's object URL; the previous one is released once the switch has settled. */
+  private adoptUrl(url: string) {
+    if (!url.startsWith('blob:') || url === this.objectUrl) return;
+    const old = this.objectUrl;
+    this.objectUrl = url;
+    if (old) setTimeout(() => URL.revokeObjectURL(old), 15000);
+  }
+  private releaseUrl(url: string) { if (url.startsWith('blob:') && url !== this.objectUrl) URL.revokeObjectURL(url); }
 
   async analyse() {
     const track = this.current;
-    if (!track || this.analysing || track.source === 'youtube') return;
-    this.analysing = true;
+    if (!track || this.analysingId === track.id || track.source === 'youtube') return;
+    this.analysingId = track.id;
     this.analysisError = '';
     try {
       const a = await analyseTrack(track);
@@ -217,9 +239,9 @@ class Player {
       this.analysis = a;
       if (settings.normalize) { this.normDb = normalisationDb(a, settings.normTarget); engine.setNormalization(this.normDb); }
     } catch (e) {
-      this.analysisError = (e as Error).message;
+      if (this.current?.id === track.id) this.analysisError = (e as Error).message;
     } finally {
-      this.analysing = false;
+      if (this.analysingId === track.id) this.analysingId = null;
     }
   }
 
@@ -257,6 +279,7 @@ class Player {
   }
 
   toggle() {
+    if (this.out === engine) engine.unlock();
     if (this.index < 0 && this.queue.length) return void this.load(0);
     this.out.toggle();
   }
@@ -297,20 +320,31 @@ class Player {
   setSleep(s: Sleep) {
     clearInterval(this.sleepTimer);
     this.sleep = s;
-    if (s?.mode === 'minutes') {
-      this.sleepTimer = window.setInterval(async () => {
-        const left = (s.endsAt - Date.now()) / 1000;
-        if (left <= 20 && left > 0 && this.playing && !this.fading) {
-          this.fading = true;
-          clearInterval(this.sleepTimer);
-          await this.out.fadeOutAndPause(Math.max(1, left));
-          this.fading = false;
-          this.sleep = null;
-          this.logListen();
-          ui.toast(t('toast.sleepFaded'));
-        }
-      }, 1000);
-    }
+    if (s?.mode !== 'minutes') return;
+    const finish = () => {
+      clearInterval(this.sleepTimer);
+      if (this.sleep !== s) return;
+      this.sleep = null;
+      this.logListen();
+      ui.toast(t('toast.sleepFaded'));
+    };
+    this.sleepTimer = window.setInterval(async () => {
+      if (this.sleep !== s) return clearInterval(this.sleepTimer);
+      const left = (s.endsAt - Date.now()) / 1000;
+      if (left <= 0) {
+        // time is up (e.g. it was paused through the fade window): stop now
+        if (this.playing && !this.sleepFading) this.out.pause();
+        if (!this.sleepFading) finish();
+        return;
+      }
+      if (left <= 20 && this.playing && !this.sleepFading) {
+        this.sleepFading = true;
+        // cancelled if the timer is changed or turned off during the fade
+        await this.out.fadeOutAndPause(Math.max(1, left), () => this.sleep !== s);
+        this.sleepFading = false;
+        finish();
+      }
+    }, 1000);
   }
 
   private logListen() {
@@ -326,7 +360,7 @@ class Player {
   private setupMediaSession() {
     if (!('mediaSession' in navigator)) return;
     const ms = navigator.mediaSession;
-    ms.setActionHandler('play', () => this.out.resume());
+    ms.setActionHandler('play', () => { if (this.out === engine) engine.unlock(); void this.out.resume(); });
     ms.setActionHandler('pause', () => this.out.pause());
     ms.setActionHandler('nexttrack', () => this.next());
     ms.setActionHandler('previoustrack', () => this.prev());

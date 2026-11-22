@@ -1,6 +1,7 @@
 <script lang="ts">
   import { parseYouTubeUrl, youtubeKey } from '../lib/sources/youtube';
   import { t } from '../lib/i18n/i18n.svelte';
+  import { untrack } from 'svelte';
   import { licenceLabel, sourceBlurb, sourceName } from '../lib/i18n/labels';
   import { searchAll, SOURCES, type UnifiedResults } from '../lib/sources';
   import { jamendoKey } from '../lib/sources/jamendo';
@@ -22,13 +23,15 @@
 
   const updateHash = debounce((v: string) => history.replaceState(null, '', `#/search?q=${encodeURIComponent(v)}`), 400);
   const run = debounce(async (v: string) => {
-    if (v.trim().length < 2 || parseYouTubeUrl(v)) { results = null; return; }
+    if (v.trim().length < 2 || parseYouTubeUrl(v)) { results = null; loading = false; return; }
     loading = true;
     const r = await searchAll(v.trim(), library.local);
     if (v === text) { results = r; loading = false; }
   }, 350);
 
   $effect(() => { input?.focus(); });
+  // "Search for X" from the command palette while already on Search
+  $effect(() => { if (q && q !== untrack(() => text)) text = q; });
   $effect(() => { const v = text; updateHash(v); run(v); });
 
   const ytRef = $derived(parseYouTubeUrl(text));
@@ -65,19 +68,6 @@
       {/each}
     </div>
 
-    {#if filter === 'all' || filter === 'archive'}
-      {#if results.albums.length}
-        <section class="section">
-          <div class="section-head"><h2>Internet Archive</h2><span class="faint small">{t('search.archiveHint')}</span></div>
-          <div class={filter === 'archive' ? 'grid-cards' : 'scroll-x'}>
-            {#each results.albums as a (a.id)}
-              <Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={licenceLabel(a.license)} />
-            {/each}
-          </div>
-        </section>
-      {:else if filter === 'archive'}<p class="faint">{results.albumError ?? t('search.noArchive')}</p>{/if}
-    {/if}
-
     {#each groups as g (g.source)}
       {#if filter === 'all' || filter === g.source}
         <section class="section">
@@ -92,6 +82,19 @@
         </section>
       {/if}
     {/each}
+    {#if filter === 'all' || filter === 'archive'}
+      {#if results.albums.length}
+        <section class="section">
+          <div class="section-head"><h2>Internet Archive</h2><span class="faint small">{t('search.archiveHint')}</span></div>
+          <div class={filter === 'archive' ? 'grid-cards' : 'scroll-x'}>
+            {#each results.albums as a (a.id)}
+              <Card title={a.title} subtitle={a.artist} artwork={a.artwork} seed={a.id} href="#/album/{encodeURIComponent(a.id)}" badge={licenceLabel(a.license)} />
+            {/each}
+          </div>
+        </section>
+      {:else if filter === 'archive'}<p class="faint">{results.albumError ?? t('search.noArchive')}</p>{/if}
+    {/if}
+
     {#if youtubeKey()}
       <a class="btn small yt-more" href="#/youtube" onclick={() => sessionStorage.setItem('yt.q', text)}><Icon name="video" size={15} /> {t('search.ytSearch', { q: text })}</a>
     {/if}

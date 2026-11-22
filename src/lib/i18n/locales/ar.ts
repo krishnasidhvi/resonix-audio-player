@@ -664,6 +664,32 @@ const ar: Messages = {
   'update.downloading': 'جارٍ تنزيل التحديث…',
   'update.downloadingPct': 'جارٍ تنزيل التحديث… {pct}٪',
   'update.failed': 'لم يُثبَّت التحديث. حاول مرة أخرى لاحقًا.',
+
+  // added: audit fixes, mobile player, mini player window, headphone correction, personal rows
+  'common.unknownArtist': 'فنان غير معروف',
+  'queue.reorderHint': 'اضغط Alt مع السهم لأعلى أو لأسفل لنقل المقطع.',
+  'settings.shortcuts': 'اختصارات المفتاح الواحد',
+  'settings.shortcutsHint': 'تفتح الأحرف مثل L وQ وE وF اللوحات. أوقف هذا الخيار إن كانت تتعارض مع قارئ الشاشة أو التحكم الصوتي.',
+  'sheet.open': 'فتح المشغّل',
+  'sheet.close': 'إغلاق المشغّل',
+  'pip.open': 'فتح المشغّل المصغّر في نافذة منفصلة',
+  'pip.unsupported': 'لا يستطيع هذا المتصفح فتح نافذة المشغّل المصغّر. تعمل الميزة في Chrome وEdge.',
+  'pip.youtube': 'يجب أن تبقى مقاطع فيديو YouTube ظاهرة في النافذة الرئيسية، لذا لا يتوفر لها المشغّل المصغّر.',
+  'pip.title': 'مشغّل Resonix المصغّر',
+  'hp.title': 'تصحيح سماعات الرأس',
+  'hp.hint': 'اختر سماعات رأسك لموازنة صوتها، اعتمادًا على قياسات مشروع AutoEq مفتوح المصدر.',
+  'hp.search': 'البحث في طُرز سماعات الرأس',
+  'hp.loading': 'جارٍ تحميل قائمة سماعات الرأس…',
+  'hp.none': 'لا توجد نتائج مطابقة. جرّب اسم العلامة التجارية أو اسمًا أقصر.',
+  'hp.active': 'جارٍ تصحيح {name} · القياس من {source}',
+  'hp.remove': 'إزالة التصحيح',
+  'hp.applied': 'تم تطبيق تصحيح سماعات الرأس',
+  'hp.failed': 'تعذّر تحميل هذا الملف الشخصي.',
+  'hp.credit': 'الملفات الشخصية: AutoEq من Jaakko Pasanen (ترخيص MIT)',
+  'home.because': 'لأنك شغّلت {title}',
+  'home.dailyMix': 'مزيجك اليومي',
+  'home.dailyMixHint': '{count} مقطعًا من مفضّلتك وما شغّلته مؤخرًا وموسيقى تشبهها · جديد كل يوم',
+  'home.playMix': 'تشغيل المزيج',
 };
 
 export default ar;

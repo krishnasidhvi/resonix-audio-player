@@ -65,6 +65,7 @@
     };
 
     const follower = new AudioFollower();
+    const reducedMotionQuery = matchMedia('(prefers-reduced-motion: reduce)');
     const lowPower = (navigator.hardwareConcurrency ?? 8) <= 4;
     const scale = variant === 'ambient' ? 0.6 : lowPower ? 0.35 : 0.5;
     const minFrame = 1000 / (lowPower ? 30 : 45);
@@ -80,10 +81,13 @@
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (document.hidden || now - lastDraw < minFrame) return;
+      // paused: slow redraws; reduced motion (setting or OS): a still frame every few seconds
+      const reduce = settings.reduceMotion || reducedMotionQuery.matches;
+      const interval = reduce ? 3000 : player.playing ? minFrame : 1000 / 12;
+      if (document.hidden || now - lastDraw < interval) return;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now; lastDraw = now;
-      const still = settings.reduceMotion;
+      const still = reduce;
 
       const w = Math.max(1, Math.round(canvas.clientWidth * scale)), h = Math.max(1, Math.round(canvas.clientHeight * scale));
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
@@ -94,7 +98,7 @@
       cur.warm += (target.warm - cur.warm) * k;
       cur.energy += (target.energy - cur.energy) * k;
       cur.rate += (target.rate - cur.rate) * k;
-      const want = variant === 'ambient' ? 1 : settings.cinematic === 'vivid' ? 0.95 : 0.55;
+      const want = variant === 'ambient' ? 1 : settings.cinematic === 'vivid' ? 0.95 : 0.42;
       const dim = player.playing ? 1 : 0.55;
       cur.intensity += (want * dim - cur.intensity) * Math.min(1, dt * 1.5);
 

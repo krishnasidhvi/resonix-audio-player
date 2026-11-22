@@ -31,4 +31,7 @@ export const praharDesc = (label: string, fallback: string) => td(`prahar.${labe
 export const moodLabel = (raga: string, fallback: string) => td(`mood.${raga}`, fallback);
 export const traditionLabel = (tr: string) => td(`tradition.${tr}`, tr);
 export const seasonLabel = (s: string) => td(`season.${s}`, s);
+/** Sources store the English placeholder; show it in the reader's language. */
+export const artistLabel = (a: string) => (/^unknown artist$/i.test(a) ? t('common.unknownArtist') : a);
+
 export const eqPresetLabel = (p: string) => td(`eq.preset.${p}`, p);

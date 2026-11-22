@@ -17,6 +17,10 @@ export interface Settings {
   /** Keep playing similar music when the queue ends. */
   autoplay: boolean;
   cinematic: 'off' | 'subtle' | 'vivid';
+  /** Single-letter keyboard shortcuts (L, Q, E, F, M, S, R, [, ]). */
+  shortcuts: boolean;
+  /** AutoEq headphone correction: model name and its 10 band gains. */
+  headphone: { name: string; source: string; gains: number[] } | null;
 }
 
 export const EQ_PRESETS: Record<string, number[]> = {
@@ -45,6 +49,8 @@ const DEFAULTS: Settings = {
   accent: 'artwork',
   autoplay: true,
   cinematic: 'subtle',
+  shortcuts: true,
+  headphone: null,
 };
 
 const KEY = 'resonix.settings.v2';
@@ -57,7 +63,7 @@ export const settings: Settings = $state(load());
 
 /** Effective EQ curve = user EQ + hearing compensation. */
 export function effectiveEq(): number[] {
-  return settings.eq.map((g, i) => g + (settings.hearingEq?.[i] ?? 0));
+  return settings.eq.map((g, i) => g + (settings.hearingEq?.[i] ?? 0) + (settings.headphone?.gains[i] ?? 0));
 }
 
 $effect.root(() => {

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { openMiniPlayer, pipSupported } from '../../lib/pip';
+  import { focusScope } from '../../lib/a11y';
   import { i18n, LOCALES, t } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { library } from '../../lib/stores/library.svelte';
@@ -34,6 +36,7 @@
     { label: t('cmd.ambient'), hint: 'F', icon: 'expand', run: () => (ui.ambient = true) },
     { label: t('cmd.analyse'), icon: 'sparkle', run: () => player.analyse() },
     { label: t('cmd.startRadio'), icon: 'live', run: () => player.startRadio() },
+    { label: t('pip.open'), icon: 'pip', run: () => { if (!pipSupported) ui.toast(t('pip.unsupported'), 'error'); else if (player.current?.source === 'youtube') ui.toast(t('pip.youtube'), 'error'); else openMiniPlayer().catch(() => ui.toast(t('pip.unsupported'), 'error')); } },
     { label: t('cmd.cinematic', { mode: t(settings.cinematic === 'off' ? 'cinematic.subtle' : settings.cinematic === 'subtle' ? 'cinematic.vivid' : 'cinematic.off') }), icon: 'sparkle', run: () => (settings.cinematic = settings.cinematic === 'off' ? 'subtle' : settings.cinematic === 'subtle' ? 'vivid' : 'off') },
     { label: t('cmd.sleepTrack'), icon: 'moon', run: () => player.setSleep({ mode: 'track' }) },
     { label: t('cmd.sleep30'), icon: 'moon', run: () => player.setSleep({ mode: 'minutes', endsAt: Date.now() + 30 * 60000 }) },
@@ -69,7 +72,7 @@
 </script>
 
 <div class="backdrop" role="presentation" onclick={(e) => { if (e.target === e.currentTarget) ui.palette = false; }}>
-  <div class="pal surface" role="dialog" aria-modal="true" aria-label={t('cmd.aria')}>
+  <div class="pal surface" role="dialog" aria-modal="true" aria-label={t('cmd.aria')} use:focusScope={{ modal: true, initial: 'input' }}>
     <div class="field row">
       <Icon name="search" size={18} />
       <input bind:this={input} bind:value={q} onkeydown={key} placeholder={t('cmd.placeholder')} aria-label={t('cmd.aria')} aria-controls="pal-list" aria-activedescendant="pal-{sel}" role="combobox" aria-expanded="true" />

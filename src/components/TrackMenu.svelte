@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusScope } from '../lib/a11y';
   import { canLinkOut, spotifyUrl, youtubeMusicUrl } from '../lib/external';
   import { t } from '../lib/i18n/i18n.svelte';
   import type { Track } from '../lib/types';
@@ -30,7 +31,7 @@
     <Icon name="more" />
   </button>
   {#if open}
-    <div class="menu surface" role="menu">
+    <div class="menu surface" role="menu" use:focusScope={{ menu: true, onClose: () => (open = false) }}>
       <button role="menuitem" onclick={act(() => player.playNext(track))}>{t('track.playNext')}</button>
       <button role="menuitem" onclick={act(() => player.enqueue([track]))}>{t('track.addQueue')}</button>
       <button role="menuitem" onclick={act(() => library.toggleFavorite(track))}>{library.isFavorite(track.id) ? t('track.unfav') : t('track.fav')}</button>

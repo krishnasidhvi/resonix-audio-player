@@ -601,6 +601,32 @@ const ja: Messages = {
   'update.downloading': 'アップデートをダウンロード中…',
   'update.downloadingPct': 'アップデートをダウンロード中… {pct}%',
   'update.failed': 'アップデートをインストールできませんでした。後でもう一度お試しください。',
+
+  // added: audit fixes, mobile player, mini player window, headphone correction, personal rows
+  'common.unknownArtist': '不明なアーティスト',
+  'queue.reorderHint': 'Alt + 上下の矢印キーで曲を移動できます。',
+  'settings.shortcuts': '1 キーのショートカット',
+  'settings.shortcutsHint': 'L、Q、E、F などの文字キーでパネルが開きます。スクリーンリーダーや音声コントロールの妨げになる場合はオフにしてください。',
+  'sheet.open': 'プレーヤーを開く',
+  'sheet.close': 'プレーヤーを閉じる',
+  'pip.open': 'ミニプレーヤーを表示',
+  'pip.unsupported': 'このブラウザではミニプレーヤーのウィンドウを開けません。Chrome と Edge で利用できます。',
+  'pip.youtube': 'YouTube の動画はメインウィンドウに表示しておく必要があるため、ミニプレーヤーは使用できません。',
+  'pip.title': 'Resonix ミニプレーヤー',
+  'hp.title': 'ヘッドフォン補正',
+  'hp.hint': 'お使いのヘッドフォンを選ぶと、オープンソースの AutoEq プロジェクトの測定データを使って音のバランスを整えます。',
+  'hp.search': 'ヘッドフォンのモデルを検索',
+  'hp.loading': 'ヘッドフォンの一覧を読み込み中…',
+  'hp.none': '一致するものがありません。ブランド名や短い名前で試してください。',
+  'hp.active': '{name}を補正中 · 測定：{source}',
+  'hp.remove': '補正を解除',
+  'hp.applied': 'ヘッドフォン補正を適用しました',
+  'hp.failed': 'そのプロファイルを読み込めませんでした。',
+  'hp.credit': 'プロファイル：AutoEq（Jaakko Pasanen 作、MIT ライセンス）',
+  'home.because': '{title}を再生したあなたに',
+  'home.dailyMix': 'デイリーミックス',
+  'home.dailyMixHint': 'お気に入り、最近再生した曲、それらに似た音楽から{count}曲 · 毎日更新',
+  'home.playMix': 'ミックスを再生',
 };
 
 export default ja;

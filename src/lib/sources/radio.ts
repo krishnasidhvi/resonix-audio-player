@@ -1,6 +1,7 @@
 // Radio Browser: community directory of ~50k internet radio stations. https://www.radio-browser.info
 import { getJson, qs } from '../http';
 import type { Track } from '../types';
+import { safeUrl } from '../a11y';
 
 const FALLBACK = ['https://de1.api.radio-browser.info', 'https://de2.api.radio-browser.info', 'https://fi1.api.radio-browser.info'];
 let basePromise: Promise<string> | null = null;
@@ -41,7 +42,7 @@ function map(s: Station): Track {
     isLive: true,
     artwork: s.favicon?.startsWith('https://') ? s.favicon : undefined,
     streamUrl: s.url_resolved,
-    pageUrl: s.homepage,
+    pageUrl: safeUrl(s.homepage),
     genre: tags[0],
     format: s.codec || undefined,
     bitrate: s.bitrate || undefined, // kbps
@@ -55,7 +56,11 @@ const usable = (s: Station) => s.url_resolved?.startsWith('https://');
 export interface RadioQuery { name?: string; tag?: string; countrycode?: string; language?: string; limit?: number; order?: 'clickcount' | 'votes' }
 
 export async function radioSearch(q: RadioQuery): Promise<Track[]> {
-  const b = await base();
+  try { return await radioSearchOn(await base(), q); }
+  catch { basePromise = null; return radioSearchOn(await base(), q); } // that server is down: try another
+}
+
+async function radioSearchOn(b: string, q: RadioQuery): Promise<Track[]> {
   const params = qs({ ...q, limit: (q.limit ?? 40) * 3, order: q.order ?? 'clickcount', reverse: true, hidebroken: true });
   const list = await getJson<Station[]>(`${b}/json/stations/search?${params}`);
   // HTTPS only, and only stations Radio Browser's checker last saw online

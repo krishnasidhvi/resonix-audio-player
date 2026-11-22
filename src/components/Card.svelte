@@ -3,15 +3,15 @@
   import Artwork from './Artwork.svelte';
   import Icon from './Icon.svelte';
 
-  let { title, subtitle, artwork, seed, href, onplay, round = false, badge }: {
-    title: string; subtitle?: string; artwork?: string; seed: string; href?: string;
-    onplay?: () => void; round?: boolean; badge?: string;
+  let { title, subtitle, artwork, alts, seed, href, onplay, round = false, badge, fit = 'cover' }: {
+    title: string; subtitle?: string; artwork?: string; alts?: string[]; seed: string; href?: string;
+    onplay?: () => void; round?: boolean; badge?: string; fit?: 'cover' | 'contain';
   } = $props();
 </script>
 
 <div class="card">
   <div class="cover">
-    <Artwork src={artwork} {seed} radius={round ? '50%' : 'var(--radius)'} />
+    <Artwork src={artwork} {alts} {seed} {fit} radius={round ? '50%' : 'var(--radius)'} />
     {#if badge}<span class="badge">{badge}</span>{/if}
     {#if onplay}
       <button class="play" aria-label={t('common.playItem', { title })} onclick={(e) => { e.preventDefault(); e.stopPropagation(); onplay(); }}><Icon name="play" size={20} /></button>

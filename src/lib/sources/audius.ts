@@ -14,6 +14,12 @@ function host(): Promise<string> {
   return hostPromise;
 }
 
+/** Run a request against the chosen host; if it fails, pick another host once and retry. */
+async function withHost<T>(fn: (base: string) => Promise<T>): Promise<T> {
+  try { return await fn(await host()); }
+  catch { hostPromise = null; return fn(await host()); }
+}
+
 interface AudiusTrack {
   id: string;
   title: string;
@@ -21,7 +27,7 @@ interface AudiusTrack {
   genre?: string;
   mood?: string;
   permalink?: string;
-  artwork?: Record<string, string> | null;
+  artwork?: (Record<string, string> & { mirrors?: string[] }) | null;
   user: { id: string; name: string; handle: string };
   tags?: string | null;
   is_streamable?: boolean;
@@ -30,6 +36,8 @@ interface AudiusTrack {
 
 function map(t: AudiusTrack, base: string): Track {
   const art = t.artwork?.['480x480'] ?? t.artwork?.['1000x1000'] ?? t.artwork?.['150x150'];
+  const mirrors = (t.artwork as { mirrors?: string[] } | null | undefined)?.mirrors ?? [];
+  const alts = art ? mirrors.map((m) => { try { return m + new URL(art).pathname; } catch { return ''; } }).filter(Boolean) : [];
   return {
     id: `audius:${t.id}`,
     source: 'audius',
@@ -37,6 +45,7 @@ function map(t: AudiusTrack, base: string): Track {
     artist: t.user?.name ?? 'Unknown artist',
     duration: t.duration ?? 0,
     artwork: art,
+    artworkAlts: alts.length ? alts : undefined,
     genre: t.genre || undefined,
     mood: t.mood || undefined,
     tags: t.tags ? t.tags.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 6) : undefined,
@@ -50,18 +59,18 @@ function map(t: AudiusTrack, base: string): Track {
 
 const playable = (t: AudiusTrack) => t.is_available !== false && t.is_streamable !== false;
 
-export async function audiusTrending(genre?: string, time: 'week' | 'month' | 'allTime' = 'week'): Promise<Track[]> {
-  const base = await host();
-  const r = await getJson<{ data: AudiusTrack[] }>(`${base}/v1/tracks/trending?${qs({ app_name: APP, genre, time, limit: 40 })}`);
-  return r.data.filter(playable).map((t) => map(t, base));
+export function audiusTrending(genre?: string, time: 'week' | 'month' | 'allTime' = 'week'): Promise<Track[]> {
+  return withHost(async (base) => {
+    const r = await getJson<{ data: AudiusTrack[] }>(`${base}/v1/tracks/trending?${qs({ app_name: APP, genre, time, limit: 40 })}`);
+    return r.data.filter(playable).map((t) => map(t, base));
+  });
 }
 
-export async function audiusSearch(query: string, offset = 0): Promise<Track[]> {
-  const base = await host();
-  const r = await getJson<{ data: AudiusTrack[] }>(
-    `${base}/v1/tracks/search?${qs({ app_name: APP, query, limit: 30, offset })}`,
-  );
-  return r.data.filter(playable).map((t) => map(t, base));
+export function audiusSearch(query: string, offset = 0): Promise<Track[]> {
+  return withHost(async (base) => {
+    const r = await getJson<{ data: AudiusTrack[] }>(`${base}/v1/tracks/search?${qs({ app_name: APP, query, limit: 30, offset })}`);
+    return r.data.filter(playable).map((t) => map(t, base));
+  });
 }
 
 /** Other tracks by the same Audius artist, most played first. */

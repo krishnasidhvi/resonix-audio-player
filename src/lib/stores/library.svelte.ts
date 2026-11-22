@@ -49,13 +49,15 @@ class Library {
   }
 
   async removeLocal(track: Track) {
+    const art = this.local.find((t) => t.id === track.id)?.artwork;
+    if (art?.startsWith('blob:')) URL.revokeObjectURL(art);
     await removeLocal(track);
     this.local = this.local.filter((t) => t.id !== track.id);
     this.save('local');
   }
 
   async clearLocal() {
-    for (const t of this.local) await removeLocal(t);
+    for (const t of this.local) { if (t.artwork?.startsWith('blob:')) URL.revokeObjectURL(t.artwork); await removeLocal(t); }
     this.local = [];
     await db.set('kv', 'folders', []);
     this.save('local');
@@ -66,7 +68,8 @@ class Library {
     if (t && !t.duration) { t.duration = seconds; this.save('local'); }
   }
 
-  isFavorite(id: string) { return this.favorites.some((t) => t.id === id); }
+  private favIds = $derived(new Set(this.favorites.map((t) => t.id)));
+  isFavorite(id: string) { return this.favIds.has(id); }
 
   toggleFavorite(track: Track) {
     this.favorites = this.isFavorite(track.id)

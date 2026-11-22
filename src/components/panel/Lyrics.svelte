@@ -120,12 +120,13 @@
   }
   .line:hover { color: var(--text-2); }
   :global([dir='rtl']) .line { transform-origin: right center; }
-  .line.past { opacity: 0.55; }
+  .line.past { opacity: 0.8; }
   .line.active { color: var(--text); transform: scale(1.03); }
   .w {
     background: linear-gradient(90deg, var(--text) calc(var(--p) * 100%), var(--text-3) calc(var(--p) * 100%));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  .line:dir(rtl) .w { background: linear-gradient(270deg, var(--text) calc(var(--p) * 100%), var(--text-3) calc(var(--p) * 100%)); -webkit-background-clip: text; background-clip: text; }
   .big .line { font-size: clamp(26px, 3.4vw, 44px); padding: 10px 0; }
   .big .line.active { color: #fff; }
   .plain { white-space: pre-wrap; font: 16px/1.7 var(--font-ui); color: var(--text-2); margin: 0; }

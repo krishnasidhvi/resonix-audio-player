@@ -1,12 +1,18 @@
 <script lang="ts">
   import { hash } from '../lib/util';
 
-  let { src, seed, size = '100%', radius = 'var(--radius-s)', alt = '' }: {
-    src?: string; seed: string; size?: string; radius?: string; alt?: string;
+  let { src, alts = [], seed, size = '100%', radius = 'var(--radius-s)', alt = '', fit = 'cover' }: {
+    src?: string; alts?: string[]; seed: string; size?: string; radius?: string; alt?: string;
+    /** 'contain' shows small logos (radio stations) at their own size on a tinted disc. */
+    fit?: 'cover' | 'contain';
   } = $props();
 
-  let failed = $state(false);
-  $effect(() => { void src; failed = false; });
+  // try src, then each alternate host, then fall back to the generated cover
+  let attempt = $state(0);
+  $effect(() => { void src; attempt = 0; });
+  const candidates = $derived([src, ...alts].filter(Boolean) as string[]);
+  const current = $derived(candidates[attempt]);
+  const failed = $derived(!current);
 
   // Generated cover: two hues from the seed, a soft orb and concentric arcs.
   const h = $derived(hash(seed));
@@ -18,8 +24,8 @@
 </script>
 
 <div class="art" style:width={size} style:border-radius={radius}>
-  {#if src && !failed}
-    <img {src} {alt} loading="lazy" decoding="async" onerror={() => (failed = true)} />
+  {#if !failed}
+    <img src={current} {alt} class:contain={fit === 'contain'} loading="lazy" decoding="async" onerror={() => attempt++} style:--tint="oklch(30% 0.05 {h1})" />
   {:else}
     <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
@@ -39,4 +45,5 @@
 <style>
   .art { aspect-ratio: 1; overflow: hidden; background: var(--bg-raise); flex: none; position: relative; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.05); }
   img, svg { width: 100%; height: 100%; object-fit: cover; display: block; }
+  img.contain { object-fit: contain; padding: 22%; background: radial-gradient(circle, color-mix(in oklch, var(--tint) 60%, white 8%), var(--tint)); }
 </style>

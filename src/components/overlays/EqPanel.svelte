@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { headphoneGains, headphoneList, searchHeadphones, type Headphone } from '../../lib/autoeq';
+  import { focusScope } from '../../lib/a11y';
   import { t } from '../../lib/i18n/i18n.svelte';
   import { eqPresetLabel } from '../../lib/i18n/labels';
   import { EQ_FREQS } from '../../lib/audio/engine';
@@ -20,17 +22,9 @@
       const w = (2 * Math.PI * f) / fs;
       let total = 0;
       EQ_FREQS.forEach((f0, k) => {
-        const A = 10 ** (gains[k] / 40), w0 = (2 * Math.PI * f0) / fs, alpha = Math.sin(w0) / (2 * 1.1), c = Math.cos(w0);
-        let b0, b1, b2, a0, a1, a2;
-        if (k === 0 || k === EQ_FREQS.length - 1) {
-          // Web Audio shelves ignore Q and use slope S = 1 → alpha = sin(w0)/2 · √2
-          const sq = 2 * Math.sqrt(A) * (Math.sin(w0) / 2) * Math.SQRT2, s = k === 0 ? 1 : -1;
-          // low shelf (s=1) / high shelf (s=-1)
-          b0 = A * ((A + 1) - s * (A - 1) * c + sq); b1 = s * 2 * A * ((A - 1) - s * (A + 1) * c); b2 = A * ((A + 1) - s * (A - 1) * c - sq);
-          a0 = (A + 1) + s * (A - 1) * c + sq; a1 = -s * 2 * ((A - 1) + s * (A + 1) * c); a2 = (A + 1) + s * (A - 1) * c - sq;
-        } else {
-          b0 = 1 + alpha * A; b1 = -2 * c; b2 = 1 - alpha * A; a0 = 1 + alpha / A; a1 = -2 * c; a2 = 1 - alpha / A;
-        }
+        const A = 10 ** (gains[k] / 40), w0 = (2 * Math.PI * f0) / fs, alpha = Math.sin(w0) / (2 * 1.41), c = Math.cos(w0);
+        // peaking band at Q 1.41, as in the engine
+        const b0 = 1 + alpha * A, b1 = -2 * c, b2 = 1 - alpha * A, a0 = 1 + alpha / A, a1 = -2 * c, a2 = 1 - alpha / A;
         const re = (b: number[]) => b[0] + b[1] * Math.cos(w) + b[2] * Math.cos(2 * w);
         const im = (b: number[]) => -(b[1] * Math.sin(w) + b[2] * Math.sin(2 * w));
         const num = Math.hypot(re([b0, b1, b2]), im([b0, b1, b2])), den = Math.hypot(re([a0, a1, a2]), im([a0, a1, a2]));
@@ -45,10 +39,28 @@
 
   function set(i: number, v: number) { settings.eq[i] = v; settings.eqPreset = 'Custom'; player.applyEq(); }
   function preset(name: string) { settings.eq = EQ_PRESETS[name].slice(); settings.eqPreset = name; player.applyEq(); }
+  let hpQuery = $state('');
+  let hpList: Headphone[] = $state([]);
+  let hpLoading = $state(false);
+  const hpMatches = $derived(searchHeadphones(hpList, hpQuery));
+  async function loadHeadphones() {
+    if (hpList.length || hpLoading) return;
+    hpLoading = true;
+    try { hpList = await headphoneList(); } catch { ui.toast(t('hp.failed'), 'error'); } finally { hpLoading = false; }
+  }
+  async function pickHeadphone(h: Headphone) {
+    try {
+      const gains = await headphoneGains(h);
+      settings.headphone = { name: h.name, source: h.source, gains };
+      hpQuery = '';
+      player.applyEq();
+      ui.toast(t('hp.applied'));
+    } catch { ui.toast(t('hp.failed'), 'error'); }
+  }
   const label = (f: number) => (f >= 1000 ? `${f / 1000}k` : `${f}`);
 </script>
 
-<div class="sheet surface" role="dialog" aria-label={t('player.sound')}>
+<div class="sheet surface" role="dialog" aria-label={t('player.sound')} use:focusScope={{ onClose: () => (ui.eqOpen = false) }}>
   <div class="row head">
     <h2>{t('eq.title')}</h2>
     <label class="switch"><input type="checkbox" bind:checked={settings.eqEnabled} onchange={() => player.applyEq()} /> {t('eq.on')}</label>
@@ -80,6 +92,24 @@
     {/each}
   </div>
   {#if settings.hearingEq}<p class="faint small">{t('eq.hearingNote')} <button class="link" onclick={() => { settings.hearingEq = null; player.applyEq(); }}>{t('eq.removeIt')}</button></p>{/if}
+
+  <section class="hp">
+    <h3>{t('hp.title')}</h3>
+    {#if settings.headphone}
+      <div class="row active"><span class="grow">{t('hp.active', { name: settings.headphone.name, source: settings.headphone.source })}</span>
+        <button class="btn small ghost" onclick={() => { settings.headphone = null; player.applyEq(); }}>{t('hp.remove')}</button></div>
+    {:else}
+      <p class="faint small">{t('hp.hint')}</p>
+      <input type="search" placeholder={t('hp.search')} aria-label={t('hp.search')} bind:value={hpQuery} onfocus={loadHeadphones} />
+      {#if hpLoading}<p class="faint small">{t('hp.loading')}</p>
+      {:else if hpQuery.trim().length > 1}
+        {#if hpMatches.length}
+          <ul class="hp-list">{#each hpMatches as h (h.path)}<li><button onclick={() => pickHeadphone(h)}><span class="grow">{h.name}</span><span class="faint">{h.source}</span></button></li>{/each}</ul>
+        {:else}<p class="faint small">{t('hp.none')}</p>{/if}
+      {/if}
+    {/if}
+    <p class="faint tiny"><a href="https://github.com/jaakkopasanen/AutoEq" target="_blank" rel="noopener">{t('hp.credit')}</a></p>
+  </section>
 
   <div class="extras">
     <label>
@@ -113,6 +143,14 @@
   .band input::-webkit-slider-thumb { margin-top: 0; margin-left: -4.5px; }
   .db { font-size: 11px; color: var(--text-2); }
   .f { font-size: 11px; color: var(--text-3); }
+  .hp { display: grid; gap: 8px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+  .hp h3 { margin: 0; font-size: 14px; }
+  .hp .active { gap: 10px; font-size: 13px; color: var(--accent); }
+  .hp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; max-height: 220px; overflow: auto; }
+  .hp-list button { width: 100%; display: flex; gap: 10px; text-align: start; padding: 7px 10px; border-radius: 8px; font-size: 13px; }
+  .hp-list button:hover, .hp-list button:focus-visible { background: oklch(25% 0.015 var(--h)); }
+  .tiny { font-size: 11.5px; margin: 0; }
+  .tiny a { color: inherit; }
   .extras { display: grid; gap: 12px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
   .extras label:not(.switch) { display: grid; gap: 4px; font-size: 13px; }
   .small { font-size: 12px; margin: 0; }

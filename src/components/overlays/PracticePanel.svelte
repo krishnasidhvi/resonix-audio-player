@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusScope } from '../../lib/a11y';
   import { t } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { ui } from '../../lib/stores/ui.svelte';
@@ -8,7 +9,7 @@
   const rates = [0.5, 0.6, 0.75, 0.85, 0.9, 1, 1.1, 1.25, 1.5];
 </script>
 
-<div class="sheet surface" role="dialog" aria-label={t('cmd.practice')}>
+<div class="sheet surface" role="dialog" aria-label={t('cmd.practice')} use:focusScope={{ onClose: () => (ui.practiceOpen = false) }}>
   <div class="row head">
     <h2>{t('practice.title')}</h2>
     <span class="faint small grow">{t('practice.hint')}</span>

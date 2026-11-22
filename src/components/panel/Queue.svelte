@@ -12,6 +12,16 @@
 
   const remaining = $derived(player.queue.slice(player.index + 1).reduce((s, t) => s + (t.duration || 0), 0));
 
+  /** Alt+ArrowUp / Alt+ArrowDown moves the focused track. */
+  function reorderKey(e: KeyboardEvent, i: number) {
+    if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    const to = e.key === 'ArrowUp' ? i - 1 : i + 1;
+    if (to < 0 || to >= player.queue.length) return;
+    player.move(i, to);
+    requestAnimationFrame(() => (document.querySelectorAll<HTMLElement>('.q .hit')[to])?.focus());
+  }
+
   function drop(i: number) {
     if (dragFrom !== null && dragFrom !== i) player.move(dragFrom, i);
     dragFrom = dragOver = null;
@@ -29,6 +39,7 @@
     <span class="faint small grow">{t('queue.upNext', { count: player.queue.length - player.index - 1 })}{#if remaining} · {fmtDuration(remaining)}{/if}</span>
     <button class="btn small ghost" onclick={save}>{t('queue.save')}</button>
   </div>
+  <p id="q-reorder" class="sr-only">{t('queue.reorderHint')}</p>
   <ol class="q">
     {#each player.queue as tr, i (tr.id + i)}
       <li
@@ -41,7 +52,7 @@
         ondragleave={() => (dragOver = null)}
         ondrop={() => drop(i)}
       >
-        <button class="hit" aria-label={t('common.playItem', { title: tr.title })} onclick={() => player.load(i)}></button>
+        <button class="hit" aria-label={t('common.playItem', { title: tr.title })} aria-describedby="q-reorder" onclick={() => player.load(i)} onkeydown={(e) => reorderKey(e, i)}></button>
         <span class="grip" aria-hidden="true">⋮⋮</span>
         <Artwork src={tr.artwork} seed={tr.artist + tr.title} size="36px" radius="6px" />
         <span class="meta grow">

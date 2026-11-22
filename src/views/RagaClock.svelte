@@ -58,7 +58,7 @@
   <p class="muted lead">{t('raga.lead')}</p>
 
   <div class="layout">
-    <svg viewBox="0 0 400 400" class="dial" role="img" aria-label={t('raga.dialAria', { prahar: praharLabel(prahar.label) })}>
+    <svg viewBox="0 0 400 400" class="dial" role="group" aria-label={t('raga.dialAria', { prahar: praharLabel(prahar.label) })}>
       <circle cx={C} cy={C} r={R + 26} class="face" />
       {#each PRAHARS as p}
         {@const [lx, ly] = pt((p.hours[0] + p.hours[1]) / 2, R + 38)}
@@ -76,7 +76,7 @@
           tabindex="0"
           aria-label="{raga.name}, {traditionLabel(raga.tradition)}"
           onclick={() => (picked = raga)}
-          onkeydown={(e) => { if (e.key === 'Enter') picked = raga; }}
+          onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); picked = raga; } }}
         ><title>{raga.name} · {moodLabel(raga.name, raga.mood)}</title></path>
       {/each}
       <line x1={C} y1={C} x2={hand[0]} y2={hand[1]} class="hand" />
@@ -129,14 +129,15 @@
   .raga { fill: none; stroke-width: 8; stroke-linecap: round; cursor: pointer; opacity: 0.5; transition: opacity 0.2s, stroke-width 0.2s; outline: none; }
   .raga.Hindustani { stroke: oklch(74% 0.13 var(--h)); }
   .raga.Carnatic { stroke: oklch(78% 0.12 calc(var(--h) + 150)); }
-  .raga:hover, .raga:focus-visible { opacity: 0.9; }
+  .raga:hover { opacity: 0.9; }
+  .raga:focus-visible { opacity: 1; stroke: var(--text); stroke-width: 12; }
   .raga.on { opacity: 1; stroke-width: 11; }
   .hand { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
   .hub { fill: var(--bg-raise); stroke: var(--line); }
   .time { font-size: 20px; font-weight: 650; fill: var(--text); }
   .hub-label { font-size: 11px; fill: var(--text-3); }
   .ragas { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
-  .ragas button { width: 100%; display: grid; text-align: left; gap: 2px; padding: 14px 16px; border-radius: 12px; background: var(--bg-raise); border: 1px solid var(--line-soft); }
+  .ragas button { width: 100%; display: grid; text-align: start; gap: 2px; padding: 14px 16px; border-radius: 12px; background: var(--bg-raise); border: 1px solid var(--line-soft); }
   .ragas button.on { border-color: var(--accent); background: linear-gradient(135deg, var(--accent-wash), transparent), var(--bg-raise); }
   .ragas strong { font-size: 22px; }
   .mood { color: var(--text-2); font-size: 13.5px; }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusScope } from '../../lib/a11y';
   import { t } from '../../lib/i18n/i18n.svelte';
   // A quick hearing check: finds the quietest level you hear at 7 frequencies, then gives
   // a gentle boost where your hearing is weaker relative to your own average. It's a
@@ -50,7 +51,7 @@
 </script>
 
 <div class="backdrop" role="presentation" onclick={(e) => { if (e.target === e.currentTarget) ui.hearingOpen = false; }}>
-  <div class="dialog surface" role="dialog" aria-modal="true" aria-label={t('eq.hearingCheck')}>
+  <div class="dialog surface" role="dialog" aria-modal="true" aria-label={t('eq.hearingCheck')} use:focusScope={{ modal: true, onClose: () => (ui.hearingOpen = false) }}>
     <button class="icon-btn close" aria-label={t('common.close')} onclick={() => (ui.hearingOpen = false)}><Icon name="close" size={16} /></button>
     {#if step === 'intro'}
       <Icon name="ear" size={34} />

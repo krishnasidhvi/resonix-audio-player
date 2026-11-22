@@ -36,6 +36,10 @@ Every track shows its source and licence and links back to the original page. If
 - **Similar to this:** recommendations for the playing track from the same artist, related artists (Audius), the same genre and tags, matching radio stations and, where both tracks are analysed, similar measured sound. Each one says why it was picked. **Start radio** queues them, and Resonix can keep playing similar music when the queue ends.
 - **Cinematic background:** a WebGL scene behind the app that follows the music. Beats and bass drive the light, energy picks the scene (nebula, pulse or aurora), major/minor key shifts the colour temperature, and the palette comes from the artwork. Off / subtle / vivid, and it respects reduced motion.
 - **Open in YouTube Music / Spotify:** plain search links from any track to those services.
+- **Headphone correction:** pick your headphone model and Resonix applies its correction curve from the open-source [AutoEq](https://github.com/jaakkopasanen/AutoEq) measurements (MIT). The EQ uses the same 10 peaking bands as AutoEq, so profiles map one to one.
+- **Pop-out mini player:** a small always-on-top window with artwork and controls (Chrome and Edge, via Document Picture-in-Picture).
+- **Your daily mix and "Because you played…":** personal Home rows built from your own favourites, recent plays and the recommender, refreshed daily.
+- **Phone layout:** a slim mini player that opens a full-screen player with lyrics and queue.
 - **Live hits radio:** Telugu, Bollywood, Hindi, Tamil, English Top 40 and English pop shelves, ranked by listener votes, showing only stations that were last seen online.
 - **Raga clock:** a 24-hour dial of Hindustani prahars and Carnatic associations that plays openly licensed recordings of the ragas for the current hour.
 - **Synced lyrics** with word timing, tap-to-seek and a timing nudge, plus one-tap **Latin transliteration** for Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Gujarati, Gurmukhi and Odia.

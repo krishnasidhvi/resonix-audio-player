@@ -1,4 +1,5 @@
 <script lang="ts">
+  import NowSheet from './components/NowSheet.svelte';
   import YouTube from './views/YouTube.svelte';
   import YouTubeDock from './components/YouTubeDock.svelte';
   import Cinematic from './components/Cinematic.svelte';
@@ -49,16 +50,21 @@
   }
   function onKey(e: KeyboardEvent) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); ui.palette = !ui.palette; return; }
-    if (e.key === 'Escape') { ui.eqOpen = ui.practiceOpen = ui.palette = ui.hearingOpen = false; if (ui.ambient) ui.ambient = false; return; }
+    if (e.key === 'Escape') { ui.eqOpen = ui.practiceOpen = ui.palette = ui.hearingOpen = ui.nowSheet = false; if (ui.ambient) ui.ambient = false; return; }
     if (typing(e) || e.ctrlKey || e.metaKey || e.altKey || ui.palette) return;
+    const target = e.target as HTMLElement;
+    // Arrow keys only act as player shortcuts when nothing else is focused (or the player itself is):
+    // otherwise they keep scrolling the page / moving inside lists and sliders.
+    const free = target === document.body || target === document.documentElement || !!target.closest('.bar');
     const k = e.key;
-    if (k === ' ' && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); player.toggle(); }
-    else if (k === 'ArrowRight' && e.shiftKey) player.next();
-    else if (k === 'ArrowLeft' && e.shiftKey) player.prev();
-    else if (k === 'ArrowRight' && !(e.target as HTMLElement).closest('[role=slider]')) player.seek(player.time + 5);
-    else if (k === 'ArrowLeft' && !(e.target as HTMLElement).closest('[role=slider]')) player.seek(player.time - 5);
-    else if (k === 'ArrowUp') { e.preventDefault(); player.setVolume(Math.min(1, settings.volume + 0.05)); }
-    else if (k === 'ArrowDown') { e.preventDefault(); player.setVolume(Math.max(0, settings.volume - 0.05)); }
+    if (k === ' ' && !(target instanceof HTMLButtonElement) && !target.closest('a, [role=slider]')) { e.preventDefault(); player.toggle(); }
+    else if (k === 'ArrowRight' && e.shiftKey && free) player.next();
+    else if (k === 'ArrowLeft' && e.shiftKey && free) player.prev();
+    else if (k === 'ArrowRight' && free && !target.closest('[role=slider]')) player.seek(player.time + 5);
+    else if (k === 'ArrowLeft' && free && !target.closest('[role=slider]')) player.seek(player.time - 5);
+    else if (k === 'ArrowUp' && free && !target.closest('[role=slider]')) { e.preventDefault(); player.setVolume(Math.min(1, settings.volume + 0.05)); }
+    else if (k === 'ArrowDown' && free && !target.closest('[role=slider]')) { e.preventDefault(); player.setVolume(Math.max(0, settings.volume - 0.05)); }
+    else if (!settings.shortcuts) return; // single-key shortcuts can be turned off in Settings
     else if (k === 'l') { ui.panel = 'lyrics'; ui.panelOpen = true; }
     else if (k === 'q') { ui.panel = 'queue'; ui.panelOpen = true; }
     else if (k === 'e') ui.eqOpen = !ui.eqOpen;
@@ -76,25 +82,26 @@
     dragging = false;
     const files = [...(e.dataTransfer?.files ?? [])];
     if (!files.length) return;
-    const tracks = await importFiles(files, () => {});
-    if (!tracks.length) return ui.toast(t('toast.noAudio'), 'error');
-    await library.addLocal(tracks);
-    ui.toast(t('toast.addedToLibrary', { count: tracks.length }));
-    player.playList(tracks, 0);
+    try {
+      const tracks = await importFiles(files, () => {});
+      if (!tracks.length) return ui.toast(t('toast.noAudio'), 'error');
+      await library.addLocal(tracks);
+      ui.toast(t('toast.addedToLibrary', { count: tracks.length }));
+      player.playList(tracks, 0);
+    } catch (err) { ui.toast((err as Error).message, 'error'); }
   }
   const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes('Files');
 </script>
 
 <svelte:window onkeydown={onKey} />
 
-<div
-  class="app"
-  class:panel-open={ui.panelOpen}
-  role="application"
+<svelte:document
   ondragover={(e) => { if (hasFiles(e)) { e.preventDefault(); dragging = true; } }}
   ondragleave={(e) => { if (!e.relatedTarget) dragging = false; }}
   ondrop={onDrop}
->
+/>
+
+<div class="app" class:panel-open={ui.panelOpen}>
   <Sidebar />
   {#if settings.cinematic !== 'off' && !ui.ambient}<div class="cine-layer"><Cinematic /></div>{/if}
   <main id="main" class="main" class:over-cine={settings.cinematic !== 'off'} class:dock-open={player.current?.source === 'youtube'}>
@@ -123,6 +130,7 @@
 {#if ui.hearingOpen}<HearingCheck />{/if}
 {#if ui.palette}<CommandPalette />{/if}
 {#if ui.ambient}<Ambient />{/if}
+{#if ui.nowSheet && player.current}<NowSheet />{/if}
 
 {#if dragging}
   <div class="drop" aria-hidden="true"><div><strong class="display">{t('drop.title')}</strong><p class="muted">{t('drop.hint')}</p></div></div>

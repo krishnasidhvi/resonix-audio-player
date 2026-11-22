@@ -5,6 +5,9 @@ import { licenseFromUrl, OPEN_LICENSE_QUERY } from '../license';
 import type { Track } from '../types';
 import type { Album } from './album';
 
+/** Leave out audiobooks, lectures, sermons, podcasts and old radio shows: this is a music player. */
+const NOT_SPOKEN = '-collection:(librivoxaudio OR audio_bookspoetry OR podcasts OR radioprograms OR oldtimeradio OR audio_religion OR audio_news OR audio_podcast) AND -subject:(audiobook OR audiobooks OR librivox OR sermon OR lecture OR podcast OR speech)';
+
 interface Doc {
   identifier: string;
   title?: string | string[];
@@ -30,7 +33,7 @@ function itemToAlbum(d: Doc): Album {
 }
 
 export async function archiveSearch(query: string, page = 1, extra = ''): Promise<Album[]> {
-  const q = `(${query}) AND mediatype:audio AND ${OPEN_LICENSE_QUERY}${extra ? ' AND ' + extra : ''}`;
+  const q = `(${query}) AND mediatype:audio AND ${OPEN_LICENSE_QUERY} AND ${NOT_SPOKEN}${extra ? ' AND ' + extra : ''}`;
   const url =
     `https://archive.org/advancedsearch.php?${qs({ q, rows: 30, page, output: 'json' })}` +
     ['identifier', 'title', 'creator', 'licenseurl', 'downloads', 'year'].map((f) => `&fl[]=${f}`).join('') +

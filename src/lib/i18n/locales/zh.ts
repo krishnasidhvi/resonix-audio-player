@@ -602,6 +602,32 @@ const zh: Messages = {
   'update.downloading': '正在下载更新…',
   'update.downloadingPct': '正在下载更新… {pct}%',
   'update.failed': '更新未能安装，请稍后重试。',
+
+  // added: audit fixes, mobile player, mini player window, headphone correction, personal rows
+  'common.unknownArtist': '未知音乐人',
+  'queue.reorderHint': '按 Alt + 上/下方向键可移动歌曲。',
+  'settings.shortcuts': '单键快捷键',
+  'settings.shortcutsHint': 'L、Q、E、F 等字母键可打开面板。如果它们干扰了屏幕阅读器或语音控制，请关闭此项。',
+  'sheet.open': '打开播放器',
+  'sheet.close': '关闭播放器',
+  'pip.open': '弹出迷你播放器',
+  'pip.unsupported': '此浏览器无法打开迷你播放器窗口。请使用 Chrome 或 Edge。',
+  'pip.youtube': 'YouTube 视频必须在主窗口中保持可见，因此无法使用迷你播放器。',
+  'pip.title': 'Resonix 迷你播放器',
+  'hp.title': '耳机校正',
+  'hp.hint': '选择你的耳机，即可借助开源项目 AutoEq 的测量数据让声音更均衡。',
+  'hp.search': '搜索耳机型号',
+  'hp.loading': '正在加载耳机列表…',
+  'hp.none': '无匹配结果。请尝试品牌名或更短的名称。',
+  'hp.active': '正在校正 {name} · 测量来源：{source}',
+  'hp.remove': '移除校正',
+  'hp.applied': '已应用耳机校正',
+  'hp.failed': '无法加载该配置文件。',
+  'hp.credit': '配置文件：AutoEq，作者 Jaakko Pasanen（MIT 许可）',
+  'home.because': '因为你听过 {title}',
+  'home.dailyMix': '每日推荐',
+  'home.dailyMixHint': '{count} 首歌曲，来自你喜欢的、最近播放的以及与之相似的音乐 · 每天更新',
+  'home.playMix': '播放推荐',
 };
 
 export default zh;

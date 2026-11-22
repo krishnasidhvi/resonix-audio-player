@@ -10,7 +10,7 @@
 
   let items: Analysis[] = $state([]);
   let loaded = $state(false);
-  allAnalyses().then((a) => { items = a.filter((x) => x.bpm); loaded = true; });
+  allAnalyses().then((a) => { items = a.filter((x) => x.bpm); }).catch(() => {}).finally(() => (loaded = true));
 
   const px = (bpm: number) => PAD + ((Math.min(BPM_MAX, Math.max(BPM_MIN, bpm)) - BPM_MIN) / (BPM_MAX - BPM_MIN)) * (W - 2 * PAD);
   const py = (energy: number) => H - PAD - energy * (H - 2 * PAD);

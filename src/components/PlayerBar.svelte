@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { artistLabel } from '../lib/i18n/labels';
+  import { openMiniPlayer, pipSupported } from '../lib/pip';
+  import { focusScope } from '../lib/a11y';
   import { player } from '../lib/stores/player.svelte';
   import { library } from '../lib/stores/library.svelte';
   import { settings } from '../lib/stores/settings.svelte';
@@ -10,6 +13,14 @@
 
   const tr = $derived(player.current);
   let sleepOpen = $state(false);
+  let sleepRoot: HTMLDivElement | undefined = $state();
+  // close the sleep menu on a click outside it
+  $effect(() => {
+    if (!sleepOpen) return;
+    const close = (e: PointerEvent) => { if (!sleepRoot?.contains(e.target as Node)) sleepOpen = false; };
+    addEventListener('pointerdown', close, true);
+    return () => removeEventListener('pointerdown', close, true);
+  });
   let lastVol = 0.8;
 
   let now = $state(Date.now());
@@ -31,6 +42,24 @@
   function toggleMute() {
     if (settings.volume > 0) { lastVol = settings.volume; player.setVolume(0); } else player.setVolume(lastVol || 0.8);
   }
+  const phone = () => matchMedia('(max-width: 720px)').matches;
+  let volOpen = $state(false);
+  let volRoot: HTMLDivElement | undefined = $state();
+  $effect(() => {
+    if (!volOpen) return;
+    const close = (e: PointerEvent) => { if (!volRoot?.contains(e.target as Node)) volOpen = false; };
+    addEventListener('pointerdown', close, true);
+    return () => removeEventListener('pointerdown', close, true);
+  });
+  /** Narrow screens show only the volume icon; it opens a small slider instead of muting. */
+  function volumeButton() {
+    if (matchMedia('(max-width: 1100px)').matches) volOpen = !volOpen;
+    else toggleMute();
+  }
+  async function popOut() {
+    try { await openMiniPlayer(); } catch { ui.toast(t('pip.unsupported'), 'error'); }
+  }
+  function openNow() { if (phone()) ui.nowSheet = true; else showPanel('now'); }
   function showPanel(p: typeof ui.panel) {
     if (ui.panelOpen && ui.panel === p) ui.panelOpen = false;
     else { ui.panel = p; ui.panelOpen = true; }
@@ -38,21 +67,30 @@
 </script>
 
 <footer class="bar">
+  {#if tr && !tr.isLive && player.duration > 0}
+    <div class="mini-progress" aria-hidden="true"><i style:width="{Math.min(100, (player.time / player.duration) * 100)}%"></i></div>
+  {/if}
   <div class="now">
     {#if tr}
-      <button class="art-btn" aria-label={t('player.openNow')} onclick={() => showPanel('now')}>
-        <Artwork src={tr.artwork} seed={tr.artist + tr.title} size="56px" radius="9px" />
+      <button class="art-btn" aria-label={t('player.openNow')} onclick={openNow}>
+        <Artwork src={tr.artwork} alts={tr.artworkAlts} seed={tr.artist + tr.title} size="56px" radius="9px" />
       </button>
-      <div class="meta">
-        <div class="title ellipsis" dir="auto">{tr.title}</div>
-        <div class="artist ellipsis" dir="auto">{tr.artist}</div>
-      </div>
+      <button class="meta" onclick={openNow} aria-label={t('sheet.open')}>
+        <span class="title ellipsis" dir="auto">{tr.title}</span>
+        <span class="artist ellipsis" dir="auto">{artistLabel(tr.artist)}</span>
+      </button>
       <button class="icon-btn" class:on={library.isFavorite(tr.id)} aria-label={t('player.favourite')} aria-pressed={library.isFavorite(tr.id)} onclick={() => library.toggleFavorite(tr)}>
         <Icon name="heart" size={18} fill={library.isFavorite(tr.id)} />
       </button>
     {:else}
       <p class="idle faint">{t('player.idle')}</p>
     {/if}
+  </div>
+
+  <!-- phones: play/next next to the title; the full controls live in the player sheet -->
+  <div class="mini-controls" dir="ltr">
+    <button class="icon-btn" aria-label={player.playing ? t('player.pause') : t('player.play')} onclick={() => player.toggle()} disabled={!player.queue.length}><Icon name={player.playing ? 'pause' : 'play'} size={22} /></button>
+    <button class="icon-btn" aria-label={t('player.next')} onclick={() => player.next()} disabled={!player.queue.length}><Icon name="next" size={20} /></button>
   </div>
 
   <div class="center">
@@ -77,11 +115,11 @@
     <button class="icon-btn" class:on={ui.panelOpen && ui.panel === 'queue'} aria-label={t('panel.queue')} onclick={() => showPanel('queue')}><Icon name="queue" size={18} /></button>
     <button class="icon-btn" class:on={ui.eqOpen} aria-label={t('player.sound')} onclick={() => (ui.eqOpen = !ui.eqOpen)}><Icon name="eq" size={18} /></button>
     <button class="icon-btn" class:on={ui.practiceOpen || player.rate !== 1 || player.loopA !== null} aria-label={t('player.practice')} onclick={() => (ui.practiceOpen = !ui.practiceOpen)}><Icon name="metronome" size={18} /></button>
-    <div class="sleep">
+    <div class="sleep" bind:this={sleepRoot}>
       <button class="icon-btn" class:on={!!player.sleep} aria-label={t('sleep.title')} aria-expanded={sleepOpen} onclick={() => (sleepOpen = !sleepOpen)}><Icon name="moon" size={18} /></button>
       {#if sleepLabel}<span class="sleep-label num">{sleepLabel}</span>{/if}
       {#if sleepOpen}
-        <div class="pop surface" role="menu">
+        <div class="pop surface" role="menu" use:focusScope={{ menu: true, onClose: () => (sleepOpen = false) }}>
           <span class="eyebrow">{t('sleep.title')}</span>
           {#each [15, 30, 45, 60, 90] as m}<button role="menuitem" onclick={() => setSleep(m)}>{t('sleep.minutes', { count: m })}</button>{/each}
           <button role="menuitem" onclick={() => setSleep('track')}>{t('sleep.endOfTrack')}</button>
@@ -89,10 +127,19 @@
         </div>
       {/if}
     </div>
-    <div class="vol" dir="ltr">
-      <button class="icon-btn" aria-label={settings.volume ? t('player.mute') : t('player.unmute')} onclick={toggleMute}><Icon name={settings.volume ? 'volume' : 'mute'} size={18} /></button>
-      <input type="range" min="0" max="1" step="0.01" aria-label={t('player.volume')} value={settings.volume} style:--fill="{settings.volume * 100}%" oninput={(e) => player.setVolume(+e.currentTarget.value)} />
+    <div class="vol" dir="ltr" bind:this={volRoot}>
+      <button class="icon-btn" aria-label={settings.volume ? t('player.mute') : t('player.unmute')} aria-expanded={volOpen} onclick={volumeButton}><Icon name={settings.volume ? 'volume' : 'mute'} size={18} /></button>
+      <input class="inline" type="range" min="0" max="1" step="0.01" aria-label={t('player.volume')} value={settings.volume} style:--fill="{settings.volume * 100}%" oninput={(e) => player.setVolume(+e.currentTarget.value)} />
+      {#if volOpen}
+        <div class="vol-pop surface" use:focusScope={{ onClose: () => (volOpen = false) }}>
+          <button class="icon-btn" aria-label={settings.volume ? t('player.mute') : t('player.unmute')} onclick={toggleMute}><Icon name={settings.volume ? 'volume' : 'mute'} size={16} /></button>
+          <input type="range" min="0" max="1" step="0.01" aria-label={t('player.volume')} value={settings.volume} style:--fill="{settings.volume * 100}%" oninput={(e) => player.setVolume(+e.currentTarget.value)} />
+        </div>
+      {/if}
     </div>
+    {#if pipSupported}
+      <button class="icon-btn pip-btn" aria-label={t('pip.open')} title={tr?.source === 'youtube' ? t('pip.youtube') : t('pip.open')} disabled={!tr || tr.source === 'youtube'} onclick={popOut}><Icon name="pip" size={18} /></button>
+    {/if}
     <button class="icon-btn" aria-label={t('player.ambient')} onclick={() => (ui.ambient = true)} disabled={!tr}><Icon name="expand" size={18} /></button>
     <button class="icon-btn panel-btn" class:on={ui.panelOpen} aria-label={t('player.togglePanel')} onclick={() => (ui.panelOpen = !ui.panelOpen)}><Icon name="panel" size={18} /></button>
   </div>
@@ -106,7 +153,11 @@
   }
   .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .art-btn { border-radius: 9px; flex: none; }
-  .meta { min-width: 0; display: grid; }
+  .meta { min-width: 0; display: grid; text-align: start; }
+  .mini-progress, .mini-controls { display: none; }
+  .vol { position: relative; }
+  .vol-pop { position: absolute; bottom: 48px; inset-inline-end: -8px; display: flex; align-items: center; gap: 6px; padding: 8px 12px 8px 6px; width: 200px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.5); }
+  .vol-pop input { flex: 1; }
   .title { font-weight: 600; }
   .artist { color: var(--text-2); font-size: 13px; }
   .idle { margin: 0; font-size: 13px; }
@@ -126,18 +177,28 @@
   .vol { display: flex; align-items: center; width: 140px; }
   .vol input { flex: 1; }
   .sleep { position: relative; display: flex; align-items: center; }
-  .sleep-label { font-size: 11px; color: var(--accent); margin-right: 4px; }
+  .sleep-label { font-size: 11px; color: var(--accent); margin-inline-end: 4px; }
   .pop { position: absolute; bottom: 48px; inset-inline-end: -40px; padding: 8px; display: grid; min-width: 180px; box-shadow: 0 18px 50px rgb(0 0 0 / 0.5); }
   .pop .eyebrow { padding: 4px 10px 6px; }
   .pop button { text-align: start; padding: 8px 10px; border-radius: 7px; }
   .pop button:hover { background: oklch(25% 0.015 var(--h)); }
   @media (max-width: 1100px) {
-    .vol { width: 96px; }
     .bar { gap: 14px; }
+    .vol input.inline { display: none; }
   }
   @media (max-width: 900px) {
     .bar { grid-template-columns: 1fr auto; grid-template-rows: auto auto; height: auto; padding: 8px 12px; gap: 6px 12px; }
     .center { grid-column: 1 / -1; grid-row: 2; }
-    .tools .vol, .tools .panel-btn { display: none; }
+    .tools .panel-btn, .tools .pip-btn { display: none; }
+  }
+  /* phones: a slim mini player; tapping it opens the full-screen player sheet */
+  @media (max-width: 720px) {
+    .bar { grid-template-columns: 1fr auto; grid-template-rows: auto; padding: 8px 10px 8px 8px; gap: 8px; }
+    .center, .tools, .now > .icon-btn { display: none; }
+    .mini-controls { display: flex; align-items: center; gap: 2px; }
+    .mini-controls .icon-btn { width: 44px; height: 44px; color: var(--text); }
+    .mini-progress { display: block; position: absolute; inset: 0 0 auto; height: 2px; background: var(--line); }
+    .mini-progress i { display: block; height: 100%; background: var(--accent); }
+    .art-btn :global(.art) { width: 46px !important; }
   }
 </style>

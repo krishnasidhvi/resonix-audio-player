@@ -16,7 +16,7 @@
 
   // Harmonic suggestions: analysed tracks in a compatible key and within ±6% tempo.
   let pool: Analysis[] = $state([]);
-  $effect(() => { void a; allAnalyses().then((x) => (pool = x)); });
+  $effect(() => { if (!a?.camelot) return; allAnalyses().then((x) => (pool = x)).catch(() => {}); });
   const harmonic = $derived.by(() => {
     if (!a?.camelot || !t) return [];
     return pool

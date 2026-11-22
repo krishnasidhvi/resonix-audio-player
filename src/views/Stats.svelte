@@ -8,7 +8,7 @@
   let plays: PlayEvent[] = $state([]);
   let loaded = $state(false);
   let range: 7 | 30 | 365 | 0 = $state(30);
-  db.all<PlayEvent>('plays').then((p) => { plays = p; loaded = true; });
+  db.all<PlayEvent>('plays').then((p) => { plays = p; }).catch(() => {}).finally(() => (loaded = true));
 
   const inRange = $derived(range ? plays.filter((p) => p.at >= Date.now() - range * 86400000) : plays);
   const total = $derived(inRange.reduce((s, p) => s + p.seconds, 0));

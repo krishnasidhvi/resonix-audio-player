@@ -16,7 +16,7 @@
   let batch: { done: number; total: number } | null = $state(null);
   let fileInput: HTMLInputElement | undefined = $state();
 
-  $effect(() => { if (canPickFolder && library.local.length) ensurePermission().then((ok) => (needsPermission = !ok)); });
+  $effect(() => { if (canPickFolder && library.local.length) ensurePermission().then((ok) => (needsPermission = !ok)).catch(() => {}); });
 
   const shown = $derived.by(() => {
     const q = filter.toLowerCase();
@@ -37,10 +37,12 @@
   async function addFiles(files: FileList | null) {
     if (!files?.length) return;
     progress = { done: 0, total: files.length };
-    const tracks = await importFiles([...files], (done, total) => (progress = { done, total }));
-    await library.addLocal(tracks);
-    progress = null;
-    ui.toast(t('toast.addedTracks', { count: tracks.length }));
+    try {
+      const tracks = await importFiles([...files], (done, total) => (progress = { done, total }));
+      await library.addLocal(tracks);
+      ui.toast(t('toast.addedTracks', { count: tracks.length }));
+    } catch (e) { ui.toast((e as Error).message, 'error'); }
+    finally { progress = null; }
   }
 
   async function analyseAll() {

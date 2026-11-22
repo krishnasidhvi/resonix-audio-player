@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { focusScope } from '../../lib/a11y';
   import Cinematic from '../Cinematic.svelte';
   import { t as tt } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
@@ -24,7 +25,7 @@
   });
 </script>
 
-<div class="amb" class:idle bind:this={root} onpointermove={wake} role="dialog" tabindex="-1" aria-modal="true" aria-label={tt('ambient.aria')}>
+<div class="amb" class:idle bind:this={root} onpointermove={wake} onkeydown={wake} onfocusin={wake} role="dialog" tabindex="-1" aria-modal="true" aria-label={tt('ambient.aria')} use:focusScope={{ modal: true, onClose: () => (ui.ambient = false) }}>
   {#if t}
     <div class="bg"><Cinematic variant="ambient" /></div>
     <div class="grid">

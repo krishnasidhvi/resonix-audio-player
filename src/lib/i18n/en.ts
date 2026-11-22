@@ -603,6 +603,32 @@ const en = {
   'update.downloading': 'Downloading update…',
   'update.downloadingPct': 'Downloading update… {pct}%',
   'update.failed': 'The update didn’t install. Try again later.',
+
+  // added: audit fixes, mobile player, mini player window, headphone correction, personal rows
+  'common.unknownArtist': 'Unknown artist',
+  'queue.reorderHint': 'Alt + Up or Down arrow moves a track.',
+  'settings.shortcuts': 'Single-key shortcuts',
+  'settings.shortcutsHint': 'Letters like L, Q, E and F open panels. Turn this off if they get in the way of a screen reader or voice control.',
+  'sheet.open': 'Open player',
+  'sheet.close': 'Close player',
+  'pip.open': 'Pop out mini player',
+  'pip.unsupported': 'This browser can’t open a mini player window. It works in Chrome and Edge.',
+  'pip.youtube': 'YouTube videos have to stay visible in the main window, so the mini player isn’t available for them.',
+  'pip.title': 'Resonix mini player',
+  'hp.title': 'Headphone correction',
+  'hp.hint': 'Pick your headphones to even out their sound, using measurements from the open-source AutoEq project.',
+  'hp.search': 'Search headphone models',
+  'hp.loading': 'Loading the headphone list…',
+  'hp.none': 'No match. Try the brand or a shorter name.',
+  'hp.active': 'Correcting {name} · measured by {source}',
+  'hp.remove': 'Remove correction',
+  'hp.applied': 'Headphone correction applied',
+  'hp.failed': 'Couldn’t load that profile.',
+  'hp.credit': 'Profiles: AutoEq by Jaakko Pasanen (MIT licence)',
+  'home.because': 'Because you played {title}',
+  'home.dailyMix': 'Your daily mix',
+  'home.dailyMixHint': '{count} tracks from your favourites, recent plays and music like them · new every day',
+  'home.playMix': 'Play mix',
 } as const;
 
 export default en;

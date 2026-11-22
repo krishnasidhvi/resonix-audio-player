@@ -12,6 +12,8 @@
     let raf = 0;
     const peaks = new Float32Array(bands);
     let data: Uint8Array<ArrayBuffer> | null = null;
+    let frame = 0;
+    let accent = '';
     const draw = () => {
       raf = requestAnimationFrame(draw);
       const an = engine.analyser;
@@ -21,7 +23,7 @@
       const g = canvas.getContext('2d')!;
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
       g.clearRect(0, 0, w, height);
-      const accent = getComputedStyle(canvas).getPropertyValue('--accent').trim();
+      if (frame++ % 60 === 0) accent = getComputedStyle(canvas).getPropertyValue('--accent').trim();
       const bw = w / bands;
       if (!an || player.bypassed || !player.playing) {
         // idle: decay existing peaks

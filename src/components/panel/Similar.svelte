@@ -27,7 +27,7 @@
   });
 
   function playNow(r: Rec) { player.playNext(r.track); player.next(); }
-  async function radio() { radioBusy = true; await player.startRadio(); radioBusy = false; }
+  async function radio() { radioBusy = true; try { await player.startRadio(); } catch { /* toast shown by player */ } finally { radioBusy = false; } }
 </script>
 
 <section class="similar">
