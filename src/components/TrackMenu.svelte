@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { canLinkOut, spotifyUrl, youtubeMusicUrl } from '../lib/external';
   import { t } from '../lib/i18n/i18n.svelte';
   import type { Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
@@ -39,6 +40,12 @@
         <button role="menuitem" onclick={act(() => { library.addToPlaylist(p.id, [track]); ui.toast(t('toast.addedTo', { name: p.name })); })}>{p.name}</button>
       {/each}
       <button role="menuitem" onclick={act(newPlaylist)}><Icon name="plus" size={15} /> {t('track.newPlaylist')}</button>
+      <button role="menuitem" onclick={act(() => player.startRadio(track))}>{t('cmd.startRadio')}</button>
+      {#if canLinkOut(track)}
+        <div class="sep"></div>
+        <a role="menuitem" href={youtubeMusicUrl(track)} target="_blank" rel="noopener">{t('track.openYouTubeMusic')} <Icon name="external" size={14} /></a>
+        <a role="menuitem" href={spotifyUrl(track)} target="_blank" rel="noopener">{t('track.openSpotify')} <Icon name="external" size={14} /></a>
+      {/if}
       {#if track.pageUrl}
         <div class="sep"></div>
         <a role="menuitem" href={track.pageUrl} target="_blank" rel="noopener">{t('track.openSource')} <Icon name="external" size={14} /></a>

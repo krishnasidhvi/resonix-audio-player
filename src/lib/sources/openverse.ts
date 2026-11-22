@@ -21,6 +21,7 @@ interface OvAudio {
   bit_rate?: number | null;
   thumbnail?: string | null;
   genres?: string[] | null;
+  tags?: { name: string }[] | null;
 }
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -30,9 +31,9 @@ const PROVIDER_LABEL: Record<string, string> = {
   freesound: 'Freesound',
 };
 
-export async function openverseSearch(query: string, page = 1): Promise<Track[]> {
+export async function openverseSearch(query: string, page = 1, by: 'q' | 'creator' | 'tags' = 'q'): Promise<Track[]> {
   // category=music drops sound effects; length=medium,long drops snippets under ~30s.
-  const url = `https://api.openverse.org/v1/audio/?${qs({ q: query, page, page_size: 20 /* anonymous max */, category: 'music', length: 'medium,long', mature: false })}`;
+  const url = `https://api.openverse.org/v1/audio/?${qs({ [by]: query, page, page_size: 20 /* anonymous max */, category: 'music', length: 'medium,long', mature: false })}`;
   const r = await getJson<{ results: OvAudio[] }>(url);
   return r.results.map((a): Track => ({
     id: `openverse:${a.id}`,
@@ -47,6 +48,7 @@ export async function openverseSearch(query: string, page = 1): Promise<Track[]>
     pageUrl: a.foreign_landing_url,
     license: licenseFromCode(a.license, a.license_version, a.license_url),
     genre: a.genres?.[0],
+    tags: (a.tags ?? []).map((x) => x.name).filter((n) => n && n.length < 24).slice(0, 6),
     format: a.filetype?.toUpperCase(),
     bitrate: a.bit_rate ?? undefined,
     cors: a.source === 'jamendo' ? false : undefined, // Jamendo storage has no CORS; others are probed

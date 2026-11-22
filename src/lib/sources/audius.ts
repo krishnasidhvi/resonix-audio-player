@@ -22,7 +22,8 @@ interface AudiusTrack {
   mood?: string;
   permalink?: string;
   artwork?: Record<string, string> | null;
-  user: { name: string; handle: string };
+  user: { id: string; name: string; handle: string };
+  tags?: string | null;
   is_streamable?: boolean;
   is_available?: boolean;
 }
@@ -37,6 +38,9 @@ function map(t: AudiusTrack, base: string): Track {
     duration: t.duration ?? 0,
     artwork: art,
     genre: t.genre || undefined,
+    mood: t.mood || undefined,
+    tags: t.tags ? t.tags.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 6) : undefined,
+    artistId: t.user?.id,
     streamUrl: `${base}/v1/tracks/${t.id}/stream?app_name=${APP}`,
     pageUrl: t.permalink ? `https://audius.co${t.permalink}` : `https://audius.co/${t.user?.handle ?? ''}`,
     license: { name: 'Artist upload (Audius)', url: 'https://audius.co/legal/terms-of-use' },
@@ -58,6 +62,20 @@ export async function audiusSearch(query: string, offset = 0): Promise<Track[]> 
     `${base}/v1/tracks/search?${qs({ app_name: APP, query, limit: 30, offset })}`,
   );
   return r.data.filter(playable).map((t) => map(t, base));
+}
+
+/** Other tracks by the same Audius artist, most played first. */
+export async function audiusArtistTracks(userId: string, limit = 12): Promise<Track[]> {
+  const base = await host();
+  const r = await getJson<{ data: AudiusTrack[] }>(`${base}/v1/users/${encodeURIComponent(userId)}/tracks?${qs({ app_name: APP, limit, sort: 'plays' })}`);
+  return r.data.filter(playable).map((t) => map(t, base));
+}
+
+/** Artists Audius considers related (by shared listeners). */
+export async function audiusRelatedArtists(userId: string, limit = 6): Promise<{ id: string; name: string }[]> {
+  const base = await host();
+  const r = await getJson<{ data: { id: string; name: string }[] }>(`${base}/v1/users/${encodeURIComponent(userId)}/related?${qs({ app_name: APP, limit })}`);
+  return r.data.map((u) => ({ id: u.id, name: u.name }));
 }
 
 export const AUDIUS_GENRES = [

@@ -20,6 +20,7 @@ export function hash(s: string): number {
 export const hueOf = (s: string) => hash(s) % 360;
 
 const colorCache = new Map<string, number | null>();
+const paletteCache = new Map<string, [number, number] | null>();
 
 /**
  * Dominant vivid hue of an image, or null when the image is not CORS-readable.
@@ -51,11 +52,19 @@ export function artworkHue(src: string): Promise<number | null> {
         }
         let best = -1, hue: number | null = null;
         bins.forEach((v, i) => { if (v > best && v > 0.5) { best = v; hue = i * 10 + 5; } });
+        // second colour: strongest bin at least 40° away from the first
+        let second = -1, hue2: number | null = null;
+        bins.forEach((v, i) => {
+          const h = i * 10 + 5;
+          const d = hue === null ? 0 : Math.min(Math.abs(h - hue), 360 - Math.abs(h - hue));
+          if (d >= 40 && v > second && v > 0.25) { second = v; hue2 = h; }
+        });
         colorCache.set(src, hue);
+        paletteCache.set(src, hue === null ? null : [hue, hue2 ?? (hue + 50) % 360]);
         resolve(hue);
-      } catch { colorCache.set(src, null); resolve(null); }
+      } catch { colorCache.set(src, null); paletteCache.set(src, null); resolve(null); }
     };
-    img.onerror = () => { colorCache.set(src, null); resolve(null); };
+    img.onerror = () => { colorCache.set(src, null); paletteCache.set(src, null); resolve(null); };
     img.src = src;
   });
 }
@@ -66,3 +75,9 @@ export function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number)
 }
 
 export const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+/** Two dominant hues (degrees) of an image, or null when it isn't CORS-readable. */
+export async function artworkPalette(src: string): Promise<[number, number] | null> {
+  if (!paletteCache.has(src)) await artworkHue(src);
+  return paletteCache.get(src) ?? null;
+}

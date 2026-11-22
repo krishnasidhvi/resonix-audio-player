@@ -68,3 +68,14 @@ test('full analyse() returns sane shape', () => {
   assert.ok(a.energy >= 0 && a.energy <= 1);
   assert.ok(a.lufs < 0 && a.lufs > -30);
 });
+
+test('recommendation sound similarity: identical > half-time > unrelated', async () => {
+  const { soundSimilarity } = await import('../src/lib/recommend-core.ts');
+  const base = { bpm: 128, key: 'A minor', camelot: '8A', lufs: -8, energy: 0.8, wave: [], heat: [], peakSection: 0 };
+  const same = soundSimilarity(base, { ...base });
+  const half = soundSimilarity(base, { ...base, bpm: 64 });
+  const far = soundSimilarity(base, { ...base, bpm: 75, energy: 0.2, lufs: -22, camelot: '3B' });
+  assert.ok(same > 0.99, `same ${same}`);
+  assert.ok(half > 0.9, `half-time ${half}`);
+  assert.ok(far < 0.3, `far ${far}`);
+});

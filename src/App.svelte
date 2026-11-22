@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Cinematic from './components/Cinematic.svelte';
   import { player } from './lib/stores/player.svelte';
   import { library } from './lib/stores/library.svelte';
   import { settings } from './lib/stores/settings.svelte';
@@ -92,7 +93,8 @@
   ondrop={onDrop}
 >
   <Sidebar />
-  <main id="main" class="main">
+  {#if settings.cinematic !== 'off' && !ui.ambient}<div class="cine-layer"><Cinematic /></div>{/if}
+  <main id="main" class="main" class:over-cine={settings.cinematic !== 'off'}>
     {#key ui.route.name === 'search' ? 'search' : JSON.stringify(ui.route)}
       {#if ui.route.name === 'home'}<Home />
       {:else if ui.route.name === 'search'}<Search q={ui.route.q} />
@@ -132,7 +134,10 @@
     grid-template-areas: 'side main' 'bar bar';
   }
   .app.panel-open { grid-template-columns: var(--sidebar) minmax(0, 1fr) var(--panel); grid-template-areas: 'side main panel' 'bar bar bar'; }
-  .main { grid-area: main; overflow-y: auto; min-height: 0; background: radial-gradient(1200px 500px at 30% -10%, oklch(30% 0.06 var(--h) / 0.55), transparent 70%), var(--bg); transition: background 1s; }
+  .main { grid-area: main; overflow-y: auto; min-height: 0; position: relative; z-index: 1; background: radial-gradient(1200px 500px at 30% -10%, oklch(30% 0.06 var(--h) / 0.55), transparent 70%), var(--bg); transition: background 1s; }
+  .cine-layer { grid-area: main; position: relative; overflow: hidden; background: var(--bg); }
+  /* scrim keeps text readable over the moving scene */
+  .main.over-cine { background: linear-gradient(180deg, oklch(12% 0.02 var(--h) / 0.5), oklch(12% 0.02 var(--h) / 0.72) 40%, oklch(12% 0.02 var(--h) / 0.8)); }
   .drop { position: fixed; inset: 10px; z-index: 90; border: 2px dashed var(--accent); border-radius: 20px; background: oklch(12% 0.03 var(--h) / 0.85); display: grid; place-items: center; text-align: center; pointer-events: none; }
   .drop strong { font-size: 28px; }
   .toasts { position: fixed; left: 50%; bottom: calc(var(--bar) + 16px); transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; justify-items: center; pointer-events: none; }

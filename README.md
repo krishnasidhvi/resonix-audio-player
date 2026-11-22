@@ -32,6 +32,9 @@ Every track shows its source and licence and links back to the original page. If
 - **Loudness matching:** analysed tracks are levelled to −14 LUFS.
 - **Mixes well next:** suggests analysed tracks in a compatible key and within ±6% tempo.
 - **Journey:** draw a line across a tempo × energy map and the queue follows it.
+- **Similar to this:** recommendations for the playing track from the same artist, related artists (Audius), the same genre and tags, matching radio stations and, where both tracks are analysed, similar measured sound. Each one says why it was picked. **Start radio** queues them, and Resonix can keep playing similar music when the queue ends.
+- **Cinematic background:** a WebGL scene behind the app that follows the music. Beats and bass drive the light, energy picks the scene (nebula, pulse or aurora), major/minor key shifts the colour temperature, and the palette comes from the artwork. Off / subtle / vivid, and it respects reduced motion.
+- **Open in YouTube Music / Spotify:** plain search links from any track to those services.
 - **Raga clock:** a 24-hour dial of Hindustani prahars and Carnatic associations that plays openly licensed recordings of the ragas for the current hour.
 - **Synced lyrics** with word timing, tap-to-seek and a timing nudge, plus one-tap **Latin transliteration** for Telugu, Hindi, Tamil, Kannada, Malayalam, Bengali, Gujarati, Gurmukhi and Odia.
 - **Sound:** 10-band EQ with a live response curve and presets, a **hearing check** that builds a personal compensation curve, headphone **crossfeed**, crossfade or gapless playback.

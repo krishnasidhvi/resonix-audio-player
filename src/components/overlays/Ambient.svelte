@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Cinematic from '../Cinematic.svelte';
   import { t as tt } from '../../lib/i18n/i18n.svelte';
   import { player } from '../../lib/stores/player.svelte';
   import { ui } from '../../lib/stores/ui.svelte';
@@ -24,7 +25,7 @@
 
 <div class="amb" class:idle bind:this={root} onpointermove={wake} role="dialog" tabindex="-1" aria-modal="true" aria-label={tt('ambient.aria')}>
   {#if t}
-    <div class="bg" style:background-image={t.artwork ? `url("${t.artwork}")` : undefined}></div>
+    <div class="bg"><Cinematic variant="ambient" /></div>
     <div class="grid">
       <div class="left">
         <div class="art"><Artwork src={t.artwork} seed={t.artist + t.title} radius="18px" /></div>
@@ -50,7 +51,8 @@
   .amb { position: fixed; inset: 0; z-index: 80; background: oklch(10% 0.03 var(--h)); display: flex; flex-direction: column; padding: 5vh 5vw 3vh; overflow: hidden; cursor: default; }
   .amb.idle { cursor: none; }
   .amb.idle .controls, .amb.idle .close { opacity: 0; }
-  .bg { position: absolute; inset: -10%; background-size: cover; background-position: center; filter: blur(80px) saturate(1.4) brightness(0.45); transform: scale(1.1); }
+  .bg { position: absolute; inset: 0; }
+  .bg::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgb(0 0 0 / 0.15), rgb(0 0 0 / 0.55)); }
   .grid { position: relative; flex: 1; display: grid; grid-template-columns: minmax(260px, 0.8fr) 1.2fr; gap: 6vw; min-height: 0; align-items: center; }
   .left { display: grid; gap: 10px; align-content: center; }
   .art { width: min(38vh, 100%); box-shadow: 0 40px 90px rgb(0 0 0 / 0.6); border-radius: 18px; }

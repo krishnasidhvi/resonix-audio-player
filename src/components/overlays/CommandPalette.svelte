@@ -33,6 +33,8 @@
     { label: t('eq.hearingCheck'), icon: 'ear', run: () => (ui.hearingOpen = true) },
     { label: t('cmd.ambient'), hint: 'F', icon: 'expand', run: () => (ui.ambient = true) },
     { label: t('cmd.analyse'), icon: 'sparkle', run: () => player.analyse() },
+    { label: t('cmd.startRadio'), icon: 'live', run: () => player.startRadio() },
+    { label: t('cmd.cinematic', { mode: t(settings.cinematic === 'off' ? 'cinematic.subtle' : settings.cinematic === 'subtle' ? 'cinematic.vivid' : 'cinematic.off') }), icon: 'sparkle', run: () => (settings.cinematic = settings.cinematic === 'off' ? 'subtle' : settings.cinematic === 'subtle' ? 'vivid' : 'off') },
     { label: t('cmd.sleepTrack'), icon: 'moon', run: () => player.setSleep({ mode: 'track' }) },
     { label: t('cmd.sleep30'), icon: 'moon', run: () => player.setSleep({ mode: 'minutes', endsAt: Date.now() + 30 * 60000 }) },
     { label: settings.crossfade ? t('cmd.crossfadeOff') : t('cmd.crossfadeOn'), icon: 'wave', run: () => (settings.crossfade = settings.crossfade ? 0 : 6) },

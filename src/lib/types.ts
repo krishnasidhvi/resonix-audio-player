@@ -30,6 +30,11 @@ export interface Track {
   cors?: boolean;
   /** Local library only: key into the IndexedDB file-handle store. */
   localKey?: string;
+  /** Source-side artist/user id (Audius user id, Archive item id…) for "more like this". */
+  artistId?: string;
+  /** Free-form descriptors from the source (tags, mood) used by recommendations. */
+  tags?: string[];
+  mood?: string;
 }
 
 export interface Analysis {

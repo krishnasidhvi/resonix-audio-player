@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Similar from './Similar.svelte';
+  import { canLinkOut, spotifyUrl, youtubeMusicUrl } from '../../lib/external';
   import { t as tt } from '../../lib/i18n/i18n.svelte';
   import { keyLabel, licenceLabel, sourceName } from '../../lib/i18n/labels';
   import { player } from '../../lib/stores/player.svelte';
@@ -40,6 +42,12 @@
         <div class="lic">
           {#if t.license.url}<a href={t.license.url} target="_blank" rel="noopener">{licenceLabel(t.license)}</a>{:else}{licenceLabel(t.license)}{/if}
           {#if t.license.name.startsWith('CC')}<span class="faint"> · {tt('now.credit', { artist: t.artist })}</span>{/if}
+        </div>
+      {/if}
+      {#if canLinkOut(t)}
+        <div class="out row wrap">
+          <a href={youtubeMusicUrl(t)} target="_blank" rel="noopener">{tt('track.openYouTubeMusic')} <Icon name="external" size={12} /></a>
+          <a href={spotifyUrl(t)} target="_blank" rel="noopener">{tt('track.openSpotify')} <Icon name="external" size={12} /></a>
         </div>
       {/if}
     </div>
@@ -85,6 +93,7 @@
         </ul>
       </section>
     {/if}
+    <Similar />
   </div>
 {:else}
   <div class="empty">
@@ -102,6 +111,9 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; }
   .lic { color: var(--text-2); }
   .lic a { color: var(--accent); }
+  .out { gap: 14px; padding-top: 4px; border-top: 1px solid var(--line-soft); margin-top: 2px; }
+  .out a { color: var(--text-2); text-decoration: none; font-size: 12.5px; display: inline-flex; gap: 4px; align-items: center; }
+  .out a:hover { color: var(--text); }
   .section-head { margin-bottom: 8px; }
   h3.eyebrow { margin: 0 0 8px; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

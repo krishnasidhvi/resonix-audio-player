@@ -534,6 +534,31 @@ const en = {
   'keys.repeat': 'Repeat',
   'keys.loop': 'Set loop A / B',
   'keys.search': 'Search',
+
+  // added: recommendations, service links, cinematic background
+  'track.openYouTubeMusic': 'Open in YouTube Music',
+  'track.openSpotify': 'Open in Spotify',
+  'rec.title': 'Similar to this',
+  'rec.none': 'No similar tracks found yet.',
+  'rec.startRadio': 'Start radio',
+  'rec.radioStarted': 'Radio started from “{title}”',
+  'rec.reason.artist': 'Same artist',
+  'rec.reason.album': 'Same album',
+  'rec.reason.related': 'Related artist',
+  'rec.reason.genre': 'Same genre',
+  'rec.reason.tag': 'Similar tags',
+  'rec.reason.sound': 'Similar sound',
+  'rec.reason.station': 'Similar station',
+  'cmd.startRadio': 'Start radio from this track',
+  'toast.autoplay': 'Queue finished. Playing similar music.',
+  'settings.autoplay': 'Keep playing similar music',
+  'settings.autoplayHint': 'When the queue ends, Resonix adds tracks similar to the last one.',
+  'settings.cinematic': 'Cinematic background',
+  'settings.cinematicHint': 'A moving scene behind the app that follows the music: tempo, bass, energy, key and the artwork’s colours.',
+  'cinematic.off': 'Off',
+  'cinematic.subtle': 'Subtle',
+  'cinematic.vivid': 'Vivid',
+  'cmd.cinematic': 'Cinematic background: {mode}',
 } as const;
 
 export default en;

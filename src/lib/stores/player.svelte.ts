@@ -8,6 +8,7 @@ import { library } from './library.svelte';
 import { effectiveEq, settings } from './settings.svelte';
 import { ui } from './ui.svelte';
 import { t } from '../i18n/i18n.svelte';
+import { similarTo } from '../recommend';
 
 export type Repeat = 'off' | 'all' | 'one';
 export type Sleep = { mode: 'minutes'; endsAt: number } | { mode: 'track' } | null;
@@ -191,7 +192,32 @@ class Player {
     if (this.repeat === 'one') { engine.seek(0); void engine.resume(); return; }
     const n = this.nextIndex();
     if (n !== null) void this.load(n);
+    else if (settings.autoplay && this.current && !this.current.isLive) void this.continueWithSimilar();
     else { this.logListen(); this.playing = false; }
+  }
+
+  /** Queue ended: append music similar to the last track and keep going. */
+  private async continueWithSimilar() {
+    const last = this.current!;
+    const recs = await similarTo(last, library.local, new Set(this.queue.map((q) => q.id)), 10).catch(() => []);
+    if (this.current?.id !== last.id || !recs.length) { this.logListen(); this.playing = false; return; }
+    const at = this.queue.length;
+    this.queue.push(...recs.map((r) => $state.snapshot(r.track) as Track));
+    ui.toast(t('toast.autoplay'));
+    void this.load(at);
+  }
+
+  /** Replace everything after the current track with similar music. */
+  async startRadio(from = this.current) {
+    if (!from) return;
+    const recs = await similarTo(from, library.local, new Set([from.id]), 20);
+    if (!recs.length) { ui.toast(t('rec.none'), 'error'); return; }
+    if (this.current?.id === from.id) {
+      this.queue.splice(this.index + 1, Infinity, ...recs.map((r) => $state.snapshot(r.track) as Track));
+    } else {
+      this.playList([from, ...recs.map((r) => r.track)], 0);
+    }
+    ui.toast(t('rec.radioStarted', { title: from.title }));
   }
 
   toggle() {

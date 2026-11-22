@@ -14,6 +14,9 @@ export interface Settings {
   transliterate: boolean;
   reduceMotion: boolean;
   accent: 'artwork' | 'fixed';
+  /** Keep playing similar music when the queue ends. */
+  autoplay: boolean;
+  cinematic: 'off' | 'subtle' | 'vivid';
 }
 
 export const EQ_PRESETS: Record<string, number[]> = {
@@ -40,6 +43,8 @@ const DEFAULTS: Settings = {
   transliterate: true,
   reduceMotion: false,
   accent: 'artwork',
+  autoplay: true,
+  cinematic: 'subtle',
 };
 
 const KEY = 'resonix.settings.v2';

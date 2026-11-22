@@ -81,8 +81,11 @@ export function seasonalAt(date = new Date()) {
   return SEASONAL.find((s) => s.months.includes(date.getMonth()));
 }
 
-/** Internet Archive query matching common spellings ("Raag Yaman", "Raga Yaman", "Yaman Kalyan"). */
+/**
+ * Internet Archive query for recordings of a raga. The name must appear next to
+ * "raag/raga/rag" (either order): a bare name like "yaman" matches unrelated items.
+ */
 export function ragaQuery(name: string): string {
   const n = name.toLowerCase();
-  return `"raag ${n}" OR "raga ${n}" OR "rag ${n}" OR "${n}"`;
+  return [`raag ${n}`, `raga ${n}`, `rag ${n}`, `${n} raag`, `${n} raga`, `ragam ${n}`, `${n} ragam`].map((p) => `"${p}"`).join(' OR ');
 }

@@ -69,6 +69,7 @@
       <input type="range" min="0" max="12" step="1" bind:value={settings.crossfade} style:--fill="{(settings.crossfade / 12) * 100}%" /></label>
     <label class="switch"><input type="checkbox" bind:checked={settings.normalize} onchange={() => player.applyNormalization()} /><span>{t('settings.normalize')}<small>{t('settings.normalizeHint', { target: settings.normTarget })}</small></span></label>
     <label class="switch"><input type="checkbox" bind:checked={settings.autoAnalyse} /><span>{t('settings.autoAnalyse')}<small>{t('settings.autoAnalyseHint')}</small></span></label>
+    <label class="switch"><input type="checkbox" bind:checked={settings.autoplay} /><span>{t('settings.autoplay')}<small>{t('settings.autoplayHint')}</small></span></label>
     <button class="btn small" onclick={() => (ui.hearingOpen = true)}><Icon name="ear" size={15} /> {settings.hearingEq ? t('settings.hearingRedo') : t('settings.hearingRun')}</button>
   </section>
 
@@ -76,6 +77,14 @@
     <h2>{t('settings.display')}</h2>
     <label class="switch"><input type="checkbox" bind:checked={settings.transliterate} /><span>{t('settings.translit')}<small>{t('settings.translitHint')}</small></span></label>
     <label class="switch"><input type="checkbox" onchange={(e) => (settings.accent = e.currentTarget.checked ? 'artwork' : 'fixed')} checked={settings.accent === 'artwork'} /><span>{t('settings.tint')}</span></label>
+    <div class="field">
+      <span id="cine-label">{t('settings.cinematic')}<small>{t('settings.cinematicHint')}</small></span>
+      <div class="langs" role="radiogroup" aria-labelledby="cine-label">
+        {#each ['off', 'subtle', 'vivid'] as const as m}
+          <button role="radio" class="chip" class:active={settings.cinematic === m} aria-checked={settings.cinematic === m} onclick={() => (settings.cinematic = m)}>{t(`cinematic.${m}`)}</button>
+        {/each}
+      </div>
+    </div>
     <label class="switch"><input type="checkbox" bind:checked={settings.reduceMotion} /><span>{t('settings.reduceMotion')}</span></label>
   </section>
 
