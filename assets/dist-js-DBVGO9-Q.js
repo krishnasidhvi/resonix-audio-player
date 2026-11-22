@@ -1,0 +1,1 @@
+import{i as e}from"./core-5A5Ti_Rw.js";async function t(){await e(`plugin:process|restart`)}export{t as relaunch};

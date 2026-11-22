@@ -1,0 +1,20 @@
+{
+  "name": "Resonix",
+  "short_name": "Resonix",
+  "description": "Open music player: your files plus openly licensed music and live radio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#14121a",
+  "theme_color": "#14121a",
+  "icons": [
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./app-icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": { "audio/*": [".mp3", ".flac", ".m4a", ".ogg", ".opus", ".wav"] }
+    }
+  ]
+}
