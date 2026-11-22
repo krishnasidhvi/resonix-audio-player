@@ -38,7 +38,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "category": "AudioVideo",
+    "category": "Music",
     "shortDescription": "Open music player",
     "longDescription": "Plays your own music files plus openly licensed music from Audius, the Internet Archive, Openverse and Jamendo, and live radio. It includes on-device tempo, key and loudness analysis, synced lyrics, an EQ and a raga clock.",
     "android": {
