@@ -4,6 +4,11 @@ An open music player for the web and desktop. It plays **your own music files** 
 
 No account, no server, no tracking. Everything you do stays in your browser.
 
+## Get Resonix
+
+- **Windows app:** [download the latest release](https://github.com/krishnasidhvi/resonix-audio-player/releases/latest) and run `Resonix_…_x64-setup.exe`. The installer isn't code-signed, so Windows SmartScreen may warn you. Choose **More info**, then **Run anyway**.
+- **Web:** use it in the browser at [krishnasidhvi.github.io/resonix-audio-player](https://krishnasidhvi.github.io/resonix-audio-player/). It can also be installed as an app from the browser.
+
 ## Where the music comes from
 
 | Source | What it offers | Licence handling |
