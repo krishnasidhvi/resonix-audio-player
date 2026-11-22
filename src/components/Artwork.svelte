@@ -10,8 +10,11 @@
 
   // try the copy saved on this device, then src, then each alternate host, then the generated cover
   let attempt = $state(0);
-  $effect(() => { void src; attempt = 0; });
-  const candidates = $derived([offline.artFor(src), ...alts].filter(Boolean) as string[]);
+  // start over when the image changes, including when a copy saved on this device becomes
+  // available (saved covers load just after startup; offline, the remote one has failed by then)
+  const first = $derived(offline.artFor(src));
+  $effect(() => { void first; attempt = 0; });
+  const candidates = $derived([first, ...alts].filter(Boolean) as string[]);
   const current = $derived(candidates[attempt]);
   const failed = $derived(!current);
 
