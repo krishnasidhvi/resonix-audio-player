@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Setup Rust Toolchain
@@ -39,8 +39,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Resonix Studio v__VERSION__'
-          releaseBody: 'Standalone bit-perfect high-resolution audio player for Windows with 320kbps online streaming, WASAPI Exclusive support, and on-device acoustic vector ML.'
+          releaseName: 'Resonix v__VERSION__'
+          releaseBody: 'Resonix desktop app for Windows. Plays your own music files plus openly licensed music from Audius, the Internet Archive, Openverse and Jamendo, and live radio.'
           releaseDraft: false
           prerelease: false
           args: --target x86_64-pc-windows-msvc
