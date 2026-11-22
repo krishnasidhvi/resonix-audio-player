@@ -2,9 +2,9 @@
 
 [![Latest release](https://img.shields.io/github/v/release/krishnasidhvi/resonix-audio-player)](https://github.com/krishnasidhvi/resonix-audio-player/releases/latest)
 
-An open music player for the web and desktop. It plays **your own music files** plus **openly licensed music** from public sources, with on-device analysis, synced lyrics and a raga clock.
+An open music player for the web and desktop. It plays **your own music files**, **your own music server** and **openly licensed music** from public sources, with on-device analysis, synced lyrics, offline listening and a raga clock.
 
-No account, no server, no tracking. Everything you do stays in your browser.
+No account, no server, no tracking. Everything you do stays on your device.
 
 ## Get Resonix
 
@@ -16,14 +16,14 @@ No account, no server, no tracking. Everything you do stays in your browser.
 | Source | What it offers | Licence handling |
 |---|---|---|
 | Your files | MP3, FLAC, M4A/AAC, Ogg, Opus, WAV from a folder or drag-and-drop | Files never leave the device |
-| Your server | Navidrome / Subsonic-compatible servers and Jellyfin | Streams straight from your server to your browser |
+| Your server | Navidrome / Subsonic-compatible servers and Jellyfin | Streams straight from your server to Resonix |
 | [Audius](https://audius.co) | Full tracks uploaded by independent artists | Streamed through Audius's public API, which is how artists choose to share them |
 | [Internet Archive](https://archive.org/details/audio) | Concerts, 78s, classical, Hindustani & Carnatic recordings, netlabels | **Only** items declaring a Creative Commons or public-domain licence are searched or played |
 | [Openverse](https://openverse.org) | CC music indexed from Jamendo, Wikimedia Commons, ccMixter and more | Licence shown per track, linked to its terms |
 | [Jamendo](https://www.jamendo.com) (optional) | 600k+ CC tracks | Needs a free client ID in Settings |
 | [Radio Browser](https://www.radio-browser.info) | Tens of thousands of live stations | Live broadcast; HTTPS streams only |
 | [YouTube](https://www.youtube.com) | Official uploads by labels and artists: most Telugu, Hindi and English songs | Played only in YouTube's own embedded player, which stays visible (at least 200×200 px) with YouTube's controls and ads. Audio is never separated, downloaded or processed. Paste any YouTube / YouTube Music song, album or playlist link; search needs the user's own free API key (100 searches a day) |
-| [LRCLIB](https://lrclib.net) | Synced lyrics | Open community database |
+| [LRCLIB](https://lrclib.net) | Synced lyrics | Open community database; the desktop app can also publish to it |
 
 Every track shows its source and licence and links back to the original page. If you reuse CC music elsewhere, credit the artist as the licence requires.
 
@@ -37,10 +37,10 @@ Every track shows its source and licence and links back to the original page. If
 - **Similar to this:** recommendations for the playing track from the same artist, related artists (Audius), the same genre and tags, matching radio stations and, where both tracks are analysed, similar measured sound. Each one says why it was picked. **Start radio** queues them, and Resonix can keep playing similar music when the queue ends.
 - **Cinematic background:** a WebGL scene behind the app that follows the music. Beats and bass drive the light, energy picks the scene (nebula, pulse or aurora), major/minor key shifts the colour temperature, and the palette comes from the artwork. Off / subtle / vivid, and it respects reduced motion.
 - **Open in YouTube Music / Spotify:** plain search links from any track to those services.
-- **Your music server:** connect Navidrome (or any Subsonic-compatible server) or Jellyfin and stream your own collection with every Resonix feature. Only a salted token (Subsonic) or session token (Jellyfin) is kept, in this browser. The server must be reachable over HTTPS from the web app.
-- **Save for offline:** keep openly licensed Internet Archive and Openverse tracks on the device and play them without a connection.
+- **Your music server:** connect Navidrome (or any Subsonic-compatible server) or Jellyfin and stream your own collection with every Resonix feature. Only a salted token (Subsonic) or session token (Jellyfin) is kept, on this device. The web app needs the server on HTTPS; the desktop app also reaches plain `http://` servers on your home network.
+- **Offline listening:** save openly licensed Internet Archive and Openverse tracks on the device, one at a time or a whole album or playlist with **Save all for offline**. Each saved track keeps its cover art and lyrics. With no connection, a banner says so, tracks that aren't saved are dimmed, playback goes straight to saved tracks, and Resonix opens on your saved music. The web app itself (every language included) is cached on the first visit, so it opens offline too.
 - **Harmonic order:** reorder the queue so each track flows into the next by key (Camelot wheel) and tempo, using the on-device analysis.
-- **Lyrics editor:** tap along to sync lyrics line by line, keep them on this device, and download the `.lrc` file. (LRCLIB doesn't yet accept submissions from web pages; publish with its LRCGET app.)
+- **Lyrics editor:** tap along to sync lyrics line by line, keep them on this device, and download the `.lrc` file. In the desktop app, **Publish to LRCLIB** shares them with the open lyrics database. (LRCLIB doesn't accept submissions from web pages; on the web, publish with its LRCGET app.)
 - **Headphone correction:** pick your headphone model and Resonix applies its correction curve from the open-source [AutoEq](https://github.com/jaakkopasanen/AutoEq) measurements (MIT). The EQ uses the same 10 peaking bands as AutoEq, so profiles map one to one.
 - **Pop-out mini player:** a small always-on-top window with artwork and controls (Chrome and Edge, via Document Picture-in-Picture).
 - **Your daily mix and "Because you played…":** personal Home rows built from your own favourites, recent plays and the recommender, refreshed daily.
@@ -61,11 +61,13 @@ Every track shows its source and licence and links back to the original page. If
 npm install
 npm run dev      # http://localhost:5173
 npm run check    # svelte-check (TypeScript)
-npm test         # unit tests: analysis DSP, LRC parsing, transliteration, translation completeness
+npm test         # unit tests: analysis DSP, lyrics, translations, YouTube links, AutoEq, recommendations, harmonic order
 npm run build    # static site in dist/
 ```
 
-Stack: Svelte 5 + TypeScript + Vite. No runtime dependencies. All sources are called directly from the browser (each sends CORS headers), so `dist/` can be hosted on any static host.
+Stack: Svelte 5 + TypeScript + Vite. The only runtime dependencies are Tauri's JavaScript bindings, which load only inside the desktop app. All sources are called directly from the browser (each sends CORS headers), so `dist/` can be hosted on any static host.
+
+The build also writes `dist/precache.json`, the list of every build file; the service worker (`public/sw.js`) uses it to cache the whole app for offline use.
 
 Optional: set `VITE_JAMENDO_CLIENT_ID` at build time to enable Jamendo for every visitor.
 
@@ -76,7 +78,15 @@ npm run tauri dev
 npm run tauri build
 ```
 
-The desktop app is a thin shell around the same web app. Building it locally needs the [Rust toolchain](https://www.rust-lang.org/tools/install) and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform.
+The desktop app is a thin shell around the same web app. Its native side (`src-tauri/src`) adds only what a web page can't do:
+
+- `lrclib.rs`: publishing lyrics to LRCLIB, including its proof-of-work challenge.
+- `cover.rs`: keeping archive.org cover art for offline listening (archive.org serves images without CORS headers). It only fetches https images from archive.org.
+- Auto-update (see below).
+
+`.github/workflows/desktop-check.yml` compiles the desktop app and runs its Rust tests on every push that changes `src-tauri/`.
+
+Building it locally needs the [Rust toolchain](https://www.rust-lang.org/tools/install) and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform.
 
 #### Publishing a release
 
@@ -99,16 +109,17 @@ The release workflow signs updates with the private key in the repository secret
 ```
 src/
   lib/
-    audio/      engine.ts (Web Audio graph), analysis-core.ts (DSP), analysis.worker.ts
-    sources/    audius, archive, openverse, jamendo, radio, local (+ unified search)
+    audio/      engine.ts (Web Audio graph), analysis-core.ts (DSP), analysis.worker.ts, youtube-player.ts
+    sources/    audius, archive, openverse, jamendo, radio, youtube, server (Subsonic/Jellyfin), local (+ unified search)
     lyrics/     lrc parser, LRCLIB client, Indic transliteration
-    stores/     player, library, settings, ui (Svelte runes)
-    raga.ts     raga time theory data
+    stores/     player, library, settings, ui, offline (Svelte runes)
+    i18n/       en.ts (source strings), locales/*.ts, labels.ts
+    recommend.ts, harmonic.ts, autoeq.ts, personal.ts, pip.ts, desktop.ts, raga.ts
   components/   player bar, scrubber, side panel, overlays
-  i18n/         en.ts (source strings), locales/*.ts, labels.ts
-  views/        Home, Search, Library, Album, Playlist, Radio, Raga clock, Journey, Stats, Settings
+  views/        Home, Search, Library, Album, Playlist, Radio, YouTube, Server, Raga clock, Journey, Stats, Settings
+public/sw.js    offline app shell
 tests/          node:test unit tests
-src-tauri/      desktop shell
+src-tauri/      desktop shell (lrclib.rs, cover.rs)
 ```
 
 ## License
