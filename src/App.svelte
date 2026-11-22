@@ -15,6 +15,7 @@
   import { artworkHue, hueOf } from './lib/util';
   import { t } from './lib/i18n/i18n.svelte';
   import Sidebar from './components/Sidebar.svelte';
+  import Icon from './components/Icon.svelte';
   import PlayerBar from './components/PlayerBar.svelte';
   import SidePanel from './components/SidePanel.svelte';
   import EqPanel from './components/overlays/EqPanel.svelte';
@@ -34,7 +35,10 @@
   import Settings from './views/Settings.svelte';
 
   void library.load();
-  void offline.load();
+  // starting with no connection: open the music saved on this device instead of an empty Home
+  void offline.load().then(() => {
+    if (!offline.online && offline.entries.length && ui.route.name === 'home') ui.go('#/library/offline');
+  });
   let dragging = $state(false);
 
   // Accent hue follows the artwork (or a stable hue from the title when the image isn't readable).
@@ -43,7 +47,7 @@
     if (settings.accent !== 'artwork' || !cur) { document.documentElement.style.setProperty('--h', '285'); return; }
     const fallback = hueOf(cur.artist + cur.title);
     document.documentElement.style.setProperty('--h', String(fallback));
-    if (cur.artwork) artworkHue(cur.artwork).then((h) => { if (h !== null && player.current?.id === cur.id) document.documentElement.style.setProperty('--h', String(h)); });
+    if (cur.artwork) artworkHue(offline.artFor(cur.artwork)!).then((h) => { if (h !== null && player.current?.id === cur.id) document.documentElement.style.setProperty('--h', String(h)); });
   });
   $effect(() => { document.documentElement.classList.toggle('reduce-motion', settings.reduceMotion); });
   $effect(() => { const cur = player.current; document.title = cur ? `${cur.title} · ${cur.artist}` : 'Resonix'; });
@@ -109,6 +113,12 @@
   <Sidebar />
   {#if settings.cinematic !== 'off' && !ui.ambient}<div class="cine-layer"><Cinematic /></div>{/if}
   <main id="main" class="main" class:over-cine={settings.cinematic !== 'off'} class:dock-open={player.current?.source === 'youtube'}>
+    {#if !offline.online}
+      <div class="offline-bar" role="status">
+        <Icon name="download" size={14} /> <span>{t('offline.banner')}</span>
+        {#if !(ui.route.name === 'library' && ui.route.tab === 'offline')}<a href="#/library/offline">{t('offline.bannerLink')}</a>{/if}
+      </div>
+    {/if}
     {#key ui.route.name === 'search' ? 'search' : JSON.stringify(ui.route)}
       {#if ui.route.name === 'home'}<Home />
       {:else if ui.route.name === 'search'}<Search q={ui.route.q} />
@@ -161,6 +171,8 @@
   .cine-layer { grid-area: main; position: relative; overflow: hidden; background: var(--bg); }
   /* scrim keeps text readable over the moving scene */
   .main.over-cine { background: linear-gradient(180deg, oklch(12% 0.02 var(--h) / 0.5), oklch(12% 0.02 var(--h) / 0.72) 40%, oklch(12% 0.02 var(--h) / 0.8)); }
+  .offline-bar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 20px; font-size: 13px; font-weight: 550; background: color-mix(in oklch, var(--bg-raise) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .offline-bar a { color: var(--accent); margin-inline-start: auto; }
   .drop { position: fixed; inset: 10px; z-index: 90; border: 2px dashed var(--accent); border-radius: 20px; background: oklch(12% 0.03 var(--h) / 0.85); display: grid; place-items: center; text-align: center; pointer-events: none; }
   .drop strong { font-size: 28px; }
   .toasts { position: fixed; left: 50%; bottom: calc(var(--bar) + 16px); transform: translateX(-50%); z-index: 100; display: grid; gap: 8px; justify-items: center; pointer-events: none; }

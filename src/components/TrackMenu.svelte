@@ -51,7 +51,7 @@
         <button role="menuitem" onclick={act(async () => { await offline.remove(track.id); ui.toast(t('offline.removed')); })}>{t('offline.remove')}</button>
       {:else if canSaveOffline(track)}
         <button role="menuitem" disabled={track.id in offline.progress} onclick={act(saveOffline)}>
-          {track.id in offline.progress ? t('offline.saving', { pct: Math.round(offline.progress[track.id] * 100) }) : t('offline.save')}
+          {offline.savingLabel(track.id)}
         </button>
       {/if}
       {#if canLinkOut(track)}

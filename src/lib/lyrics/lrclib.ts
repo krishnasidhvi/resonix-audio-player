@@ -52,12 +52,26 @@ export async function removeLocalLyrics(id: string): Promise<void> {
   cache.delete(id);
 }
 
+// Lyrics of tracks saved for offline listening, kept next to the audio (see stores/offline.svelte.ts).
+const savedKey = (id: string) => `lyr:${id}`;
+/** Fetch and keep a track's LRCLIB lyrics on this device. */
+export async function keepLyricsOffline(track: Track): Promise<void> {
+  const l = await fetchLyrics(track);
+  if (l && !l.local) await db.set('offline', savedKey(track.id), JSON.parse(JSON.stringify(l)));
+}
+export async function forgetSavedLyrics(id: string): Promise<void> {
+  await db.del('offline', savedKey(id));
+  if (!cache.get(id)?.local) cache.delete(id);
+}
+
 export async function fetchLyrics(track: Track): Promise<Lyrics | null> {
   if (track.isLive) return null;
   if (cache.has(track.id)) return cache.get(track.id)!;
   const mine = await localLyrics(track.id);
   if (mine?.lrc) { const l: Lyrics = { synced: true, instrumental: false, lines: parseLrc(mine.lrc), local: true }; cache.set(track.id, l); return l; }
   if (mine?.plain) { const l: Lyrics = { synced: false, instrumental: false, lines: [], plain: mine.plain, local: true }; cache.set(track.id, l); return l; }
+  const kept = await db.get<Lyrics>('offline', savedKey(track.id)).catch(() => undefined);
+  if (kept) { cache.set(track.id, kept); return kept; }
   const title = cleanTitle(track.title);
   let artist = track.artist;
   // Many uploads are named "Artist - Title"
@@ -79,7 +93,7 @@ export async function fetchLyrics(track: Track): Promise<Lyrics | null> {
       const pick = list.find((r) => r.syncedLyrics && close(r)) ?? list.find((r) => close(r) && r.plainLyrics);
       if (pick) result = toLyrics(pick);
     }
-  } catch { result = null; }
+  } catch { return null; } // network trouble: don't remember "no lyrics", try again next time
   cache.set(track.id, result);
   return result;
 }

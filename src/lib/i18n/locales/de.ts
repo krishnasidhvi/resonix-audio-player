@@ -698,6 +698,23 @@ const de: Messages = {
   'lyr.publishFailed': 'Veröffentlichen fehlgeschlagen: {error}',
   'lyr.publishConfirm': 'Diesen synchronisierten Songtext auf LRCLIB veröffentlichen? Er ist dann für jede App, die LRCLIB nutzt, öffentlich, und Resonix kann ihn nicht wieder entfernen.',
   'lyr.publishDesktopHint': 'Teile diesen synchronisierten Songtext auf LRCLIB, der offenen Songtext-Datenbank, die Resonix und viele andere Player nutzen. Veröffentliche nur Songtexte, die du mit dem Song abgeglichen hast.',
+
+  // added: finishing offline listening
+  'offline.savingSize': 'Wird gespeichert … {size}',
+  'offline.saveAll': 'Alle offline speichern',
+  'offline.savingAll': '{done} von {total} wird gespeichert …',
+  'offline.stop': 'Stopp',
+  'offline.savedAll': '{done} von {total} offline gespeichert',
+  'offline.full': 'Auf diesem Gerät ist nicht genug Speicherplatz frei.',
+  'offline.noCors': 'Dieser Anbieter erlaubt nicht, seine Dateien im Browser zu speichern.',
+  'offline.failed': 'Download fehlgeschlagen ({status})',
+  'offline.notEligible': 'Dieser Titel kann nicht offline gespeichert werden.',
+  'offline.banner': 'Du bist offline. Auf diesem Gerät gespeicherte Musik spielt weiter.',
+  'offline.bannerLink': 'Gespeicherte Musik',
+  'offline.unavailable': 'Nicht auf diesem Gerät gespeichert, daher offline nicht abspielbar',
+  'offline.skipped': '„{title}“ ist nicht auf diesem Gerät gespeichert und wurde übersprungen.',
+  'offline.nothing': 'Du bist offline, und nichts in dieser Warteschlange ist auf diesem Gerät gespeichert.',
+  'offline.includes': 'Gespeicherte Titel behalten Cover und Songtext und funktionieren so ganz ohne Verbindung.',
 };
 
 export default de;

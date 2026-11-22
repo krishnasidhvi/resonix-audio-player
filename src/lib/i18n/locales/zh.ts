@@ -699,6 +699,23 @@ const zh: Messages = {
   'lyr.publishFailed': '无法发布：{error}',
   'lyr.publishConfirm': '要将这些同步歌词发布到 LRCLIB 吗？发布后，所有使用 LRCLIB 的应用都能看到它们，且 Resonix 无法将其撤下。',
   'lyr.publishDesktopHint': '在 LRCLIB 上分享这些同步歌词。LRCLIB 是 Resonix 和许多其他播放器使用的开放歌词数据库。请只发布已对照歌曲核对过的歌词。',
+
+  // added: finishing offline listening
+  'offline.savingSize': '正在保存… {size}',
+  'offline.saveAll': '全部离线保存',
+  'offline.savingAll': '正在保存第 {done} 首，共 {total} 首…',
+  'offline.stop': '停止',
+  'offline.savedAll': '已离线保存 {done} 首（共 {total} 首）',
+  'offline.full': '此设备的存储空间不足。',
+  'offline.noCors': '该网站不允许从浏览器保存其文件。',
+  'offline.failed': '下载失败（{status}）',
+  'offline.notEligible': '此曲目无法保存以供离线收听。',
+  'offline.banner': '你已离线。保存在此设备上的音乐仍可播放。',
+  'offline.bannerLink': '已保存的音乐',
+  'offline.unavailable': '未保存在此设备上，因此无法离线播放',
+  'offline.skipped': '“{title}”未保存在此设备上，已跳过。',
+  'offline.nothing': '你已离线，且此队列中没有保存在此设备上的曲目。',
+  'offline.includes': '已保存的曲目会同时保存封面和歌词，因此无需联网也能完整使用。',
 };
 
 export default zh;

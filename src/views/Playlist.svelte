@@ -6,6 +6,7 @@
   import Artwork from '../components/Artwork.svelte';
   import TrackList from '../components/TrackList.svelte';
   import Icon from '../components/Icon.svelte';
+  import SaveAllOffline from '../components/SaveAllOffline.svelte';
 
   let { id }: { id: string } = $props();
   const p = $derived(library.playlists.find((x) => x.id === id));
@@ -36,6 +37,7 @@
         <div class="row wrap actions">
           <button class="btn primary" onclick={() => player.playList(p.tracks, 0)} disabled={!p.tracks.length}><Icon name="play" size={16} /> {t('common.play')}</button>
           <button class="btn" onclick={() => { player.shuffle = true; player.playList(p.tracks, Math.floor(Math.random() * p.tracks.length)); }} disabled={!p.tracks.length}><Icon name="shuffle" size={16} /> {t('player.shuffle')}</button>
+          <SaveAllOffline tracks={p.tracks} />
           <button class="btn ghost" onclick={rename}>{t('playlist.rename')}</button>
           <button class="btn ghost" onclick={exportM3u} disabled={!p.tracks.length}>{t('playlist.export')}</button>
           <button class="btn ghost danger" onclick={del}><Icon name="trash" size={15} /> {t('playlist.delete')}</button>

@@ -698,6 +698,23 @@ const ja: Messages = {
   'lyr.publishFailed': '公開できませんでした：{error}',
   'lyr.publishConfirm': 'この同期歌詞を LRCLIB に公開しますか？LRCLIB を使うすべてのアプリで公開され、Resonix から取り下げることはできません。',
   'lyr.publishDesktopHint': 'この同期歌詞を LRCLIB で共有しましょう。LRCLIB は、Resonix をはじめ多くのプレーヤーが使うオープンな歌詞データベースです。曲と照らし合わせて確認した歌詞だけを公開してください。',
+
+  // added: finishing offline listening
+  'offline.savingSize': '保存中… {size}',
+  'offline.saveAll': 'すべてオフライン保存',
+  'offline.savingAll': '{total} 曲中 {done} 曲目を保存中…',
+  'offline.stop': '停止',
+  'offline.savedAll': '{total} 曲中 {done} 曲をオフライン保存しました',
+  'offline.full': 'このデバイスの空き容量が足りません。',
+  'offline.noCors': 'このホストはブラウザからのファイル保存を許可していません。',
+  'offline.failed': 'ダウンロードに失敗しました（{status}）',
+  'offline.notEligible': 'この曲はオフライン再生用に保存できません。',
+  'offline.banner': 'オフラインです。このデバイスに保存した音楽は再生できます。',
+  'offline.bannerLink': '保存した音楽',
+  'offline.unavailable': 'このデバイスに保存されていないため、オフラインでは再生できません',
+  'offline.skipped': '「{title}」はこのデバイスに保存されていないため、スキップしました。',
+  'offline.nothing': 'オフラインで、このキューにはこのデバイスに保存された曲がありません。',
+  'offline.includes': '保存した曲はジャケット画像と歌詞も保存されるので、接続がなくてもすべて使えます。',
 };
 
 export default ja;

@@ -52,7 +52,7 @@
             <span class="saved"><Icon name="download" size={12} /> {tt('offline.badge')}</span>
           {:else if canSaveOffline(t)}
             <button class="dl" disabled={t.id in offline.progress} onclick={async () => { try { await offline.save(t); ui.toast(tt('offline.saved', { title: t.title })); } catch (e) { ui.toast((e as Error).message, 'error'); } }}>
-              <Icon name="download" size={12} /> {t.id in offline.progress ? tt('offline.saving', { pct: Math.round(offline.progress[t.id] * 100) }) : tt('offline.save')}
+              <Icon name="download" size={12} /> {offline.savingLabel(t.id)}
             </button>
           {/if}
           <a href={youtubeMusicUrl(t)} target="_blank" rel="noopener">{tt('track.openYouTubeMusic')} <Icon name="external" size={12} /></a>

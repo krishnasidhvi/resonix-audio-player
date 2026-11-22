@@ -10,6 +10,7 @@
   import Artwork from '../components/Artwork.svelte';
   import TrackList from '../components/TrackList.svelte';
   import Icon from '../components/Icon.svelte';
+  import SaveAllOffline from '../components/SaveAllOffline.svelte';
 
   let { id }: { id: string } = $props();
   let album: Album | null = $state(null);
@@ -53,6 +54,7 @@
         <div class="row wrap actions">
           <button class="btn primary" onclick={() => player.playList(tracks, 0)} disabled={!tracks.length}><Icon name="play" size={16} /> {t('common.play')}</button>
           <button class="btn" onclick={() => player.enqueue(tracks)} disabled={!tracks.length}>{t('track.addQueue')}</button>
+          <SaveAllOffline {tracks} />
           <a class="btn ghost" href={album.pageUrl} target="_blank" rel="noopener">archive.org <Icon name="external" size={14} /></a>
         </div>
         <p class="lic small">

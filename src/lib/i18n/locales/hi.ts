@@ -698,6 +698,23 @@ const hi: Messages = {
   'lyr.publishFailed': 'पब्लिश नहीं हो सका: {error}',
   'lyr.publishConfirm': 'ये सिंक किए गए बोल LRCLIB पर पब्लिश करें? ये LRCLIB इस्तेमाल करने वाले हर ऐप के लिए पब्लिक हो जाएँगे, और Resonix इन्हें वापस नहीं हटा सकता।',
   'lyr.publishDesktopHint': 'इन सिंक किए गए बोलों को LRCLIB पर शेयर करें, जो बोलों का ओपन डेटाबेस है और जिसे Resonix और कई दूसरे प्लेयर इस्तेमाल करते हैं। सिर्फ़ वही बोल पब्लिश करें जिन्हें आपने गाने से मिलाकर जाँचा है।',
+
+  // added: finishing offline listening
+  'offline.savingSize': 'सहेजा जा रहा है… {size}',
+  'offline.saveAll': 'सब ऑफ़लाइन सहेजें',
+  'offline.savingAll': '{total} में से {done} सहेजा जा रहा है…',
+  'offline.stop': 'रोकें',
+  'offline.savedAll': '{total} में से {done} ऑफ़लाइन सहेजे गए',
+  'offline.full': 'इस डिवाइस पर पर्याप्त स्टोरेज नहीं है।',
+  'offline.noCors': 'यह होस्ट ब्राउज़र से अपनी फ़ाइलें सहेजने की अनुमति नहीं देता।',
+  'offline.failed': 'डाउनलोड विफल रहा ({status})',
+  'offline.notEligible': 'यह ट्रैक ऑफ़लाइन सुनने के लिए सहेजा नहीं जा सकता।',
+  'offline.banner': 'आप ऑफ़लाइन हैं। इस डिवाइस पर सहेजा गया संगीत अब भी चलेगा।',
+  'offline.bannerLink': 'सहेजा गया संगीत',
+  'offline.unavailable': 'इस डिवाइस पर सहेजा नहीं गया, इसलिए ऑफ़लाइन नहीं चल सकता',
+  'offline.skipped': '“{title}” इस डिवाइस पर सहेजा नहीं गया है, इसलिए छोड़ दिया गया।',
+  'offline.nothing': 'आप ऑफ़लाइन हैं, और इस कतार में कुछ भी इस डिवाइस पर सहेजा नहीं गया है।',
+  'offline.includes': 'सहेजे गए ट्रैक अपना कवर और बोल भी रखते हैं, इसलिए बिना कनेक्शन के पूरी तरह काम करते हैं।',
 };
 
 export default hi;

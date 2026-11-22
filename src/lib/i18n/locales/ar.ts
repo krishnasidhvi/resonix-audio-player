@@ -761,6 +761,23 @@ const ar: Messages = {
   'lyr.publishFailed': 'تعذّر النشر: {error}',
   'lyr.publishConfirm': 'هل تريد نشر هذه الكلمات المتزامنة على LRCLIB؟ ستصبح متاحة للجميع في كل تطبيق يستخدم LRCLIB، ولا يستطيع Resonix حذفها بعد ذلك.',
   'lyr.publishDesktopHint': 'شارك هذه الكلمات المتزامنة على LRCLIB، قاعدة بيانات الكلمات المفتوحة التي يستخدمها Resonix ومشغّلات أخرى كثيرة. لا تنشر إلا كلمات راجعتها مع الأغنية.',
+
+  // added: finishing offline listening
+  'offline.savingSize': 'جارٍ الحفظ… {size}',
+  'offline.saveAll': 'حفظ الكل للاستماع دون اتصال',
+  'offline.savingAll': 'جارٍ حفظ {done} من {total}…',
+  'offline.stop': 'إيقاف',
+  'offline.savedAll': 'تم حفظ {done} من {total} للاستماع دون اتصال',
+  'offline.full': 'لا توجد مساحة تخزين كافية على هذا الجهاز.',
+  'offline.noCors': 'لا يسمح هذا المضيف بحفظ ملفاته من المتصفح.',
+  'offline.failed': 'فشل التنزيل ({status})',
+  'offline.notEligible': 'لا يمكن حفظ هذا المقطع للاستماع دون اتصال.',
+  'offline.banner': 'أنت غير متصل. الموسيقى المحفوظة على هذا الجهاز ما زالت تعمل.',
+  'offline.bannerLink': 'الموسيقى المحفوظة',
+  'offline.unavailable': 'غير محفوظ على هذا الجهاز، لذا لا يمكن تشغيله دون اتصال',
+  'offline.skipped': '«{title}» غير محفوظ على هذا الجهاز، لذا تم تخطيه.',
+  'offline.nothing': 'أنت غير متصل، ولا يوجد في قائمة الانتظار هذه شيء محفوظ على هذا الجهاز.',
+  'offline.includes': 'تحتفظ المقاطع المحفوظة بصورة الغلاف وكلماتها، لذا تعمل بالكامل دون اتصال.',
 };
 
 export default ar;

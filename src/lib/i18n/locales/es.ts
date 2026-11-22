@@ -717,6 +717,23 @@ const es: Messages = {
   'lyr.publishFailed': 'No se pudo publicar: {error}',
   'lyr.publishConfirm': '¿Publicar esta letra sincronizada en LRCLIB? Será pública para todas las apps que usan LRCLIB y Resonix no podrá retirarla.',
   'lyr.publishDesktopHint': 'Comparte esta letra sincronizada en LRCLIB, la base de datos abierta de letras que usan Resonix y muchos otros reproductores. Publica solo letras que hayas comprobado con la canción.',
+
+  // added: finishing offline listening
+  'offline.savingSize': 'Guardando… {size}',
+  'offline.saveAll': 'Guardar todo sin conexión',
+  'offline.savingAll': 'Guardando {done} de {total}…',
+  'offline.stop': 'Detener',
+  'offline.savedAll': 'Se guardaron {done} de {total} sin conexión',
+  'offline.full': 'No hay suficiente espacio de almacenamiento en este dispositivo.',
+  'offline.noCors': 'Este servidor no permite guardar sus archivos desde el navegador.',
+  'offline.failed': 'La descarga falló ({status})',
+  'offline.notEligible': 'Esta canción no se puede guardar para escuchar sin conexión.',
+  'offline.banner': 'Estás sin conexión. La música guardada en este dispositivo sigue sonando.',
+  'offline.bannerLink': 'Música guardada',
+  'offline.unavailable': 'No está guardada en este dispositivo, así que no puede sonar sin conexión',
+  'offline.skipped': '«{title}» no está guardada en este dispositivo, así que se omitió.',
+  'offline.nothing': 'Estás sin conexión y nada de esta cola está guardado en este dispositivo.',
+  'offline.includes': 'Las canciones guardadas conservan su portada y su letra, así que funcionan por completo sin conexión.',
 };
 
 export default es;

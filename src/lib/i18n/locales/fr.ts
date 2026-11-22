@@ -713,6 +713,23 @@ const fr: Messages = {
   'lyr.publishFailed': 'Publication impossible : {error}',
   'lyr.publishConfirm': 'Publier ces paroles synchronisées sur LRCLIB ? Elles deviendront publiques pour toutes les applications qui utilisent LRCLIB, et Resonix ne pourra pas les retirer.',
   'lyr.publishDesktopHint': 'Partagez ces paroles synchronisées sur LRCLIB, la base de données de paroles ouverte qu’utilisent Resonix et de nombreux autres lecteurs. Ne publiez que des paroles que vous avez vérifiées avec la chanson.',
+
+  // added: finishing offline listening
+  'offline.savingSize': 'Enregistrement… {size}',
+  'offline.saveAll': 'Tout enregistrer hors ligne',
+  'offline.savingAll': 'Enregistrement de {done} sur {total}…',
+  'offline.stop': 'Arrêter',
+  'offline.savedAll': '{done} sur {total} enregistrés hors ligne',
+  'offline.full': 'Il n’y a pas assez d’espace de stockage sur cet appareil.',
+  'offline.noCors': 'Cet hébergeur ne permet pas d’enregistrer ses fichiers depuis le navigateur.',
+  'offline.failed': 'Échec du téléchargement ({status})',
+  'offline.notEligible': 'Ce titre ne peut pas être enregistré pour une écoute hors ligne.',
+  'offline.banner': 'Vous êtes hors ligne. La musique enregistrée sur cet appareil reste disponible.',
+  'offline.bannerLink': 'Musique enregistrée',
+  'offline.unavailable': 'Non enregistré sur cet appareil, donc impossible à lire hors ligne',
+  'offline.skipped': '« {title} » n’est pas enregistré sur cet appareil et a été ignoré.',
+  'offline.nothing': 'Vous êtes hors ligne et rien dans cette file d’attente n’est enregistré sur cet appareil.',
+  'offline.includes': 'Les titres enregistrés gardent leur pochette et leurs paroles, et fonctionnent entièrement sans connexion.',
 };
 
 export default fr;

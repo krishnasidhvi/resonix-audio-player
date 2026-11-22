@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { offline } from '../lib/stores/offline.svelte';
-  const fmtBytes = (b: number) => new Intl.NumberFormat(undefined, { style: 'unit', unit: b > 1e9 ? 'gigabyte' : 'megabyte', maximumFractionDigits: 1 }).format(b > 1e9 ? b / 1e9 : b / 1e6);
+  import { fmtBytes, offline } from '../lib/stores/offline.svelte';
   import { canPickFolder, ensurePermission, importFiles, importFolder, requestPermission } from '../lib/sources/local';
   import { analyseTrack, cachedAnalysis } from '../lib/audio/analysis';
   import { library } from '../lib/stores/library.svelte';
@@ -125,6 +124,7 @@
         <span class="faint">{t('count.tracks', { count: offline.entries.length })} · {t('offline.size', { size: fmtBytes(offline.totalBytes) })}</span>
         <button class="btn small ghost danger" onclick={() => { if (confirm(t('offline.clearConfirm'))) offline.clear(); }}>{t('offline.clear')}</button>
       </div>
+      <p class="faint small">{t('offline.includes')}</p>
       <section class="section"><TrackList tracks={offline.entries.map((e) => e.track)} showSource onRemove={(tr) => offline.remove(tr.id)} /></section>
     {:else}<div class="empty section"><Icon name="download" size={28} /><h3>{t('offline.empty')}</h3><p>{t('offline.emptyHint')}</p></div>{/if}
   {:else}

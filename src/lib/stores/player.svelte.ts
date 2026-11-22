@@ -113,6 +113,14 @@ class Player {
       this.queue = [first, ...shuffled(this.queue)];
       start = 0;
     }
+    // offline and the tapped track isn't saved: play the nearest saved one in the list instead
+    // (load() itself only looks ahead, so a finished queue doesn't start over by itself)
+    const picked = this.queue[start];
+    if (picked && !offline.online && !offline.playableOffline(picked)) {
+      const order = [...this.queue.keys()].sort((a, b) => Math.abs(a - start) - Math.abs(b - start) || b - a);
+      const j = order.find((k) => offline.playableOffline(this.queue[k]));
+      if (j !== undefined) { ui.toast(t('offline.skipped', { title: picked.title })); start = j; }
+    }
     void this.load(start);
   }
 
@@ -147,9 +155,28 @@ class Player {
     return null;
   }
 
+  /** With no connection, the first track from i on (wrapping only on repeat-all) that can still play. */
+  private playableFrom(i: number): number | null {
+    const n = this.queue.length;
+    for (let k = 0; k < n; k++) {
+      const j = i + k;
+      if (j >= n && this.repeat !== 'all') return null;
+      if (offline.playableOffline(this.queue[j % n])) return j % n;
+    }
+    return null;
+  }
+
   async load(i: number, opts: { crossfade?: number; startAt?: number } = {}) {
-    const track = this.queue[i];
+    let track = this.queue[i];
     if (!track) return;
+    // offline: go straight to the next track saved on this device instead of failing one by one
+    if (!offline.online && !offline.playableOffline(track)) {
+      const j = this.playableFrom(i);
+      if (j === null) { ui.toast(t('offline.nothing'), 'error'); engine.stop(); this.playing = false; return; }
+      ui.toast(t('offline.skipped', { title: track.title }));
+      i = j;
+      track = this.queue[i];
+    }
     const token = ++this.loadToken;
     this.logListen();
     this.index = i;
@@ -392,7 +419,7 @@ class Player {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.metadata = new MediaMetadata({
       title: t.title, artist: t.artist, album: t.album ?? '',
-      artwork: t.artwork ? [{ src: t.artwork, sizes: '512x512' }] : [],
+      artwork: t.artwork ? [{ src: offline.artFor(t.artwork)!, sizes: '512x512' }] : [],
     });
   }
 }

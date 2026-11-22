@@ -1,6 +1,7 @@
 <script lang="ts">
   import { engine } from '../lib/audio/engine';
   import { player } from '../lib/stores/player.svelte';
+  import { offline } from '../lib/stores/offline.svelte';
   import { settings } from '../lib/stores/settings.svelte';
   import { artworkPalette, hueOf } from '../lib/util';
   import { AudioFollower, chooseScene, timeRate, warmth } from '../lib/cinematic/director';
@@ -23,7 +24,7 @@
     const energy = a?.energy ?? 0.45;
     target = { ...target, ...base, scene: chooseScene(tr, a), warm: warmth(a), energy, rate: timeRate(a, energy), bpm: a?.bpm ?? null };
     if (tr.artwork) {
-      artworkPalette(tr.artwork).then((p) => {
+      artworkPalette(offline.artFor(tr.artwork)!).then((p) => {
         if (p && player.current?.id === tr.id) target = { ...target, h1: p[0] / 360, h2: p[1] / 360 };
       });
     }

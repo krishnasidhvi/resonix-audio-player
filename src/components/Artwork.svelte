@@ -1,5 +1,6 @@
 <script lang="ts">
   import { hash } from '../lib/util';
+  import { offline } from '../lib/stores/offline.svelte';
 
   let { src, alts = [], seed, size = '100%', radius = 'var(--radius-s)', alt = '', fit = 'cover' }: {
     src?: string; alts?: string[]; seed: string; size?: string; radius?: string; alt?: string;
@@ -7,10 +8,10 @@
     fit?: 'cover' | 'contain';
   } = $props();
 
-  // try src, then each alternate host, then fall back to the generated cover
+  // try the copy saved on this device, then src, then each alternate host, then the generated cover
   let attempt = $state(0);
   $effect(() => { void src; attempt = 0; });
-  const candidates = $derived([src, ...alts].filter(Boolean) as string[]);
+  const candidates = $derived([offline.artFor(src), ...alts].filter(Boolean) as string[]);
   const current = $derived(candidates[attempt]);
   const failed = $derived(!current);
 

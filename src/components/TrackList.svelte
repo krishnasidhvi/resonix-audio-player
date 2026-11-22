@@ -4,6 +4,7 @@
   import type { Track } from '../lib/types';
   import { player } from '../lib/stores/player.svelte';
   import { library } from '../lib/stores/library.svelte';
+  import { offline } from '../lib/stores/offline.svelte';
   import { SOURCES } from '../lib/sources';
   import { fmtTime } from '../lib/util';
   import Artwork from './Artwork.svelte';
@@ -32,7 +33,8 @@
   {#each shown as t, i (t.id + ':' + i)}
     {@const cur = player.current?.id === t.id}
     {@const fav = library.isFavorite(t.id)}
-    <li class="row-item" class:current={cur}>
+    {@const unavailable = !offline.online && !offline.playableOffline(t)}
+    <li class="row-item" class:current={cur} class:unavailable title={unavailable ? tr('offline.unavailable') : undefined}>
       <button class="hit" aria-label={tr('track.playBy', { title: t.title, artist: artistLabel(t.artist) })} onclick={() => player.playList(tracks, i)}></button>
       <span class="idx num">
         {#if cur && player.playing}
@@ -44,6 +46,7 @@
         <span class="title ellipsis" dir="auto">{t.title}</span>
         <span class="sub ellipsis" dir="auto">
           {#if t.isLive}<span class="live">{tr('common.live')}</span>{/if}
+          {#if offline.has(t.id)}<span class="saved" role="img" aria-label={tr('offline.badge')} title={tr('offline.badge')}><Icon name="download" size={12} /></span>{/if}
           {artistLabel(t.artist)}{#if t.album && !t.isLive}<span class="faint"> · {t.album}</span>{/if}
         </span>
       </span>
@@ -91,6 +94,9 @@
   .fav.on { color: var(--accent); }
   .dur { text-align: end; font-size: 13px; }
   .live { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--danger); margin-inline-end: 6px; }
+  .saved { display: inline-flex; vertical-align: -2px; color: var(--accent); margin-inline-end: 6px; }
+  /* offline, and not saved on this device */
+  .row-item.unavailable { opacity: 0.42; }
   .bars { display: inline-flex; gap: 2px; height: 12px; align-items: end; }
   .bars i { width: 3px; background: var(--accent); border-radius: 1px; animation: bar 0.9s ease-in-out infinite alternate; }
   .bars i:nth-child(2) { animation-delay: -0.3s; } .bars i:nth-child(3) { animation-delay: -0.6s; }
