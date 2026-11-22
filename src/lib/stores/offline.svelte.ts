@@ -12,6 +12,7 @@ import { db } from '../db';
 import type { Track } from '../types';
 import { t } from '../i18n/i18n.svelte';
 import { forgetSavedLyrics, keepLyricsOffline } from '../lyrics/lrclib';
+import { fetchCover, isDesktop, nativeCoverHost } from '../desktop';
 
 export interface OfflineEntry { track: Track; bytes: number; savedAt: number }
 
@@ -55,12 +56,16 @@ class Offline {
       addEventListener('online', () => (this.online = true));
       addEventListener('offline', () => (this.online = false));
       this.entries = (await db.get<OfflineEntry[]>('kv', 'offline-index').catch(() => undefined)) ?? [];
+      const missing: Track[] = [];
       for (const e of this.entries) {
         const url = e.track.artwork;
         if (!url || this.artUrls[url]) continue;
         const art = await db.get<Blob>('offline', `art:${e.track.id}`).catch(() => undefined);
         if (art) this.artUrls[url] = URL.createObjectURL(art);
+        else missing.push(e.track);
       }
+      // desktop: fetch covers of tracks saved before the app could keep archive.org covers
+      if (isDesktop && this.online && missing.length) void this.backfillArt(missing);
     })();
     return this.loaded;
   }
@@ -136,11 +141,22 @@ class Offline {
       await db.set('offline', `art:${tr.id}`, img);
       this.artUrls[url] = URL.createObjectURL(img);
     } catch {
-      // the host doesn't allow reading the image: keep an opaque copy for the service worker to serve
+      // the host doesn't allow pages to read the image (archive.org): the desktop app fetches it natively
+      if (isDesktop && nativeCoverHost(url)) {
+        const img = await fetchCover(url);
+        await db.set('offline', `art:${tr.id}`, img);
+        this.artUrls[url] = URL.createObjectURL(img);
+        return;
+      }
+      // in the browser, keep an opaque copy for the service worker to serve
       if (!('caches' in globalThis)) return;
       const opaque = await fetch(url, { mode: 'no-cors' });
       await (await caches.open(ART_CACHE)).put(url, opaque);
     }
+  }
+
+  private async backfillArt(tracks: Track[]) {
+    for (const tr of tracks) await this.saveArt(tr).catch(() => {});
   }
 
   /** Save every eligible track in a list, one after another. Returns how many were saved. */
