@@ -594,6 +594,15 @@ const en = {
   'radio.shelf.ta': 'Tamil hits',
   'radio.shelf.enhits': 'English hits',
   'radio.shelf.enpop': 'English pop',
+
+  // desktop updates
+  'update.title': 'App update',
+  'update.available': 'Resonix {version} is available',
+  'update.install': 'Update and restart',
+  'update.later': 'Later',
+  'update.downloading': 'Downloading update…',
+  'update.downloadingPct': 'Downloading update… {pct}%',
+  'update.failed': 'The update didn’t install. Try again later.',
 } as const;
 
 export default en;

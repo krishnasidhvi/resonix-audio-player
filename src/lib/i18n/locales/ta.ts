@@ -592,6 +592,15 @@ const ta: Messages = {
   'radio.shelf.ta': 'தமிழ் ஹிட்ஸ்',
   'radio.shelf.enhits': 'ஆங்கில ஹிட்ஸ்',
   'radio.shelf.enpop': 'ஆங்கில பாப்',
+
+  // desktop updates
+  'update.title': 'ஆப் புதுப்பிப்பு',
+  'update.available': 'Resonix {version} கிடைக்கிறது',
+  'update.install': 'புதுப்பித்து மீண்டும் தொடங்கு',
+  'update.later': 'பிறகு',
+  'update.downloading': 'புதுப்பிப்பு பதிவிறக்கப்படுகிறது…',
+  'update.downloadingPct': 'புதுப்பிப்பு பதிவிறக்கப்படுகிறது… {pct}%',
+  'update.failed': 'புதுப்பிப்பு நிறுவப்படவில்லை. பிறகு மீண்டும் முயலவும்.',
 };
 
 export default ta;

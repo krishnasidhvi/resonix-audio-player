@@ -655,6 +655,15 @@ const ar: Messages = {
   'radio.shelf.ta': 'أغانٍ تاميلية رائجة',
   'radio.shelf.enhits': 'أغانٍ إنجليزية رائجة',
   'radio.shelf.enpop': 'بوب إنجليزي',
+
+  // desktop updates
+  'update.title': 'تحديث التطبيق',
+  'update.available': '\u200fResonix {version} متاح',
+  'update.install': 'حدِّث وأعد التشغيل',
+  'update.later': 'لاحقًا',
+  'update.downloading': 'جارٍ تنزيل التحديث…',
+  'update.downloadingPct': 'جارٍ تنزيل التحديث… {pct}٪',
+  'update.failed': 'لم يُثبَّت التحديث. حاول مرة أخرى لاحقًا.',
 };
 
 export default ar;

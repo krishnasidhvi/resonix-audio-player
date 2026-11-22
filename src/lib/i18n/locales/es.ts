@@ -612,6 +612,15 @@ const es: Messages = {
   'radio.shelf.ta': 'Éxitos en tamil',
   'radio.shelf.enhits': 'Éxitos en inglés',
   'radio.shelf.enpop': 'Pop en inglés',
+
+  // desktop updates
+  'update.title': 'Actualización de la app',
+  'update.available': 'Resonix {version} está disponible',
+  'update.install': 'Actualizar y reiniciar',
+  'update.later': 'Más tarde',
+  'update.downloading': 'Descargando actualización…',
+  'update.downloadingPct': 'Descargando actualización… {pct} %',
+  'update.failed': 'No se pudo instalar la actualización. Inténtalo más tarde.',
 };
 
 export default es;

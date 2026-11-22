@@ -2,6 +2,7 @@
   import YouTube from './views/YouTube.svelte';
   import YouTubeDock from './components/YouTubeDock.svelte';
   import Cinematic from './components/Cinematic.svelte';
+  import UpdatePrompt from './components/UpdatePrompt.svelte';
   import { player } from './lib/stores/player.svelte';
   import { library } from './lib/stores/library.svelte';
   import { settings } from './lib/stores/settings.svelte';
@@ -126,6 +127,8 @@
 {#if dragging}
   <div class="drop" aria-hidden="true"><div><strong class="display">{t('drop.title')}</strong><p class="muted">{t('drop.hint')}</p></div></div>
 {/if}
+
+<UpdatePrompt />
 
 <div class="toasts" role="status" aria-live="polite">
   {#each ui.toasts as t (t.id)}<div class="toast" class:error={t.kind === 'error'}>{t.text}</div>{/each}

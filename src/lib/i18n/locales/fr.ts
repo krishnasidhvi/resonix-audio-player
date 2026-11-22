@@ -608,6 +608,15 @@ const fr: Messages = {
   'radio.shelf.ta': 'Tubes tamouls',
   'radio.shelf.enhits': 'Tubes anglophones',
   'radio.shelf.enpop': 'Pop anglophone',
+
+  // desktop updates
+  'update.title': 'Mise à jour de l’app',
+  'update.available': 'Resonix {version} est disponible',
+  'update.install': 'Mettre à jour et redémarrer',
+  'update.later': 'Plus tard',
+  'update.downloading': 'Téléchargement de la mise à jour…',
+  'update.downloadingPct': 'Téléchargement de la mise à jour… {pct} %',
+  'update.failed': 'La mise à jour n’a pas pu s’installer. Réessayez plus tard.',
 };
 
 export default fr;

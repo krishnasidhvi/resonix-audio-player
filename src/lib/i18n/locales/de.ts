@@ -593,6 +593,15 @@ const de: Messages = {
   'radio.shelf.ta': 'Tamil-Hits',
   'radio.shelf.enhits': 'Englische Hits',
   'radio.shelf.enpop': 'Englischer Pop',
+
+  // desktop updates
+  'update.title': 'App-Update',
+  'update.available': 'Resonix {version} ist verfügbar',
+  'update.install': 'Aktualisieren und neu starten',
+  'update.later': 'Später',
+  'update.downloading': 'Update wird heruntergeladen…',
+  'update.downloadingPct': 'Update wird heruntergeladen… {pct} %',
+  'update.failed': 'Das Update wurde nicht installiert. Versuche es später erneut.',
 };
 
 export default de;

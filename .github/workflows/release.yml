@@ -37,10 +37,13 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: 'Resonix v__VERSION__'
           releaseBody: 'Resonix desktop app for Windows. Plays your own music files plus openly licensed music from Audius, the Internet Archive, Openverse and Jamendo, and live radio.'
           releaseDraft: false
           prerelease: false
+          includeUpdaterJson: true
           args: --target x86_64-pc-windows-msvc

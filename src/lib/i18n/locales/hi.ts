@@ -592,6 +592,15 @@ const hi: Messages = {
   'radio.shelf.ta': 'तमिल हिट्स',
   'radio.shelf.enhits': 'इंग्लिश हिट्स',
   'radio.shelf.enpop': 'इंग्लिश पॉप',
+
+  // desktop updates
+  'update.title': 'ऐप अपडेट',
+  'update.available': 'Resonix {version} उपलब्ध है',
+  'update.install': 'अपडेट करें और फिर से शुरू करें',
+  'update.later': 'बाद में',
+  'update.downloading': 'अपडेट डाउनलोड हो रहा है…',
+  'update.downloadingPct': 'अपडेट डाउनलोड हो रहा है… {pct}%',
+  'update.failed': 'अपडेट इंस्टॉल नहीं हुआ। बाद में फिर से कोशिश करें।',
 };
 
 export default hi;

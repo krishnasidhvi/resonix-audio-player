@@ -593,6 +593,15 @@ const zh: Messages = {
   'radio.shelf.ta': '泰米尔语热歌',
   'radio.shelf.enhits': '英语热歌',
   'radio.shelf.enpop': '英语流行',
+
+  // desktop updates
+  'update.title': '应用更新',
+  'update.available': 'Resonix {version} 现已推出',
+  'update.install': '更新并重启',
+  'update.later': '稍后',
+  'update.downloading': '正在下载更新…',
+  'update.downloadingPct': '正在下载更新… {pct}%',
+  'update.failed': '更新未能安装，请稍后重试。',
 };
 
 export default zh;

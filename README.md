@@ -79,6 +79,12 @@ The desktop app is a thin shell around the same web app. Building it locally nee
 
 The build takes about 10 minutes. The installers are not code-signed, so Windows SmartScreen warns on first run.
 
+#### Auto-update
+
+From v2.2.0 the desktop app checks `releases/latest/download/latest.json` a few seconds after it starts and offers to download and install a newer release. Each update is verified against the public key in `tauri.conf.json` (`plugins.updater.pubkey`).
+
+The release workflow signs updates with the private key in the repository secret `TAURI_SIGNING_PRIVATE_KEY`. The key has no password, so `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` is left unset. Keep a backup of the private key: if it's lost, installed apps can't verify any future update and everyone has to reinstall by hand.
+
 ## Layout
 
 ```

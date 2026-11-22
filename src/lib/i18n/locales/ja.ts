@@ -592,6 +592,15 @@ const ja: Messages = {
   'radio.shelf.ta': 'タミル語ヒット',
   'radio.shelf.enhits': '英語ヒット',
   'radio.shelf.enpop': '英語ポップ',
+
+  // desktop updates
+  'update.title': 'アプリのアップデート',
+  'update.available': 'Resonix {version} が利用可能です',
+  'update.install': 'アップデートして再起動',
+  'update.later': '後で',
+  'update.downloading': 'アップデートをダウンロード中…',
+  'update.downloadingPct': 'アップデートをダウンロード中… {pct}%',
+  'update.failed': 'アップデートをインストールできませんでした。後でもう一度お試しください。',
 };
 
 export default ja;

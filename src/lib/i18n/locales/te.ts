@@ -593,6 +593,15 @@ const te: Messages = {
   'radio.shelf.ta': 'తమిళ్ హిట్స్',
   'radio.shelf.enhits': 'ఇంగ్లీష్ హిట్స్',
   'radio.shelf.enpop': 'ఇంగ్లీష్ పాప్',
+
+  // desktop updates
+  'update.title': 'యాప్ అప్\u200cడేట్',
+  'update.available': 'Resonix {version} అందుబాటులో ఉంది',
+  'update.install': 'అప్\u200cడేట్ చేసి రీస్టార్ట్ చేయండి',
+  'update.later': 'తర్వాత',
+  'update.downloading': 'అప్\u200cడేట్ డౌన్\u200cలోడ్ అవుతోంది…',
+  'update.downloadingPct': 'అప్\u200cడేట్ డౌన్\u200cలోడ్ అవుతోంది… {pct}%',
+  'update.failed': 'అప్\u200cడేట్ ఇన్\u200cస్టాల్ కాలేదు. తర్వాత మళ్లీ ప్రయత్నించండి.',
 };
 
 export default te;
