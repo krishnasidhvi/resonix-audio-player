@@ -1,0 +1,45 @@
+name: Desktop app check
+
+# Compiles the Tauri desktop crate and runs its unit tests whenever the desktop code changes,
+# so Rust changes are verified before a release tag is pushed.
+on:
+  push:
+    branches: [ master ]
+    paths: [ 'src-tauri/**', '.github/workflows/desktop-check.yml' ]
+  pull_request:
+    paths: [ 'src-tauri/**' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cargo-test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # tauri::generate_context!() embeds the built web app, so it must exist before compiling
+      - name: Build the web app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Cargo test
+        working-directory: src-tauri
+        run: cargo test --no-fail-fast

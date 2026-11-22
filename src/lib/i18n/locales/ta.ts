@@ -690,6 +690,14 @@ const ta: Messages = {
   'source.server': 'உங்கள் சர்வர்',
   'source.server.blurb': 'உங்கள் சொந்த Navidrome அல்லது Jellyfin',
   'licence.server': 'உங்கள் சர்வர்',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'LRCLIB இல் வெளியிடு',
+  'lyr.publishing': 'வெளியிடப்படுகிறது…',
+  'lyr.published': 'LRCLIB இல் வெளியிடப்பட்டன',
+  'lyr.publishFailed': 'வெளியிட முடியவில்லை: {error}',
+  'lyr.publishConfirm': 'இந்த ஒத்திசைக்கப்பட்ட வரிகளை LRCLIB இல் வெளியிடவா? LRCLIB ஐப் பயன்படுத்தும் ஒவ்வொரு ஆப்பிலும் இவை பொதுவில் தெரியும், Resonix ஆல் இவற்றை மீண்டும் நீக்க முடியாது.',
+  'lyr.publishDesktopHint': 'இந்த ஒத்திசைக்கப்பட்ட வரிகளை LRCLIB இல் பகிருங்கள். Resonix உட்பட பல பிளேயர்கள் பயன்படுத்தும் திறந்த பாடல் வரிகள் தரவுத்தளம் இது. பாடலுடன் சரிபார்த்த வரிகளை மட்டுமே வெளியிடுங்கள்.',
 };
 
 export default ta;

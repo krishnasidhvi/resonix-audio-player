@@ -709,6 +709,14 @@ const es: Messages = {
   'source.server': 'Tu servidor',
   'source.server.blurb': 'Tu propio Navidrome o Jellyfin',
   'licence.server': 'Tu servidor',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'Publicar en LRCLIB',
+  'lyr.publishing': 'Publicando…',
+  'lyr.published': 'Publicada en LRCLIB',
+  'lyr.publishFailed': 'No se pudo publicar: {error}',
+  'lyr.publishConfirm': '¿Publicar esta letra sincronizada en LRCLIB? Será pública para todas las apps que usan LRCLIB y Resonix no podrá retirarla.',
+  'lyr.publishDesktopHint': 'Comparte esta letra sincronizada en LRCLIB, la base de datos abierta de letras que usan Resonix y muchos otros reproductores. Publica solo letras que hayas comprobado con la canción.',
 };
 
 export default es;

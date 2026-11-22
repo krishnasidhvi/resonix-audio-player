@@ -690,6 +690,14 @@ const ja: Messages = {
   'source.server': 'あなたのサーバー',
   'source.server.blurb': '自分の Navidrome または Jellyfin',
   'licence.server': 'あなたのサーバー',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'LRCLIB に公開',
+  'lyr.publishing': '公開中…',
+  'lyr.published': 'LRCLIB に公開しました',
+  'lyr.publishFailed': '公開できませんでした：{error}',
+  'lyr.publishConfirm': 'この同期歌詞を LRCLIB に公開しますか？LRCLIB を使うすべてのアプリで公開され、Resonix から取り下げることはできません。',
+  'lyr.publishDesktopHint': 'この同期歌詞を LRCLIB で共有しましょう。LRCLIB は、Resonix をはじめ多くのプレーヤーが使うオープンな歌詞データベースです。曲と照らし合わせて確認した歌詞だけを公開してください。',
 };
 
 export default ja;

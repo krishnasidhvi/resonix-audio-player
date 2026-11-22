@@ -693,6 +693,14 @@ const en = {
   'source.server': 'Your server',
   'source.server.blurb': 'Your own Navidrome or Jellyfin',
   'licence.server': 'Your server',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'Publish to LRCLIB',
+  'lyr.publishing': 'Publishing…',
+  'lyr.published': 'Published to LRCLIB',
+  'lyr.publishFailed': 'Couldn’t publish: {error}',
+  'lyr.publishConfirm': 'Publish these synced lyrics to LRCLIB? They become public for every app that uses LRCLIB, and Resonix can’t take them back down.',
+  'lyr.publishDesktopHint': 'Share these synced lyrics on LRCLIB, the open lyrics database that Resonix and many other players use. Only publish lyrics you checked against the song.',
 } as const;
 
 export default en;

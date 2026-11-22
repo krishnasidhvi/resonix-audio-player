@@ -690,6 +690,14 @@ const hi: Messages = {
   'source.server': 'आपका सर्वर',
   'source.server.blurb': 'आपका अपना Navidrome या Jellyfin',
   'licence.server': 'आपका सर्वर',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'LRCLIB पर पब्लिश करें',
+  'lyr.publishing': 'पब्लिश हो रहा है…',
+  'lyr.published': 'LRCLIB पर पब्लिश हो गए',
+  'lyr.publishFailed': 'पब्लिश नहीं हो सका: {error}',
+  'lyr.publishConfirm': 'ये सिंक किए गए बोल LRCLIB पर पब्लिश करें? ये LRCLIB इस्तेमाल करने वाले हर ऐप के लिए पब्लिक हो जाएँगे, और Resonix इन्हें वापस नहीं हटा सकता।',
+  'lyr.publishDesktopHint': 'इन सिंक किए गए बोलों को LRCLIB पर शेयर करें, जो बोलों का ओपन डेटाबेस है और जिसे Resonix और कई दूसरे प्लेयर इस्तेमाल करते हैं। सिर्फ़ वही बोल पब्लिश करें जिन्हें आपने गाने से मिलाकर जाँचा है।',
 };
 
 export default hi;

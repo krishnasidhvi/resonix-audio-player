@@ -691,6 +691,14 @@ const te: Messages = {
   'source.server': 'మీ సర్వర్',
   'source.server.blurb': 'మీ సొంత Navidrome లేదా Jellyfin',
   'licence.server': 'మీ సర్వర్',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'LRCLIB లో పబ్లిష్ చేయి',
+  'lyr.publishing': 'పబ్లిష్ చేస్తున్నాం…',
+  'lyr.published': 'LRCLIB లో పబ్లిష్ అయ్యాయి',
+  'lyr.publishFailed': 'పబ్లిష్ చేయలేకపోయాం: {error}',
+  'lyr.publishConfirm': 'ఈ సింక్ చేసిన లిరిక్స్‌ని LRCLIB లో పబ్లిష్ చేయాలా? LRCLIB వాడే ప్రతి యాప్‌లో ఇవి పబ్లిక్ అవుతాయి, Resonix వాటిని మళ్ళీ తీసివేయలేదు.',
+  'lyr.publishDesktopHint': 'ఈ సింక్ చేసిన లిరిక్స్‌ని LRCLIB లో షేర్ చేయండి. Resonix తో పాటు చాలా ఇతర ప్లేయర్‌లు వాడే ఓపెన్ లిరిక్స్ డేటాబేస్ ఇది. పాటతో సరిచూసుకున్న లిరిక్స్ మాత్రమే పబ్లిష్ చేయండి.',
 };
 
 export default te;

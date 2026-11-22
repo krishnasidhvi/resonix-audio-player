@@ -690,6 +690,14 @@ const de: Messages = {
   'source.server': 'Dein Server',
   'source.server.blurb': 'Dein eigenes Navidrome oder Jellyfin',
   'licence.server': 'Dein Server',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'Auf LRCLIB veröffentlichen',
+  'lyr.publishing': 'Wird veröffentlicht…',
+  'lyr.published': 'Auf LRCLIB veröffentlicht',
+  'lyr.publishFailed': 'Veröffentlichen fehlgeschlagen: {error}',
+  'lyr.publishConfirm': 'Diesen synchronisierten Songtext auf LRCLIB veröffentlichen? Er ist dann für jede App, die LRCLIB nutzt, öffentlich, und Resonix kann ihn nicht wieder entfernen.',
+  'lyr.publishDesktopHint': 'Teile diesen synchronisierten Songtext auf LRCLIB, der offenen Songtext-Datenbank, die Resonix und viele andere Player nutzen. Veröffentliche nur Songtexte, die du mit dem Song abgeglichen hast.',
 };
 
 export default de;

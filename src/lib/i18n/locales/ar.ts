@@ -753,6 +753,14 @@ const ar: Messages = {
   'source.server': 'خادمك',
   'source.server.blurb': 'Navidrome أو Jellyfin الخاص بك',
   'licence.server': 'خادمك',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': 'النشر على LRCLIB',
+  'lyr.publishing': 'جارٍ النشر…',
+  'lyr.published': 'نُشرت على LRCLIB',
+  'lyr.publishFailed': 'تعذّر النشر: {error}',
+  'lyr.publishConfirm': 'هل تريد نشر هذه الكلمات المتزامنة على LRCLIB؟ ستصبح متاحة للجميع في كل تطبيق يستخدم LRCLIB، ولا يستطيع Resonix حذفها بعد ذلك.',
+  'lyr.publishDesktopHint': 'شارك هذه الكلمات المتزامنة على LRCLIB، قاعدة بيانات الكلمات المفتوحة التي يستخدمها Resonix ومشغّلات أخرى كثيرة. لا تنشر إلا كلمات راجعتها مع الأغنية.',
 };
 
 export default ar;

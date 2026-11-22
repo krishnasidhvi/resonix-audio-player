@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { isDesktop, publishToLrclib } from '../../lib/desktop';
   // Tap-to-sync lyrics editor. Step 1: edit the text. Step 2: play the song and tap as each
   // line starts. Saved lyrics are stored on this device and used for this track from then on.
   import { player } from '../../lib/stores/player.svelte';
@@ -92,6 +93,31 @@
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
+  // Desktop app only: publish to LRCLIB (the Rust side solves LRCLIB's proof-of-work)
+  let publishing = $state(false);
+  let published = $state(false);
+  let publishError = $state('');
+  async function publish() {
+    if (!allTimed || publishing) return;
+    if (!confirm(t('lyr.publishConfirm'))) return;
+    publishing = true; publishError = '';
+    try {
+      const sorted = lines.map((l) => ({ t: l.t ?? 0, text: l.text })).sort((a, b) => a.t - b.t);
+      await publishToLrclib({
+        trackName: track.title,
+        artistName: track.artist,
+        // LRCLIB requires an album name; singles usually carry the song title as their album
+        albumName: track.album || track.title,
+        duration: Math.round(track.duration || player.duration),
+        syncedLyrics: toLrc(sorted),
+        plainLyrics: sorted.map((l) => l.text).join('\n'),
+      });
+      published = true;
+      ui.toast(t('lyr.published'));
+    } catch (e) {
+      publishError = t('lyr.publishFailed', { error: String((e as Error)?.message ?? e) });
+    } finally { publishing = false; }
+  }
   async function copy() { await navigator.clipboard.writeText(lrc()); ui.toast(t('lyr.copied')); }
   function close() { ui.lyricsEditor = false; }
 
@@ -155,7 +181,18 @@
       </div>
       <details class="publish">
         <summary>{t('lyr.publishTitle')}</summary>
-        <p class="faint small">{t('lyr.publishHint')} <a href="https://github.com/tranxuanthang/lrcget" target="_blank" rel="noopener">LRCGET</a> · <a href="https://lrclib.net" target="_blank" rel="noopener">lrclib.net</a></p>
+        {#if isDesktop}
+          <p class="faint small">{t('lyr.publishDesktopHint')}</p>
+          <div class="row wrap actions">
+            <button class="btn" disabled={!allTimed || publishing || published} onclick={publish}>
+              {publishing ? t('lyr.publishing') : published ? t('lyr.published') : t('lyr.publish')}
+            </button>
+            {#if !allTimed}<span class="faint small">{t('lyr.notDone', { done, total: lines.length })}</span>{/if}
+          </div>
+          {#if publishError}<p class="small err">{publishError}</p>{/if}
+        {:else}
+          <p class="faint small">{t('lyr.publishHint')} <a href="https://github.com/tranxuanthang/lrcget" target="_blank" rel="noopener">LRCGET</a> · <a href="https://lrclib.net" target="_blank" rel="noopener">lrclib.net</a></p>
+        {/if}
       </details>
     {/if}
   </div>
@@ -188,4 +225,6 @@
   .n { width: 28px; height: 28px; font-size: 16px; }
   .publish summary { cursor: pointer; font-size: 13px; color: var(--text-2); }
   .publish a { color: var(--accent); }
+  .publish .actions { margin-top: 8px; }
+  .err { color: var(--danger); margin-top: 6px; }
 </style>

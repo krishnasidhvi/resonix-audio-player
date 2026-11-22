@@ -691,6 +691,14 @@ const zh: Messages = {
   'source.server': '你的服务器',
   'source.server.blurb': '你自己的 Navidrome 或 Jellyfin',
   'licence.server': '你的服务器',
+
+  // added: publishing lyrics from the desktop app
+  'lyr.publish': '发布到 LRCLIB',
+  'lyr.publishing': '正在发布…',
+  'lyr.published': '已发布到 LRCLIB',
+  'lyr.publishFailed': '无法发布：{error}',
+  'lyr.publishConfirm': '要将这些同步歌词发布到 LRCLIB 吗？发布后，所有使用 LRCLIB 的应用都能看到它们，且 Resonix 无法将其撤下。',
+  'lyr.publishDesktopHint': '在 LRCLIB 上分享这些同步歌词。LRCLIB 是 Resonix 和许多其他播放器使用的开放歌词数据库。请只发布已对照歌曲核对过的歌词。',
 };
 
 export default zh;
