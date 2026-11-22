@@ -35,6 +35,7 @@
   import Settings from './views/Settings.svelte';
 
   void library.load();
+  void player.restoreSession(); // the queue and position from the last visit, paused
   // starting with no connection: open the music saved on this device instead of an empty Home
   void offline.load().then(() => {
     if (!offline.online && offline.entries.length && ui.route.name === 'home') ui.go('#/library/offline');

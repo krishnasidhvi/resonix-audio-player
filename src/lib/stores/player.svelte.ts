@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { engine } from '../audio/engine';
 import { youtube } from '../audio/youtube-player';
 import { analyseTrack, cachedAnalysis, normalisationDb } from '../audio/analysis';
@@ -22,6 +23,9 @@ interface Transport {
   readonly currentTime: number; readonly duration: number; readonly paused: boolean; readonly buffering: boolean;
   setLoop(a: number | null, b: number | null): void; fadeOutAndPause(seconds: number, cancelled?: () => boolean): Promise<void>;
 }
+
+/** Where playback was, saved so the next visit resumes there ('session-queue' holds the queue itself). */
+interface SessionPos { index: number; id: string; time: number; shuffle: boolean; repeat: Repeat }
 
 export interface PlayEvent { id: string; title: string; artist: string; source: string; genre?: string; at: number; seconds: number }
 
@@ -58,6 +62,12 @@ class Player {
   private readyToken = -1;
   private failures = 0;
   private sleepFading = false;
+  /** Set while the queue restored from the last visit hasn't been started: play resumes at this time. */
+  private resumeAt: number | null = null;
+  /** Saving starts only after the last session was restored, so startup can't overwrite it. */
+  private sessionReady = false;
+  private lastPosSave = 0;
+  private queueSaveTimer = 0;
 
   private get out(): Transport {
     return this.current?.source === 'youtube' ? youtube : engine;
@@ -77,6 +87,8 @@ class Player {
   }
 
   private sync() {
+    if (this.resumeAt !== null) return; // nothing is loaded yet: keep showing the restored position
+    const was = this.playing;
     const out = this.out;
     const t = out.currentTime;
     if (!out.paused && this.lastTick && t > this.lastTick && t - this.lastTick < 2) this.listened += t - this.lastTick;
@@ -99,6 +111,7 @@ class Player {
       // crossfades only work between tracks our own engine plays
       if (n !== null && out === engine && this.queue[n].source !== 'youtube') { this.fading = true; void this.load(n, { crossfade: cf }); }
     }
+    if ((this.playing && Date.now() - this.lastPosSave > 5000) || (was && !this.playing)) this.savePos();
     if ('mediaSession' in navigator && this.duration && Number.isFinite(this.duration)) {
       try { navigator.mediaSession.setPositionState({ duration: this.duration, position: Math.min(t, this.duration), playbackRate: this.rate }); } catch { /* ignore */ }
     }
@@ -178,6 +191,7 @@ class Player {
       track = this.queue[i];
     }
     const token = ++this.loadToken;
+    this.resumeAt = null;
     this.logListen();
     this.index = i;
     this.analysis = null;
@@ -328,14 +342,76 @@ class Player {
   toggle() {
     if (this.out === engine) engine.unlock();
     if (this.index < 0 && this.queue.length) return void this.load(0);
+    // first play after a restart: load the restored track at the saved position
+    if (this.resumeAt !== null) { const at = this.resumeAt; return void this.load(this.index, { startAt: at > 0 ? at : undefined }); }
     this.out.toggle();
   }
   next() { const n = this.nextIndex(); if (n !== null) void this.load(n); }
   prev() {
-    if (this.out.currentTime > 3 || this.index === 0) this.out.seek(0);
+    if (this.out.currentTime > 3 || this.index === 0) this.seek(0);
     else if (this.index > 0) void this.load(this.index - 1);
   }
-  seek(t: number) { this.out.seek(t); this.lastTick = t; }
+  seek(t: number) {
+    if (this.resumeAt !== null) { this.resumeAt = this.time = Math.max(0, t); return; } // applied on play
+    this.out.seek(t); this.lastTick = t;
+  }
+
+  /** Bring back the queue and position from the last visit, paused. Call once at startup. */
+  async restoreSession() {
+    try {
+      const [queue, pos] = await Promise.all([
+        db.get<Track[]>('kv', 'session-queue'),
+        db.get<SessionPos>('kv', 'session-pos'),
+      ]);
+      // the user may already have started something while this was loading
+      if (this.index >= 0 || !queue?.length || !pos) return;
+      const index = queue[pos.index]?.id === pos.id ? pos.index : queue.findIndex((tr) => tr.id === pos.id);
+      if (index < 0) return;
+      const cur = queue[index];
+      this.queue = queue;
+      this.index = index;
+      this.shuffle = pos.shuffle;
+      this.repeat = pos.repeat;
+      // a live stream has no position; a finished track starts again from the top
+      const ended = cur.duration > 0 && pos.time > cur.duration - 3;
+      this.resumeAt = this.time = cur.isLive || ended ? 0 : pos.time;
+      this.duration = cur.duration || 0;
+      this.updateMediaSession(cur);
+    } catch { /* nothing saved, or storage unavailable */ } finally {
+      this.startSessionSaving();
+    }
+  }
+
+  private startSessionSaving() {
+    if (this.sessionReady) return;
+    this.sessionReady = true;
+    $effect.root(() => {
+      // the queue is saved when it changes (debounced: edits come in bursts)
+      $effect(() => {
+        const queue = $state.snapshot(this.queue);
+        clearTimeout(this.queueSaveTimer);
+        this.queueSaveTimer = window.setTimeout(() => {
+          void (queue.length ? db.set('kv', 'session-queue', queue) : db.del('kv', 'session-queue'));
+        }, 800);
+      });
+      // and the position when the track, shuffle or repeat changes
+      $effect(() => {
+        void this.index; void this.shuffle; void this.repeat;
+        untrack(() => this.savePos());
+      });
+    });
+    addEventListener('pagehide', () => this.savePos());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.savePos(); });
+  }
+
+  private savePos() {
+    if (!this.sessionReady) return;
+    this.lastPosSave = Date.now();
+    const cur = this.current;
+    if (!cur) { void db.del('kv', 'session-pos'); return; }
+    const pos: SessionPos = { index: this.index, id: cur.id, time: cur.isLive ? 0 : Math.floor(this.time), shuffle: this.shuffle, repeat: this.repeat };
+    void db.set('kv', 'session-pos', pos);
+  }
 
   setVolume(v: number) { settings.volume = v; engine.setVolume(v); youtube.setVolume(v); }
   toggleShuffle() {
@@ -407,7 +483,11 @@ class Player {
   private setupMediaSession() {
     if (!('mediaSession' in navigator)) return;
     const ms = navigator.mediaSession;
-    ms.setActionHandler('play', () => { if (this.out === engine) engine.unlock(); void this.out.resume(); });
+    ms.setActionHandler('play', () => {
+      if (this.resumeAt !== null) return this.toggle();
+      if (this.out === engine) engine.unlock();
+      void this.out.resume();
+    });
     ms.setActionHandler('pause', () => this.out.pause());
     ms.setActionHandler('nexttrack', () => this.next());
     ms.setActionHandler('previoustrack', () => this.prev());
